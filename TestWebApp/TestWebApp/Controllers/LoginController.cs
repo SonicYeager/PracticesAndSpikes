@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Text.Encodings.Web;
+using TestWebApp.Models;
 
 namespace TestWebApp.Controllers
 {
@@ -15,9 +16,7 @@ namespace TestWebApp.Controllers
         // GET: /<controller>/Login
         public async Task<IActionResult> Login()
         {
-            ViewData["Username"] = "Jacke the Dog";
-            ViewData["Password"] = "Finn the Human";
-            return View();
+            return View(new LoginViewModel() { Password = "Finn the Human", Username = "Jake the Dog" });
         }
 
         //// GET: /<controller>/Login

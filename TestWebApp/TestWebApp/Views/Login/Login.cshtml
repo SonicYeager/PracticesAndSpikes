@@ -1,11 +1,12 @@
 ﻿@{
-    ViewData["Title"] = "Welcome";
+    ViewData["Title"] = "Login";
 }
+@model TestWebApp.Models.LoginViewModel;
 
 <h2>Welcome</h2>
 
-<form>
-<p>@ViewData["Username"]</p>
-<p>@ViewData["Password"]</p>
-</form>
+<div class="editor-field">
+    <p>@Model.Username</p>
+    <p>@Model.Password</p>
+</div>
 
