@@ -1,0 +1,161 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:uc="clr-namespace:Prototype"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:lv="clr-namespace:LiveChartsCore;assembly=LiveChartsCore"
+        xmlns:lvc="using:LiveChartsCore.SkiaSharpView.Avalonia"
+        x:Class="Prototype.MainUI"
+        Title="Prototype"
+        ExtendClientAreaToDecorationsHint="True"
+        Name="Window"
+        MinWidth="890"
+        MinHeight="600"
+        Width="890"
+        Height="600">
+
+  <DockPanel Name="ContentWrapper"
+             LastChildFill="True"
+             HorizontalAlignment="Stretch"
+             VerticalAlignment="Stretch"
+             Margin="10,0,10,10">
+
+    <DockPanel Name="Control"
+               HorizontalAlignment="Stretch"
+               VerticalAlignment="Center"
+               Height="30"
+               DockPanel.Dock="Top">
+      <TextBlock Text="Regression Checker"
+                 Name="Title"
+                 VerticalAlignment="Center">
+      </TextBlock>
+    </DockPanel>
+
+    <ScrollViewer AllowAutoHide="True"
+                  HorizontalAlignment="Stretch"
+                  VerticalAlignment="Stretch">
+        <StackPanel Name="DataSetLists"
+                    Spacing="10"
+                    MinWidth="200"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    DockPanel.Dock="Left">
+            <Border BorderBrush="Gray"
+                    BorderThickness="2"
+                    CornerRadius="2"
+                    Padding="2"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch">
+                <StackPanel Name="LatestDataSet"
+                            Spacing="5"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Stretch">
+                    <ListBox Items="{Binding LatestDataSets, Mode=TwoWay}" SelectionMode="Toggle" SelectedItem="{Binding SelectedLatestSource}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Path}"/>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <Button HorizontalAlignment="Stretch"
+                            Command="{Binding SelectLatFileCommand}">
+                      <Path Margin="10,0,10,0"
+                            Stretch="Uniform"
+                            Height="15"
+                            Width="15"
+                            Data="{StaticResource fileplus_icon}">
+                      </Path>
+                    </Button>
+                </StackPanel>
+            </Border>
+            <Border BorderBrush="Gray"
+                    BorderThickness="2"
+                    CornerRadius="2"
+                    Padding="2"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch">
+                <StackPanel Name="ReferenceDataSet"
+                            Spacing="5"
+                            HorizontalAlignment="Stretch"
+                            VerticalAlignment="Stretch">
+                    <ListBox Items="{Binding ReferenceDataSets, Mode=TwoWay}" Selection="{Binding SelectionReferences}" SelectionMode="Multiple">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Path}"/>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                    <Button HorizontalAlignment="Stretch"
+                            Command="{Binding SelectRefFileCommand}">
+                      <Path Margin="10,0,10,0"
+                            Stretch="Uniform"
+                            Height="15"
+                            Width="15"
+                            Data="{StaticResource fileplus_icon}">
+                      </Path>
+                    </Button>
+                </StackPanel>
+            </Border>
+                <Border BorderBrush="Gray"
+                        BorderThickness="2"
+                        CornerRadius="2"
+                        Padding="2"
+                        DockPanel.Dock="Left"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch">
+                    <StackPanel Spacing="5"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Stretch">
+                      <ListBox Items="{Binding RegressiveMethods}" SelectionMode="Toggle" SelectedItem="{Binding SelectedRegression}">
+                        <ListBox.ItemTemplate>
+                          <DataTemplate>
+                            <TextBlock Text="{Binding Path}"/>
+                          </DataTemplate>
+                        </ListBox.ItemTemplate>
+                      </ListBox>
+                    </StackPanel>
+                </Border>
+        </StackPanel>
+    </ScrollViewer>
+
+    <TabControl Name="ChartWrapper"
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch"
+                DockPanel.Dock="Left"
+                Margin="10,0,0,0"
+                MinWidth="200"
+                MinHeight="200">
+        <TabItem Header="Line-Chart">
+            <Viewbox Stretch="Uniform"
+                     HorizontalAlignment="Stretch"
+                     VerticalAlignment="Stretch">
+                <lvc:CartesianChart Name="LineChart"
+                                    HorizontalAlignment="Stretch"
+                                    VerticalAlignment="Stretch"
+                                    Width="500"
+                                    Height="500"
+                                    ZoomMode="X"
+                                    XAxes="{Binding LineChartXAxis}"
+                                    YAxes="{Binding LineChartYAxis}" 
+                                    LegendPosition="Bottom">
+                </lvc:CartesianChart>
+            </Viewbox>
+        </TabItem>
+        <TabItem Header="Pie-Chart">
+            <Viewbox Stretch="Uniform"
+                     HorizontalAlignment="Stretch"
+                     VerticalAlignment="Stretch">
+                <lvc:PieChart Name="PieChart"
+                              HorizontalAlignment="Stretch"
+                              VerticalAlignment="Stretch"
+                              Width="500"
+                              Height="500"
+                              LegendPosition="Bottom">
+                </lvc:PieChart>
+            </Viewbox>
+        </TabItem>
+    </TabControl>
+
+    </DockPanel>
+  
+</Window>

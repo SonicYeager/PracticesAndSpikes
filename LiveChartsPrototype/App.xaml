@@ -1,0 +1,29 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Prototype.App">
+  <Application.Styles>
+    <StyleInclude Source="avares://Avalonia.Themes.Default/DefaultTheme.xaml"></StyleInclude>
+    <StyleInclude Source="avares://Avalonia.Themes.Fluent/FluentLight.xaml"></StyleInclude>
+    <StyleInclude Source="avares://Avalonia.Themes.Fluent/FluentDark.xaml"></StyleInclude>
+    <StyleInclude Source="/Icons.xaml"></StyleInclude>
+
+    <FluentTheme Mode="Light"/>
+    
+    <!-- Add Custom Controll Styles here -->
+    <Style Selector="Button:pointerover ContentPresenter">
+      <Setter Property="Background" Value="#44AAAAAA"/>
+    </Style>
+    <Style Selector="Button:not(:pointerover) ContentPresenter">
+      <Setter Property="Background" Value="Transparent"/>
+    </Style>
+
+    <Style Selector="Path">
+      <Setter Property="VerticalAlignment" Value="Center"/>
+      <Setter Property="HorizontalAlignment" Value="Center"/>
+      <Setter Property="Fill" Value="{DynamicResource SystemControlForegroundBaseHighBrush}"/>
+      <Setter Property="Margin" Value="0, 0, 0, 0"/>
+      <Setter Property="Stretch" Value="Uniform"/>
+    </Style>
+  </Application.Styles>
+
+</Application>

@@ -1,0 +1,45 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:uc="clr-namespace:Prototype"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        x:Class="Protoype.AddFileDialog"
+        Title="AddFileDialog"
+        Name="AddFileDialog"
+        ExtendClientAreaToDecorationsHint="True"
+        Width="300"
+        MaxWidth="300"
+        MinWidth="300"
+        Height="75"
+        MinHeight="75"
+        MaxHeight="75">
+
+  <DockPanel Margin="10"
+             LastChildFill="True"
+             HorizontalAlignment="Stretch"
+             VerticalAlignment="Stretch">
+    <StackPanel DockPanel.Dock="Top">
+      <TextBlock Text="Add Source Path">
+      </TextBlock>
+    </StackPanel>
+    <StackPanel Orientation="Horizontal"
+                DockPanel.Dock="Bottom"
+                VerticalAlignment="Bottom"
+                HorizontalAlignment="Center"
+                Spacing="10">
+      <Button Content="OK" Click="OKCommand" IsCancel="False" IsEnabled="True"></Button>
+      <Button Content="Abort" Click="AbortCommand" IsCancel="True" IsEnabled="True"></Button>
+    </StackPanel>
+    <StackPanel Orientation="Horizontal"
+                DockPanel.Dock="Bottom"
+                VerticalAlignment="Bottom"
+                HorizontalAlignment="Center"
+                Spacing="10"
+                Margin="10">
+      <TextBlock Text="Path: " HorizontalAlignment="Stretch" VerticalAlignment="Center">
+      </TextBlock>
+      <TextBox Name="PathField" Watermark="add path here..." HorizontalAlignment="Stretch" VerticalAlignment="Center" MaxWidth="200">
+      </TextBox>
+    </StackPanel>
+  </DockPanel>
+</Window>
