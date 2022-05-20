@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Authors>SonicYeager</Authors>
+    <Description>Some Contracts and Data as Dep for another NuGet</Description>
+    <RepositoryUrl>https://github.com/SonicYeager/PracticesAndSpikes.git</RepositoryUrl>
+    <PackageReleaseNotes>Initial</PackageReleaseNotes>
+    <AnalysisLevel>latest-all</AnalysisLevel>
+    <BaseOutputPath>D:\!REPOS\PracticesAndSpikes\NuGetsys</BaseOutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
+  </PropertyGroup>
+
+</Project>
