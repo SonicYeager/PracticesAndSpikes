@@ -11,6 +11,7 @@
     <PackageReleaseNotes>Initial</PackageReleaseNotes>
     <AnalysisLevel>latest-all</AnalysisLevel>
     <BaseOutputPath>D:\!REPOS\PracticesAndSpikes\NuGetsys</BaseOutputPath>
+    <Version>1.0.1</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -20,5 +21,9 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="RandomDataGenerator.Net" Version="1.0.15" />
+  </ItemGroup>
 
 </Project>
