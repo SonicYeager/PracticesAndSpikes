@@ -2,8 +2,9 @@
 
 namespace HotelListing.Entities;
 
-public sealed class HotelEntity : EntityBase
+public sealed class HotelEntity
 {
+    public int Id { get; set; }
     public string Name { get; set; }
     public string Address { get; set; }
     public double Rating { get; set; }
