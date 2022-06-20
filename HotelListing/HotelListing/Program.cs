@@ -1,4 +1,7 @@
+using HotelListing.Configurations;
 using HotelListing.Contexts;
+using HotelListing.Contracts;
+using HotelListing.Repository;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -7,7 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 var connectionString = builder.Configuration.GetConnectionString("HotelListingDbConnectionString");
-builder.Services.AddDbContext<HotelListingDbContext>(options =>
+builder.Services.AddDbContext<DbContext, HotelListingDbContext>(options =>
 {
     var version = ServerVersion.AutoDetect(connectionString);
     options.UseMySql(connectionString, version);
@@ -30,6 +33,12 @@ builder.Host.UseSerilog(
     (ctx, lc) => lc
         .WriteTo.Console()
         .ReadFrom.Configuration(ctx.Configuration));
+
+builder.Services.AddAutoMapper(typeof(AutoMapperConfiguration));
+
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+builder.Services.AddScoped<ICountriesRepository, CountriesRepository>();
+builder.Services.AddScoped<IHotelsRepository, HotelsRepository>();
 
 var app = builder.Build();
 
