@@ -2,6 +2,7 @@ using HotelListing.Configurations;
 using HotelListing.Contexts;
 using HotelListing.Contracts;
 using HotelListing.Repository;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -15,6 +16,10 @@ builder.Services.AddDbContext<DbContext, HotelListingDbContext>(options =>
     var version = ServerVersion.AutoDetect(connectionString);
     options.UseMySql(connectionString, version);
 });
+
+builder.Services.AddIdentityCore<IdentityUser>()
+    .AddRoles<IdentityRole>()
+    .AddEntityFrameworkStores<HotelListingDbContext>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
