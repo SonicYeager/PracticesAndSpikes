@@ -2,7 +2,7 @@
 
 namespace HotelListing.Entities
 {
-    public class HotelListingUser : IdentityUser
+    public class UserEntity : IdentityUser
     {
         public string FirstName { get; set; }
         public string LastName { get; set; }

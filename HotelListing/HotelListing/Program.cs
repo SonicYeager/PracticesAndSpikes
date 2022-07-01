@@ -1,6 +1,7 @@
 using HotelListing.Configurations;
 using HotelListing.Contexts;
 using HotelListing.Contracts;
+using HotelListing.Entities;
 using HotelListing.Repository;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +11,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
+builder.Services.AddLogging();
+
 var connectionString = builder.Configuration.GetConnectionString("HotelListingDbConnectionString");
 builder.Services.AddDbContext<DbContext, HotelListingDbContext>(options =>
 {
@@ -17,7 +20,7 @@ builder.Services.AddDbContext<DbContext, HotelListingDbContext>(options =>
     options.UseMySql(connectionString, version);
 });
 
-builder.Services.AddIdentityCore<IdentityUser>()
+builder.Services.AddIdentityCore<UserEntity>()
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<HotelListingDbContext>();
 
@@ -44,6 +47,7 @@ builder.Services.AddAutoMapper(typeof(AutoMapperConfiguration));
 builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<ICountriesRepository, CountriesRepository>();
 builder.Services.AddScoped<IHotelsRepository, HotelsRepository>();
+builder.Services.AddScoped<IAuthManager, AuthManager>();
 
 var app = builder.Build();
 
