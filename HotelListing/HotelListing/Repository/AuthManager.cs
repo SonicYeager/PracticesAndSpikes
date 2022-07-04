@@ -21,13 +21,15 @@ namespace HotelListing.Repository
         private readonly IMapper _mapper;
         private readonly UserManager<UserEntity> _userManager;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<AuthManager> _logger;
         private UserEntity _user;
 
-        public AuthManager(IMapper mapper, UserManager<UserEntity> userManager, IConfiguration configuration)
+        public AuthManager(IMapper mapper, UserManager<UserEntity> userManager, IConfiguration configuration, ILogger<AuthManager> logger)
         {
             _mapper = mapper;
             _userManager = userManager; ;
             _configuration = configuration;
+            _logger = logger;
         }
 
         public async Task<IEnumerable<IdentityError>> Register(UserDto userDto)
@@ -47,11 +49,13 @@ namespace HotelListing.Repository
 
         public async Task<AuthDto> Login(LoginDto loginDto)
         {
+            _logger.LogInformation($"Looking for user with email {loginDto.Email}");
             _user = await _userManager.FindByEmailAsync(loginDto.Email);
             var isValidUser = await _userManager.CheckPasswordAsync(_user, loginDto.Password);
 
             if (_user == null || isValidUser == false)
             {
+                _logger.LogWarning($"User with email {loginDto.Email} was not found.");
                 return null;
             }
 
@@ -69,7 +73,7 @@ namespace HotelListing.Repository
         {
             await _userManager.RemoveAuthenticationTokenAsync(_user, LOGIN_PROVIDER, REFRESH_TOKEN_NAME);
             var newToken = await _userManager.GenerateUserTokenAsync(_user, LOGIN_PROVIDER, REFRESH_TOKEN_NAME);
-            var result = await _userManager.SetAuthenticationTokenAsync(_user, LOGIN_PROVIDER, REFRESH_TOKEN_NAME, newToken);
+            _ = await _userManager.SetAuthenticationTokenAsync(_user, LOGIN_PROVIDER, REFRESH_TOKEN_NAME, newToken);
             return newToken;
         }
 

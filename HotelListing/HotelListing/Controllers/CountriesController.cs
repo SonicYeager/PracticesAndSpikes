@@ -15,10 +15,12 @@ namespace HotelListing.Controllers
     {
         private readonly IMapper _mapper;
         private readonly ICountriesRepository _countriesRepository;
+        private readonly ILogger<CountriesController> _logger;
 
-        public CountriesController(IMapper mapper, ICountriesRepository countriesRepository)
+        public CountriesController(IMapper mapper, ICountriesRepository countriesRepository, ILogger<CountriesController> logger)
         {
             _countriesRepository = countriesRepository;
+            _logger = logger;
             _mapper = mapper;
         }
 
@@ -59,11 +61,13 @@ namespace HotelListing.Controllers
 
             if (countryEntity == null)
             {
+                _logger.LogWarning($"Could not find Country with id {id}.");
                 return NotFound();
             }
 
             if (id != countryEntity.Id)
             {
+                _logger.LogWarning($"Can not update Country with id {updateCountryDto.Id}. for Id {id}.");
                 return BadRequest();
             }
 

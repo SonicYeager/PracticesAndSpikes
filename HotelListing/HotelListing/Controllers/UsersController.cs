@@ -9,10 +9,12 @@ namespace HotelListing.Controllers
     public class UsersController : ControllerBase
     {
         private readonly IAuthManager _authManager;
+        private readonly ILogger<UsersController> _logger;
 
-        public UsersController(IAuthManager authManager)
+        public UsersController(IAuthManager authManager, ILogger<UsersController> logger)
         {
             _authManager = authManager;
+            _logger = logger;
         }
 
         // POST: HotelListing/User/Register
@@ -23,21 +25,31 @@ namespace HotelListing.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult> Register([FromBody] UserDto userDto)
         {
-            var errors = await _authManager.Register(userDto);
-
-            var identityErrorList = errors.ToList();
-
-            if (identityErrorList.Any())
+            try
             {
-                foreach (var error in identityErrorList)
+                _logger.LogInformation($"Registration Attempt for {userDto.Email}");
+
+                var errors = await _authManager.Register(userDto);
+
+                var identityErrorList = errors.ToList();
+
+                if (identityErrorList.Any())
                 {
-                    ModelState.AddModelError(error.Code, error.Description);
+                    foreach (var error in identityErrorList)
+                    {
+                        ModelState.AddModelError(error.Code, error.Description);
+                    }
+
+                    return BadRequest(ModelState);
                 }
 
-                return BadRequest(ModelState);
+                return Ok();
             }
-
-            return Ok();
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"Something Went Wrong in the {nameof(Register)} - User Registration attempt for {userDto.Email}");
+                return Problem($"Something Went Wrong in the {nameof(Register)}", statusCode: 500);
+            }
         }
 
         // POST: HotelListing/User/Login
@@ -48,14 +60,24 @@ namespace HotelListing.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult<AuthDto>> Login([FromBody] LoginDto loginDto)
         {
-            var authDto = await _authManager.Login(loginDto);
-
-            if (authDto == null)
+            try
             {
-                return Unauthorized();
-            }
+                _logger.LogInformation($"Login Attempt for {loginDto.Email}");
 
-            return Ok(authDto);
+                var authDto = await _authManager.Login(loginDto);
+
+                if (authDto == null)
+                {
+                    return Unauthorized();
+                }
+
+                return Ok(authDto);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"Something Went Wrong in the {nameof(Login)} - User Login attempt for {loginDto.Email}");
+                return Problem($"Something Went Wrong in the {nameof(Login)}", statusCode: 500);
+            }
         }
 
         // POST: HotelListing/User/RefreshToken
