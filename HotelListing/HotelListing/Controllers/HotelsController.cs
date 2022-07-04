@@ -1,15 +1,11 @@
 using AutoMapper;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using HotelListing.Contexts;
 using HotelListing.Contracts;
 using HotelListing.Entities;
+using HotelListing.Models.Configurations;
 using HotelListing.Models.Hotel;
+using Microsoft.AspNetCore.Authorization;
 
 namespace HotelListing.Controllers
 {
@@ -35,7 +31,7 @@ namespace HotelListing.Controllers
         }
 
         // GET: api/Hotels/5
-        [HttpGet("{id}")]
+        [HttpGet("{id:int}")]
         public async Task<ActionResult<HotelDto>> GetHotelEntity(int id)
         {
             var hotelEntity = await _hotelsRepository.GetAsync(id);
@@ -49,8 +45,9 @@ namespace HotelListing.Controllers
         }
 
         // PUT: api/Hotels/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
+        // To protect from over posting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPut("{id:int}")]
+        [Authorize]
         public async Task<IActionResult> PutHotelEntity(int id, UpdateHotelDto updateHotelDto)
         {
             var hotelEntity = await _hotelsRepository.GetAsync(id);
@@ -87,8 +84,9 @@ namespace HotelListing.Controllers
         }
 
         // POST: api/Hotels
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        // To protect from over posting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
+        [Authorize]
         public async Task<ActionResult<HotelDto>> PostHotelEntity(HotelDto hotelDto)
         {
             var hotelEntity = _mapper.Map<HotelEntity>(hotelDto);
@@ -101,7 +99,8 @@ namespace HotelListing.Controllers
         }
 
         // DELETE: api/Hotels/5
-        [HttpDelete("{id}")]
+        [HttpDelete("{id:int}")]
+        [Authorize(Roles = RoleConfiguration.ADMINISTRATOR_ROLE_NAME)]
         public async Task<IActionResult> DeleteHotelEntity(int id)
         {
             var hotelEntity = await _hotelsRepository.GetAsync(id);

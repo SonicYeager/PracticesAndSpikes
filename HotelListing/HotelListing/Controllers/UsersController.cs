@@ -1,10 +1,5 @@
 using HotelListing.Contracts;
 using HotelListing.Models.Users;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HotelListing.Controllers
@@ -45,22 +40,40 @@ namespace HotelListing.Controllers
             return Ok();
         }
 
-        // POST: HotelListing/User/Register
+        // POST: HotelListing/User/Login
         [HttpPost]
         [Route("Login")]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult> Login([FromBody] LoginDto loginDto)
+        public async Task<ActionResult<AuthDto>> Login([FromBody] LoginDto loginDto)
         {
-            var isValidUser = await _authManager.Login(loginDto);
+            var authDto = await _authManager.Login(loginDto);
 
-            if (!isValidUser)
+            if (authDto == null)
             {
                 return Unauthorized();
             }
 
-            return Ok();
+            return Ok(authDto);
+        }
+
+        // POST: HotelListing/User/RefreshToken
+        [HttpPost]
+        [Route("RefreshToken")]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<ActionResult<AuthDto>> RefreshToken([FromBody] AuthDto authDto)
+        {
+            var verifiedAuthDto = await _authManager.VerifyRefreshToken(authDto);
+
+            if (verifiedAuthDto == null)
+            {
+                return Unauthorized();
+            }
+
+            return Ok(verifiedAuthDto);
         }
     }
 }

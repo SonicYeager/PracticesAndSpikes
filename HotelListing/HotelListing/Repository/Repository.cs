@@ -1,6 +1,5 @@
 ﻿using HotelListing.Contracts;
 using Microsoft.EntityFrameworkCore;
-using System.Text;
 
 namespace HotelListing.Repository
 {

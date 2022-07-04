@@ -1,5 +1,4 @@
-﻿using HotelListing.Contexts;
-using HotelListing.Contracts;
+﻿using HotelListing.Contracts;
 using HotelListing.Entities;
 using Microsoft.EntityFrameworkCore;
 

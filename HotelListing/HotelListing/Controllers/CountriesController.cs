@@ -1,15 +1,11 @@
 using AutoMapper;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using HotelListing.Contexts;
 using HotelListing.Contracts;
 using HotelListing.Entities;
+using HotelListing.Models.Configurations;
 using HotelListing.Models.Country;
+using Microsoft.AspNetCore.Authorization;
 
 namespace HotelListing.Controllers
 {
@@ -32,12 +28,12 @@ namespace HotelListing.Controllers
         {
             var countries = await _countriesRepository.GetAllAsync();
             var countryDtos = _mapper.Map<IEnumerable<GetCountryDto>>(countries);
-            
+
             return Ok(countryDtos);
         }
 
         // GET: api/Countries/5
-        [HttpGet("{id}")]
+        [HttpGet("{id:int}")]
         public async Task<ActionResult<CountryDto>> GetCountryEntity(int id)
         {
 
@@ -54,8 +50,9 @@ namespace HotelListing.Controllers
         }
 
         // PUT: api/Countries/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
+        // To protect from over posting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPut("{id:int}")]
+        [Authorize]
         public async Task<IActionResult> PutCountryEntity(int id, UpdateCountryDto updateCountryDto)
         {
             var countryEntity = await _countriesRepository.GetAsync(id);
@@ -64,14 +61,14 @@ namespace HotelListing.Controllers
             {
                 return NotFound();
             }
-            
+
             if (id != countryEntity.Id)
             {
                 return BadRequest();
             }
 
             _mapper.Map(updateCountryDto, countryEntity);
-            
+
             try
             {
                 await _countriesRepository.UpdateAsync(countryEntity);
@@ -92,8 +89,9 @@ namespace HotelListing.Controllers
         }
 
         // POST: api/Countries
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        // To protect from over posting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
+        [Authorize]
         public async Task<ActionResult<CreateCountryDto>> PostCountryEntity(CreateCountryDto createCountryDto)
         {
             var countryEntity = _mapper.Map<CountryEntity>(createCountryDto);
@@ -107,7 +105,8 @@ namespace HotelListing.Controllers
         }
 
         // DELETE: api/Countries/5
-        [HttpDelete("{id}")]
+        [HttpDelete("{id:int}")]
+        [Authorize(Roles = RoleConfiguration.ADMINISTRATOR_ROLE_NAME)]
         public async Task<IActionResult> DeleteCountryEntity(int id)
         {
             var countryEntity = _countriesRepository.GetAsync(id);
@@ -115,7 +114,7 @@ namespace HotelListing.Controllers
             {
                 return NotFound();
             }
-            
+
             await _countriesRepository.DeleteAsync(id);
 
             return NoContent();
