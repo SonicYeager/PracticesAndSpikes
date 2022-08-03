@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using HotelListing.Contracts;
 using HotelListing.Entities;
+using HotelListing.Models;
 using HotelListing.Models.Configurations;
 using HotelListing.Models.Hotel;
 using Microsoft.AspNetCore.Authorization;
@@ -22,12 +23,20 @@ namespace HotelListing.Controllers
             _mapper = mapper;
         }
 
-        // GET: api/Hotels
-        [HttpGet]
+        // GET: api/Hotels/GetAll
+        [HttpGet("GetAll")]
         public async Task<ActionResult<IEnumerable<GetHotelDto>>> GetHotels()
         {
             var hotelEntities = await _hotelsRepository.GetAllAsync();
             return Ok(_mapper.Map<IEnumerable<GetHotelDto>>(hotelEntities));
+        }
+
+        // GET: api/Hotels
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<GetHotelDto>>> GetPagedHotels([FromQuery] QueryParameters queryParameters)
+        {
+            var hotelEntities = await _hotelsRepository.GetAllAsync<GetHotelDto>(queryParameters);
+            return Ok(hotelEntities);
         }
 
         // GET: api/Hotels/5
@@ -64,21 +73,7 @@ namespace HotelListing.Controllers
 
             _mapper.Map(updateHotelDto, hotelEntity);
 
-            try
-            {
-                await _hotelsRepository.UpdateAsync(hotelEntity);
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!await HotelEntityExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            await _hotelsRepository.UpdateAsync(hotelEntity);
 
             return NoContent();
         }
@@ -113,11 +108,6 @@ namespace HotelListing.Controllers
             await _hotelsRepository.DeleteAsync(id);
 
             return NoContent();
-        }
-
-        private async Task<bool> HotelEntityExists(int id)
-        {
-            return await _hotelsRepository.Exists(id);
         }
     }
 }

@@ -1,4 +1,7 @@
-﻿using HotelListing.Contracts;
+﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
+using HotelListing.Contracts;
+using HotelListing.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace HotelListing.Repository
@@ -6,10 +9,12 @@ namespace HotelListing.Repository
     public class Repository<TEntity> : IRepository<TEntity> where TEntity : class
     {
         private readonly DbContext _context;
+        private readonly IMapper _mapper;
 
-        public Repository(DbContext context)
+        public Repository(DbContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
         public async Task<TEntity> GetAsync(int? id)
@@ -25,6 +30,23 @@ namespace HotelListing.Repository
         public async Task<IEnumerable<TEntity>> GetAllAsync()
         {
             return await _context.Set<TEntity>().ToListAsync();
+        }
+
+        public async Task<QueryResult<TResult>> GetAllAsync<TResult>(QueryParameters queryParameters)
+        {
+            var totalSize = await _context.Set<TEntity>().CountAsync();
+            var items = await _context.Set<TEntity>()
+                .Skip(queryParameters.StartIndex)
+                .Take(queryParameters.PageSize)
+                .ProjectTo<TResult>(_mapper.ConfigurationProvider)
+                .ToListAsync();
+            return new QueryResult<TResult>
+            {
+                Items = items,
+                PageNumber = queryParameters.PageNumber,
+                RecordNumber = queryParameters.PageSize,
+                TotalCount = totalSize
+            };
         }
 
         public async Task<TEntity> AddAsync(TEntity entity)

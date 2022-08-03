@@ -2,11 +2,17 @@ using HotelListing.Configurations;
 using HotelListing.Contexts;
 using HotelListing.Contracts;
 using HotelListing.Entities;
+using HotelListing.Middleware;
 using HotelListing.Repository;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Versioning;
+using Microsoft.AspNetCore.OData;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Primitives;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Net.Http.Headers;
 using Serilog;
 using System.Text;
 
@@ -29,7 +35,6 @@ builder.Services.AddIdentityCore<UserEntity>()
     .AddEntityFrameworkStores<HotelListingDbContext>()
     .AddDefaultTokenProviders();
 
-builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -40,6 +45,23 @@ builder.Services.AddCors(options =>
         b => b.AllowAnyHeader()
             .AllowAnyOrigin()
             .AllowAnyMethod());
+});
+
+builder.Services.AddApiVersioning(o =>
+{
+    o.AssumeDefaultVersionWhenUnspecified = true;
+    o.DefaultApiVersion = new ApiVersion(1, 0);
+    o.ReportApiVersions = true;
+    o.ApiVersionReader = ApiVersionReader.Combine(
+        new QueryStringApiVersionReader("api-version"),
+        new HeaderApiVersionReader("X-Version"),
+        new MediaTypeApiVersionReader("ver"));
+});
+
+builder.Services.AddVersionedApiExplorer(o =>
+{
+    o.GroupNameFormat = "'v'VVV";
+    o.SubstituteApiVersionInUrl = true;
 });
 
 builder.Host.UseSerilog(
@@ -72,6 +94,21 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+builder.Services.AddResponseCaching(o =>
+{
+    o.MaximumBodySize = 1024;
+    o.UseCaseSensitivePaths = true;
+});
+
+builder.Services.AddControllers()
+    .AddOData(o =>
+    {
+        o
+            .Select()
+            .Filter()
+            .OrderBy();
+    });
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -81,9 +118,26 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseMiddleware<ExceptionMiddleware>();
+
 app.UseHttpsRedirection();
 
 app.UseCors("AllowAll");
+
+app.UseResponseCaching();
+
+app.Use(async (context, next) =>
+{
+    context.Response.GetTypedHeaders().CacheControl =
+        new CacheControlHeaderValue
+        {
+            Public = true,
+            MaxAge = TimeSpan.FromSeconds(10)
+        };
+    context.Response.Headers[HeaderNames.Vary] =
+        new StringValues("Accept-Encoding");
+    await next();
+});
 
 app.UseAuthentication();
 app.UseAuthorization();

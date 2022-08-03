@@ -3,14 +3,17 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using HotelListing.Contracts;
 using HotelListing.Entities;
+using HotelListing.Models;
 using HotelListing.Models.Configurations;
 using HotelListing.Models.Country;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.OData.Query;
 
 namespace HotelListing.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("v{version:apiVersion}/[controller]")]
+    [ApiVersion("1.0")]
     public class CountriesController : ControllerBase
     {
         private readonly IMapper _mapper;
@@ -24,14 +27,25 @@ namespace HotelListing.Controllers
             _mapper = mapper;
         }
 
-        // GET: api/Countries
-        [HttpGet]
+        // GET: api/Countries/GetAll
+        [HttpGet("GetAll")]
+        [EnableQuery]
         public async Task<ActionResult<IEnumerable<GetCountryDto>>> GetCountries()
         {
             var countries = await _countriesRepository.GetAllAsync();
             var countryDtos = _mapper.Map<IEnumerable<GetCountryDto>>(countries);
 
             return Ok(countryDtos);
+        }
+
+        // GET: api/Countries/?StartIndex=0&pageSize=25&PageNumber=1
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<QueryResult<GetCountryDto>>>> GetPagedCountries(
+            [FromQuery] QueryParameters queryParameters)
+        {
+            var countries = await _countriesRepository.GetAllAsync<GetCountryDto>(queryParameters);
+
+            return Ok(countries);
         }
 
         // GET: api/Countries/5
@@ -73,21 +87,7 @@ namespace HotelListing.Controllers
 
             _mapper.Map(updateCountryDto, countryEntity);
 
-            try
-            {
-                await _countriesRepository.UpdateAsync(countryEntity);
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!await CountryEntityExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            await _countriesRepository.UpdateAsync(countryEntity);
 
             return NoContent();
         }
@@ -122,11 +122,6 @@ namespace HotelListing.Controllers
             await _countriesRepository.DeleteAsync(id);
 
             return NoContent();
-        }
-
-        private async Task<bool> CountryEntityExists(int id)
-        {
-            return await _countriesRepository.Exists(id);
         }
     }
 }
