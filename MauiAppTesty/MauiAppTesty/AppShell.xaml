@@ -12,9 +12,9 @@
     
     <FlyoutItem FlyoutDisplayOptions="AsMultipleItems">
         <ShellContent
-            Title="Home"
-            ContentTemplate="{DataTemplate views:MainPage}"
-            Route="MainPage" />
+            Title="Mail"
+            ContentTemplate="{DataTemplate views:MailPage}"
+            Route="MailPage" />
         <ShellContent
             Title="Standard"
             ContentTemplate="{DataTemplate views:StandartPage}"
