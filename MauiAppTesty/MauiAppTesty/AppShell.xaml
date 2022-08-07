@@ -3,7 +3,6 @@
     x:Class="MauiAppTesty.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:local="clr-namespace:MauiAppTesty"
     xmlns:views="clr-namespace:MauiAppTesty.Views"
     Shell.FlyoutBehavior="Flyout">
 
@@ -14,7 +13,7 @@
     <FlyoutItem FlyoutDisplayOptions="AsMultipleItems">
         <ShellContent
             Title="Home"
-            ContentTemplate="{DataTemplate local:MainPage}"
+            ContentTemplate="{DataTemplate views:MainPage}"
             Route="MainPage" />
         <ShellContent
             Title="Standard"
