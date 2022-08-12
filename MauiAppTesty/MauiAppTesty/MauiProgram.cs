@@ -21,7 +21,6 @@ public static class MauiProgram
 			o.AddConsole();
 		});
 		builder.Services
-			.AddTransient<MailPage>()
 			.AddTransient<StandartPage>()
 			.AddTransient<FlyoutFooter>()
 			.AddTransient<FlyoutHeader>();

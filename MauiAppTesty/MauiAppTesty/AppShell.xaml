@@ -12,12 +12,12 @@
     
     <FlyoutItem FlyoutDisplayOptions="AsMultipleItems">
         <ShellContent
-            Title="Mail"
-            ContentTemplate="{DataTemplate views:MailPage}"
-            Route="MailPage" />
-        <ShellContent
             Title="Standard"
             ContentTemplate="{DataTemplate views:StandartPage}"
+            Route="StandardPage"/>
+        <ShellContent
+            Title="Api"
+            ContentTemplate="{DataTemplate views:RandomFactsApiPage}"
             Route="StandardPage"/>
     </FlyoutItem>
 

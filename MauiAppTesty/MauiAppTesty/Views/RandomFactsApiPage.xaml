@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="MauiAppTesty.Views.RandomFactsApiPage"
+             Title="RandomFactsApiPage">
+    <VerticalStackLayout 
+        Spacing="10"
+        VerticalOptions="CenterAndExpand"
+        HorizontalOptions="CenterAndExpand">
+        <Label Text="{Binding Joke}"
+               FontSize="Medium"
+               FontAttributes="Bold"
+               VerticalOptions="CenterAndExpand"
+               HorizontalOptions="CenterAndExpand"/>
+        <VerticalStackLayout Spacing="5">
+            <Label Text="MetaData:" FontAttributes="Bold" FontSize="Large" Padding="5"/>
+            <Label Text="{Binding Id}"/>
+            <Label Text="{Binding Url}"/>
+            <Label Text="{Binding IconUrl}"/>
+            <Label Text="{Binding CreatedAt}"/>
+            <Label Text="{Binding UpdatedAt}"/>
+            <Label Text="{Binding Categories}"/>
+        </VerticalStackLayout>
+        <Button Text="Fetch a new one..."
+                Command="{Binding FetchNew}"
+                VerticalOptions="CenterAndExpand"
+                HorizontalOptions="CenterAndExpand"/>
+    </VerticalStackLayout>
+</ContentPage>

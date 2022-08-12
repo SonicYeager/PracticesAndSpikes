@@ -50,6 +50,8 @@
 
 	<ItemGroup>
 	  <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="6.0.0" />
+	  <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+	  <PackageReference Include="Swashbuckle.Core" Version="5.6.0" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -59,7 +61,7 @@
 	  <MauiXaml Update="Views\FlyoutHeader.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
-	  <MauiXaml Update="Views\MailPage.xaml">
+	  <MauiXaml Update="Views\RandomFactsApiPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Views\StandartPage.xaml">
