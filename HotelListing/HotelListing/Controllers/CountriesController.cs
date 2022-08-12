@@ -7,6 +7,7 @@ using HotelListing.Api.Data.Models.Country;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.OData.Query;
 
 namespace HotelListing.Controllers
@@ -85,6 +86,17 @@ namespace HotelListing.Controllers
             }, added);
         }
 
+        // POST: api/Countries
+        // To protect from over posting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPatch]
+        public async Task<ActionResult<GetCountryDto>> PatchCountry(int id, [FromBody] JsonPatchDocument<GetCountryDto> patchDoc)
+        {
+            var entity = await _countriesRepository.GetAsync<GetCountryDto>(id);
+            patchDoc.ApplyTo(entity);
+
+            return Ok(entity);
+        }
+        
         // DELETE: api/Countries/5
         [HttpDelete("{id:int}")]
         [Authorize(Roles = RoleConfiguration.ADMINISTRATOR_ROLE_NAME)]

@@ -101,6 +101,7 @@ builder.Services.AddResponseCaching(o =>
 });
 
 builder.Services.AddControllers()
+    .AddNewtonsoftJson()
     .AddOData(o =>
     {
         o
