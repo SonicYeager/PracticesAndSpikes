@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace MauiAppTesty.BaseView
 {
-    internal class BaseViewModel : INotifyPropertyChanged
+    public class BaseViewModel : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
         protected bool RaiseAndSetIfChanged<TValue>(ref TValue field, TValue value, [CallerMemberName] string propertyName = null)

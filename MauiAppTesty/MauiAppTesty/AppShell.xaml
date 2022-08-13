@@ -9,16 +9,18 @@
     <Shell.FlyoutHeader>
         <views:FlyoutHeader/>
     </Shell.FlyoutHeader>
-    
+
     <FlyoutItem FlyoutDisplayOptions="AsMultipleItems">
         <ShellContent
-            Title="Standard"
-            ContentTemplate="{DataTemplate views:StandartPage}"
-            Route="StandardPage"/>
-        <ShellContent
-            Title="Api"
+            Title="Chuck Norris Jokes"
+            FlyoutIcon="thumb_up_white_24dp.png"
             ContentTemplate="{DataTemplate views:RandomFactsApiPage}"
-            Route="StandardPage"/>
+            Route="RandomFactsApiPage"/>
+        <ShellContent
+            Title="Settings"
+            FlyoutIcon="settings_white_24dp.png"
+            ContentTemplate="{DataTemplate views:SettingsPage}"
+            Route="SettingsPage"/>
     </FlyoutItem>
 
     <Shell.FlyoutFooter>

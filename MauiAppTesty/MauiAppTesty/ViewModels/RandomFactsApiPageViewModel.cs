@@ -8,7 +8,7 @@ using System.Windows.Input;
 
 namespace MauiAppTesty.ViewModels
 {
-    internal sealed class RandomFactsApiPageViewModel : BaseViewModel
+    public sealed class RandomFactsApiPageViewModel : BaseViewModel
     {
         private string _joke = "Here will be a joke soon...";
         private string _id;

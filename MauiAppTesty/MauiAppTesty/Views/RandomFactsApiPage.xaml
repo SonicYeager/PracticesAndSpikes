@@ -3,27 +3,52 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="MauiAppTesty.Views.RandomFactsApiPage"
              Title="RandomFactsApiPage">
-    <VerticalStackLayout 
-        Spacing="10"
-        VerticalOptions="CenterAndExpand"
-        HorizontalOptions="CenterAndExpand">
-        <Label Text="{Binding Joke}"
-               FontSize="Medium"
-               FontAttributes="Bold"
+    <ScrollView VerticalScrollBarVisibility="Always">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="150"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <ScrollView>
+                <Image Aspect="AspectFill"
+               HorizontalOptions="CenterAndExpand"
                VerticalOptions="CenterAndExpand"
-               HorizontalOptions="CenterAndExpand"/>
-        <VerticalStackLayout Spacing="5">
-            <Label Text="MetaData:" FontAttributes="Bold" FontSize="Large" Padding="5"/>
-            <Label Text="{Binding Id}"/>
-            <Label Text="{Binding Url}"/>
-            <Label Text="{Binding IconUrl}"/>
-            <Label Text="{Binding CreatedAt}"/>
-            <Label Text="{Binding UpdatedAt}"/>
-            <Label Text="{Binding Categories}"/>
-        </VerticalStackLayout>
-        <Button Text="Fetch a new one..."
+               Grid.Row="0">
+                    <Image.Source>
+                        <UriImageSource Uri="https://http.cat/404"/>
+                    </Image.Source>
+                </Image>
+            </ScrollView>
+            <VerticalStackLayout Spacing="10"
+                             Padding="10"
+                             VerticalOptions="StartAndExpand"
+                             HorizontalOptions="CenterAndExpand"
+                             Grid.Row="1">
+                <Label Text="{Binding Joke}"
+                   FontSize="Medium"
+                   FontAttributes="Bold"
+                   VerticalOptions="CenterAndExpand"
+                   HorizontalOptions="CenterAndExpand"/>
+                <Border>
+                    <VerticalStackLayout Spacing="5"
+                                     Padding="15">
+                        <Label Text="MetaData:" FontAttributes="Bold" FontSize="Large" Padding="5"/>
+                        <Label Text="{Binding Id}"/>
+                        <Label Text="{Binding Url}"/>
+                        <Label Text="{Binding IconUrl}"/>
+                        <Label Text="{Binding CreatedAt}"/>
+                        <Label Text="{Binding UpdatedAt}"/>
+                        <Label Text="{Binding Categories}"/>
+                    </VerticalStackLayout>
+                </Border>
+                <Button Text="Fetch a new one..."
                 Command="{Binding FetchNew}"
-                VerticalOptions="CenterAndExpand"
-                HorizontalOptions="CenterAndExpand"/>
-    </VerticalStackLayout>
+                VerticalOptions="Fill"
+                HorizontalOptions="Fill"/>
+            </VerticalStackLayout>
+        </Grid>
+    </ScrollView>
 </ContentPage>

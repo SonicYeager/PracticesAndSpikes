@@ -1,19 +1,27 @@
 using MauiAppTesty.Dto;
 using MauiAppTesty.ViewModels;
-using Swashbuckle.Swagger;
+using System.Text.Json;
 
 namespace MauiAppTesty.Views;
 
 public partial class RandomFactsApiPage : ContentPage
 {
-	private readonly HttpClient _httpClient = new HttpClient();
-	private readonly RandomFactsApiPageViewModel _randomFactsApiPageViewModel = new();
+	private readonly HttpClient _httpClient;
+	private readonly RandomFactsApiPageViewModel _randomFactsApiPageViewModel;
+    private readonly JsonSerializerOptions _serializerOptions;
 
-	public RandomFactsApiPage()
+    public RandomFactsApiPage(HttpClient httpClient, RandomFactsApiPageViewModel randomFactsApiPageViewModel)
 	{
 		InitializeComponent();
-		_httpClient.BaseAddress = new Uri("https://api.chucknorris.io/");
+
+		_httpClient = httpClient;
+        _randomFactsApiPageViewModel = randomFactsApiPageViewModel;
+
+        _httpClient.BaseAddress = new Uri("https://api.chucknorris.io/");
         _randomFactsApiPageViewModel.FetchNew = new Command(async () => await FetchNew());
+        _serializerOptions = new JsonSerializerOptions
+        {};
+
         BindingContext = _randomFactsApiPageViewModel;
 	}
 
@@ -21,15 +29,15 @@ public partial class RandomFactsApiPage : ContentPage
 	{
 		var request = new Uri("/jokes/random?category=dev", UriKind.Relative);
 		var response = await _httpClient.GetAsync(request);
-		var dto = await response.Content.ReadAsAsync<ChuckNorrisJokeDto>();
 		var str = await response.Content.ReadAsStringAsync();
-		_randomFactsApiPageViewModel.Joke = dto.Value;
-		_randomFactsApiPageViewModel.Categories = string.Join(" ", dto.Categories);
-		_randomFactsApiPageViewModel.Id = dto.Id;
-		_randomFactsApiPageViewModel.Url = dto.Url;
-		_randomFactsApiPageViewModel.UpdatedAt = dto.Updated_At;
-		_randomFactsApiPageViewModel.CreatedAt = dto.Created_At;
-		_randomFactsApiPageViewModel.IconUrl = dto.Icon_Url;
+		var dto = JsonSerializer.Deserialize<ChuckNorrisJokeDto>(str, _serializerOptions);
+        _randomFactsApiPageViewModel.Joke = dto.value;
+		_randomFactsApiPageViewModel.Categories = string.Join(" ", dto.categories);
+		_randomFactsApiPageViewModel.Id = dto.id;
+		_randomFactsApiPageViewModel.Url = dto.url;
+		_randomFactsApiPageViewModel.UpdatedAt = DateTime.Parse(dto.updated_at);
+		_randomFactsApiPageViewModel.CreatedAt = DateTime.Parse(dto.created_at);
+		_randomFactsApiPageViewModel.IconUrl = dto.icon_url;
 
     }
 }

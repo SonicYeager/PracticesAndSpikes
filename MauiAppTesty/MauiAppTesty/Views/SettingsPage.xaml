@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="MauiAppTesty.Views.SettingsPage"
+             Title="SettingsPage">
+    <Border>
+        <VerticalStackLayout>
+            <Picker SelectedItem="{Binding Theme}"
+                    ItemsSource="{Binding Themes}"
+                    VerticalOptions="Center"
+                    HorizontalOptions="Center" />
+            <Button Text="Change Theme"
+                    Command="{Binding SaveChanges}"/>
+        </VerticalStackLayout>
+    </Border>
+</ContentPage>

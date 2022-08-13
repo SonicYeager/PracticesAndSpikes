@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 namespace MauiAppTesty.Dto
 {
     internal record ChuckNorrisJokeDto(
-        string Id,
-        IEnumerable<string> Categories,
-        DateTime Created_At,
-        DateTime Updated_At,
-        Uri Icon_Url,
-        Uri Url,
-        string Value);
+        string id,
+        IEnumerable<string> categories,
+        string created_at,
+        string updated_at,
+        Uri icon_url,
+        Uri url,
+        string value);
 }
