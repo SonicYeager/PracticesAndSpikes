@@ -2,6 +2,6 @@
 {
     public interface ITimePrinter
     {
-        //void PrintActualTime();
+        void PrintActualTime();
     }
 }

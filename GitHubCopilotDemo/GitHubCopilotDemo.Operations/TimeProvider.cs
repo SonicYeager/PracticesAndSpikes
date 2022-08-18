@@ -1,7 +1,5 @@
 ﻿namespace GitHubCopilotDemo.Operations
 {
-    public class TimeProvider
-    {
-        //implement interface
-    }
+    //use and implement ITimeProvider
+
 }
