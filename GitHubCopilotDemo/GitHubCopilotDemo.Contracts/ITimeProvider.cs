@@ -2,6 +2,6 @@
 {
     public interface ITimeProvider
     {
-        public DateTime Now();
+        //public DateTime Now();
     }
 }

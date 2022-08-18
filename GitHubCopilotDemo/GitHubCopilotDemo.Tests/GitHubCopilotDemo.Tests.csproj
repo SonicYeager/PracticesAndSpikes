@@ -21,4 +21,9 @@
         </PackageReference>
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\GitHubCopilotDemo.Contracts\GitHubCopilotDemo.Contracts.csproj" />
+      <ProjectReference Include="..\GitHubCopilotDemo.Operations\GitHubCopilotDemo.Operations.csproj" />
+    </ItemGroup>
+
 </Project>

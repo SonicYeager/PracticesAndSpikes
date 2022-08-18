@@ -6,5 +6,5 @@ public class TimePrinterTests
     //check that time printer uses time provider to get time
     //check that time printer uses Console to print time
     [Fact]
-    public void Test1()//cursor here
+    public void PrintTime_PrintsNow()//cursor here
 }
