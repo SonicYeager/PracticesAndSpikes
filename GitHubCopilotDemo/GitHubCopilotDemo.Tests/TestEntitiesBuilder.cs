@@ -3,8 +3,13 @@ namespace GitHubCopilotDemo.Tests
 {
     public class TestEntitiesBuilder
     {
-        //write method that builds the "SomeDataBatch" record with random data
-        //fill coordinates with random values using BuildCoordinates method
-        //write BuildCoordinates method for Coordinates record
+        //public static SomeDataBatch BuildSomeDataBatch()
+        //{
+        //    return new SomeDataBatch
+        //    {
+        //        Id = 1,
+        //        Data = "some data"
+        //    };
+        //}
     }
 }

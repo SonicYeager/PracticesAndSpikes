@@ -4,8 +4,21 @@ namespace GitHubCopilotDemo.Operations
 {
     public class TimePrinter : ITimePrinter
     {
-        //write constructor that takes ITimeProvider and IConsole
-        //constructor sets local fields
-        //implement interface using ITimeProvider and IConsole
+        /// <summary>
+        /// Prints the current time.
+        /// </summary>
+        /// <param name="timeProvider"></param>
+        /// <param name="console"></param>
+        public TimePrinter(ITimeProvider timeProvider, IConsole console)
+        {
+            this.timeProvider = timeProvider;
+            this.console = console;
+        }
+        public void PrintActualTime()
+        {
+            console.WriteLine(timeProvider.Now().ToString());
+        }
+        private readonly ITimeProvider timeProvider;
+        private readonly IConsole console;
     }
 }
