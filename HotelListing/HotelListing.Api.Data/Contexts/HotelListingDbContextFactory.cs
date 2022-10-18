@@ -7,9 +7,11 @@ public class HotelListingDbContextFactory : IDesignTimeDbContextFactory<HotelLis
 {
     public HotelListingDbContext CreateDbContext(string[] args)
     {
+        Console.WriteLine(Path.GetFullPath("../HotelListing/appsettings.json"));
+
         IConfiguration conf = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("appsettings.json", false, true)
+            .AddJsonFile(Path.GetFullPath("../HotelListing/appsettings.json"), false, true)
             .Build();
 
         var optionsBuilder = new DbContextOptionsBuilder<HotelListingDbContext>();
