@@ -6,7 +6,7 @@
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #030303;
+  background-color: #0e0e0e;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -21,7 +21,7 @@
   --on-secondary-dark-color: #001520;
   --tertiary-dark-color: #008B5D;
   --on-tertiary-dark-color: #FAF4DF;
-  --background-dark-color: #030303;
+  --background-dark-color: #0e0e0e;
 }
 
 a {
