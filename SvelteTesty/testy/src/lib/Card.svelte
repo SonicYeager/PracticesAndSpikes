@@ -10,7 +10,7 @@
         display: flex;
         flex-flow: row wrap;
         border-radius: .5em;
-        background-color: whitesmoke;
+        background-color: var(--default-theme);
         gap: .5em;
         justify-content: center;
         width: fit-content;

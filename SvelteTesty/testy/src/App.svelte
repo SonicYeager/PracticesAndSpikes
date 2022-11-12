@@ -11,13 +11,12 @@
 </script>
 
 <main>
-  <link rel="stylesheet" href="node_modules/svelte-material-ui/bare.css" />
-  <h1>{title}</h1>
-  <div class="card">
-    <Card>
-      <LoginForm onAttemptLogin={attemptLogin}/>
-    </Card>
-  </div>
+    <h1>{title}</h1>
+    <div class="card">
+      <Card>
+        <LoginForm onAttemptLogin={attemptLogin}/>
+      </Card>
+    </div>
 </main>
 
 <style>
@@ -26,9 +25,6 @@
     align-self: center;
     align-content: center;
     justify-content: center;
-  }
-  h1 {
-    color: var(--primary-dark-color);
   }
   :global(*){
     box-sizing: border-box;

@@ -26,7 +26,7 @@
             height: 100%;
         }
         h2 {
-            color: var(--background-dark-color);
+            color: var(--default-text);
             margin: 0;
         }
         header {
