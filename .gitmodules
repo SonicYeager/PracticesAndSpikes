@@ -1,0 +1,9 @@
+[submodule "quiz-scraper"]
+	path = quiz-scraper
+	url = https://github.com/LineageFalcon/quiz-scraper.git
+[submodule "ColorGenerator"]
+	path = ColorGenerator
+	url = https://github.com/LineageFalcon/ColorGenerator.git
+[submodule "GameOfLife"]
+	path = GameOfLife
+	url = https://github.com/LineageFalcon/GameOfLife.git
