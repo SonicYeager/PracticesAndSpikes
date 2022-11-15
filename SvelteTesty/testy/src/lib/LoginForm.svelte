@@ -2,13 +2,14 @@
     let username
     let password
     
+    export let loginTitle = "Loggd"
     export let onAttemptLogin
     </script>
     
     <section>
         <header>
             <h2>
-                Login
+                {loginTitle}
             </h2>
         </header>
         <form>

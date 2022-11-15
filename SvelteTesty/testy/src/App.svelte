@@ -14,7 +14,7 @@
     <h1>{title}</h1>
     <div class="card">
       <Card>
-        <LoginForm onAttemptLogin={attemptLogin}/>
+        <LoginForm onAttemptLogin={attemptLogin} loginTitle="Log dich ein du Hurensohn"/>
       </Card>
     </div>
 </main>
