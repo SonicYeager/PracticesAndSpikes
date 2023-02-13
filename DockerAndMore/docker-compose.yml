@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  cpp-build-base:
+    build: .
+  #  volumes:
+  #    - logs:/app/logs
+  #    - ./backend:/app
+  #    - /app/node_modules
+
+#volumes:
+#  data:
+#  logs:
