@@ -8,9 +8,9 @@ using System.Reactive.Linq;
 using System.Threading;
 
 namespace MusicStore.ViewModels;
+
 public class MusicStoreViewModel : ViewModelBase
 {
-        
     private string? _searchText;
     private bool _isBusy;
     private AlbumViewModel? _selectedAlbum;
@@ -24,7 +24,7 @@ public class MusicStoreViewModel : ViewModelBase
         get => _searchText;
         set => this.RaiseAndSetIfChanged(ref _searchText, value);
     }
-        
+
     public bool IsBusy
     {
         get => _isBusy;
@@ -36,14 +36,14 @@ public class MusicStoreViewModel : ViewModelBase
         get => _selectedAlbum;
         set => this.RaiseAndSetIfChanged(ref _selectedAlbum, value);
     }
-        
+
     public MusicStoreViewModel()
     {
         this.WhenAnyValue(x => x.SearchText)
             .Throttle(TimeSpan.FromMilliseconds(400))
             .ObserveOn(RxApp.MainThreadScheduler)
             .Subscribe(DoSearch!);
-            
+
         BuyMusicCommand = ReactiveCommand.Create(() => SelectedAlbum);
     }
 
@@ -51,7 +51,7 @@ public class MusicStoreViewModel : ViewModelBase
     {
         IsBusy = true;
         SearchResults.Clear();
-        
+
         _cancellationTokenSource?.Cancel();
         _cancellationTokenSource = new CancellationTokenSource();
         var cancellationToken = _cancellationTokenSource.Token;
@@ -66,7 +66,7 @@ public class MusicStoreViewModel : ViewModelBase
 
                 SearchResults.Add(vm);
             }
-            
+
             if (!cancellationToken.IsCancellationRequested)
             {
                 LoadCovers(cancellationToken);
@@ -75,7 +75,7 @@ public class MusicStoreViewModel : ViewModelBase
 
         IsBusy = false;
     }
-    
+
     private async void LoadCovers(CancellationToken cancellationToken)
     {
         foreach (var album in SearchResults.ToList())

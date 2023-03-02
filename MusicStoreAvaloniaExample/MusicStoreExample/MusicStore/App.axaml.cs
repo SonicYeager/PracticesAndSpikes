@@ -1,6 +1,5 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Controls.Templates;
 using Avalonia.Markup.Xaml;
 using Microsoft.Extensions.DependencyInjection;
 using MusicStore.ViewModels;
@@ -26,7 +25,7 @@ public class App : Application
         ServiceCollection.AddTransient<MusicStoreWindow>();
 
         ServiceProvider = ServiceCollection.BuildServiceProvider();
-        
+
         AvaloniaXamlLoader.Load(this);
         DataTemplates.Add(new ViewLocator(ServiceProvider));
     }

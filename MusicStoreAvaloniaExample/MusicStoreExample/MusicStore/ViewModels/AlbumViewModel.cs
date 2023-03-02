@@ -4,6 +4,7 @@ using ReactiveUI;
 using System.Threading.Tasks;
 
 namespace MusicStore.ViewModels;
+
 public class AlbumViewModel : ViewModelBase
 {
     private readonly Album _album;
@@ -22,13 +23,13 @@ public class AlbumViewModel : ViewModelBase
         get => _cover;
         private set => this.RaiseAndSetIfChanged(ref _cover, value);
     }
-    
+
     public async Task LoadCover()
     {
         await using var imageStream = await _album.LoadCoverBitmapAsync();
         Cover = await Task.Run(() => Bitmap.DecodeToWidth(imageStream, 400));
     }
-    
+
     public async Task SaveToDiskAsync()
     {
         await _album.SaveAsync();
