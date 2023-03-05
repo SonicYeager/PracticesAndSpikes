@@ -1,11 +1,18 @@
 using System;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
+using Microsoft.Extensions.DependencyInjection;
 using MusicStore.ViewModels;
 
 namespace MusicStore;
 public class ViewLocator : IDataTemplate
 {
+    private readonly IServiceProvider _serviceProvider;
+    public ViewLocator(IServiceProvider serviceProvider)
+    {
+        _serviceProvider = serviceProvider;
+    }
+    
     public IControl Build(object data)
     {
         var name = data.GetType().FullName!.Replace("ViewModel", "View");
@@ -13,7 +20,7 @@ public class ViewLocator : IDataTemplate
 
         if (type != null)
         {
-            return (Control)Activator.CreateInstance(type)!;
+            return (Control)_serviceProvider.GetRequiredService(type);
         }
 
         return new TextBlock { Text = "Not Found: " + name };

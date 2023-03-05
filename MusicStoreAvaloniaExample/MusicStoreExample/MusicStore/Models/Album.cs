@@ -78,7 +78,7 @@ public class Album
             if (!string.IsNullOrWhiteSpace(new DirectoryInfo(file).Extension)) continue;
 
             await using var fs = File.OpenRead(file);
-            results.Add(await Album.LoadFromStream(fs).ConfigureAwait(false));
+            results.Add(await LoadFromStream(fs).ConfigureAwait(false));
         }
 
         return results;
