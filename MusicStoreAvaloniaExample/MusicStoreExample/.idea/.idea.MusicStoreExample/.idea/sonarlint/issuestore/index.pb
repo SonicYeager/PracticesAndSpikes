@@ -1,5 +1,21 @@
 
 J
 MusicStore/Models/Album.cs,0\a\0a8722af5ee387315cb73a544f0d421ab877677c
+X
+(MusicStore/Views/MusicStoreView.axaml.cs,a\e\ae4933a2317bff4aa5c8efad2a35a10047727448
+S
+#MusicStore/Views/AlbumView.axaml.cs,9\5\95cf4bcfb491e0fb9aa680b0419380429658e53e
+\
+,MusicStore/ViewModels/MusicStoreViewModel.cs,c\9\c9f7cb5c48689a4c97d8e227c85d9b231661da1c
+F
+MusicStore/Icons.axaml,8\9\89a8e076928e97dd3e3a48f7259e3756cd49f3d8
+D
+MusicStore/App.axaml,6\8\68638197669422f338f6799b06a6707d78a161cb
+G
+MusicStore/App.axaml.cs,9\8\9830f564e51cf3ee827e9eae6b36c618565e2010
+I
+MusicStore/ViewLocator.cs,9\9\997a2f49c3a95769b45f2829c9585fb475635600
+W
+'MusicStore/ViewModels/AlbumViewModel.cs,c\8\c81c291c99b50adce2c061bba006facafb400424
 V
 &MusicStore/ViewModels/ViewModelBase.cs,8\2\8223945bfa84d0568cd6ddb661cc587898d5426c
