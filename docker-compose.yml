@@ -1,0 +1,17 @@
+
+version: "3"
+services:
+  pulsar:
+    container_name: local_pulsar
+    image: apachepulsar/pulsar:latest
+    ports:
+      - "6650:6650"
+      - "8080:8080"
+    volumes:
+      - ./pulsar/data:/pulsar/data
+    command: ["bin/pulsar", "standalone"]
+    restart: always
+ 
+networks:
+  localnetwork:
+    driver: bridge
