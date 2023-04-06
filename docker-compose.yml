@@ -1,5 +1,5 @@
 
-version: "3"
+version: "3.8"
 services:
   pulsar:
     container_name: local_pulsar
@@ -11,7 +11,12 @@ services:
       - ./pulsar/data:/pulsar/data
     command: ["bin/pulsar", "standalone"]
     restart: always
- 
-networks:
-  localnetwork:
-    driver: bridge
+
+  mariadb:
+    container_name: local_db
+    image: mariadb:latest
+    ports:
+      - "3306:3306"
+    environment:
+      - MARIADB_ROOT_PASSWORD=my-secret
+    restart: always

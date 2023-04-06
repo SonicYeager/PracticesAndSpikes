@@ -1,7 +1,7 @@
+using System.Text.Json;
 using DotPulsar;
 using DotPulsar.Extensions;
-using PulsarWorker.Data;
-using PulsarWorker.Data.PulsarMessages;
+using BaseMessage = PulsarWorker.Data.BaseMessage;
 
 namespace PulsarWorker.DotPulsarWorker;
 
@@ -9,17 +9,19 @@ public class ApachePulsarConsumerWorker : BackgroundService
 {
     private static async Task RunRealWorld(CancellationToken cancellationToken)
     {
-        await using var client = PulsarClient.Builder()
+        await using var client = PulsarClient.Builder().ServiceUrl(new Uri("pulsar://localhost:6650"))
             .Build();
 
-        await using var consumer = client.NewConsumer(new JsonSchema<BaseMessage>())
+        await using var consumer = client.NewConsumer(Schema.String)
             .SubscriptionName("MySubscription")
             .Topic("persistent://public/default/mytopic")
             .Create();
 
         await foreach (var message in consumer.Messages(cancellationToken))
         {
-            Console.WriteLine("Received: " + message.Value().MessageId);
+            var decoded = JsonSerializer.Deserialize<BaseMessage>(message.Value());
+            
+            Console.WriteLine("Received: " + decoded?.MessageId);
             await consumer.Acknowledge(message, cancellationToken: cancellationToken);
         }
     }

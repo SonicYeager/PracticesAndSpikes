@@ -1,7 +1,10 @@
+using System.Text;
+using System.Text.Json;
 using DotPulsar;
 using DotPulsar.Extensions;
 using PulsarWorker.Data;
 using PulsarWorker.Data.PulsarMessages;
+using BaseMessage = PulsarWorker.Data.BaseMessage;
 
 namespace PulsarWorker.DotPulsarWorker;
 
@@ -12,14 +15,16 @@ public class ApachePulsarProducerWorker : BackgroundService
         await using var client = PulsarClient.Builder()
             .Build();
 
-        await using var producer = client.NewProducer(new JsonSchema<BaseMessage>())
+        await using var producer = client.NewProducer(Schema.String)
             .Topic("persistent://public/default/mytopic")
             .Create();
 
         for (var i = 0; i < Random.Shared.Next(10); i++)
         {
             var data = DataGenerator.Generate<BaseMessage>();
-            await producer.Send(data);
+            var encoded = JsonSerializer.Serialize(data);
+            
+            await producer.Send(encoded);
         }
     }
 
