@@ -12,7 +12,7 @@ public class ApachePulsarProducerWorker : BackgroundService
 {
     private static async Task Produce()
     {
-        await using var client = PulsarClient.Builder()
+        await using var client = PulsarClient.Builder().ServiceUrl(new Uri("pulsar://localhost:6650"))
             .Build();
 
         await using var producer = client.NewProducer(Schema.String)
@@ -21,7 +21,7 @@ public class ApachePulsarProducerWorker : BackgroundService
 
         for (var i = 0; i < Random.Shared.Next(10); i++)
         {
-            var data = DataGenerator.Generate<BaseMessage>();
+            var data = new BaseMessage(Guid.NewGuid().ToString(), DateTime.Now);
             var encoded = JsonSerializer.Serialize(data);
             
             await producer.Send(encoded);
