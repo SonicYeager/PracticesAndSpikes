@@ -1,5 +1,4 @@
 ﻿using System.Net.Http.Json;
-using PulsarWorker.Data.PulsarApi;
 
 namespace PulsarWorker.Client;
 
@@ -13,10 +12,19 @@ public class PulsarApi : IPulsarApi
         _client.BaseAddress ??= new Uri("http://localhost:8080/");
     }
 
-    public async Task<ClusterList?> GetClusters()
+    public async Task<IEnumerable<string>?> GetClusters()
     {
-        return await _client.GetFromJsonAsync<ClusterList>(new Uri("/admin/v2/clusters"));
+        return await _client.GetFromJsonAsync<IEnumerable<string>>(new Uri("/admin/v2/clusters"));
     }
     
+    public async Task<IEnumerable<string>?> GetTopics(string tenant, string pulsarNamespace)
+    {
+        return await _client.GetFromJsonAsync<IEnumerable<string>>(new Uri("/persistent/:tenant/:namespace"));
+    }
+    
+    public async Task<HttpResponseMessage> DeleteTopic(string tenant, string pulsarNamespace, string topic)
+    {
+        return await _client.DeleteAsync(new Uri("/persistent/:tenant/:namespace/:topic"));
+    }
     
 }
