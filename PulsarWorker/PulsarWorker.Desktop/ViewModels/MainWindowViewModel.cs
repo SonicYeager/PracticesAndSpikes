@@ -14,11 +14,13 @@ public class MainWindowViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _paneOpen, value);
     }
 
-    public ICommand OpenSettings { get; }
+    public ICommand ShowSettings { get; }
     
+    public ICommand ShowApi { get; }
+
     public ICommand TogglePane { get; }
 
-    private Control _content = new TextBox { Text = "Here follows some content soon!" };
+    private Control _content = new TextBlock { Text = "Here follows some content soon!" };
 
     public Control Content
     {
@@ -32,13 +34,17 @@ public class MainWindowViewModel : ViewModelBase
 
     public MainWindowViewModel()
     {
-        TogglePane = ReactiveCommand.Create( () =>
+        TogglePane = ReactiveCommand.Create(() => { PaneState = !PaneState; });
+        ShowSettings = ReactiveCommand.Create(() =>
         {
-            PaneState = !PaneState;
+            Content = new TextBlock { Text = "Settings page will follow soon!" };
+            //TODO add ability to set host address and in future to configure auth
         });
-        OpenSettings = ReactiveCommand.Create( () =>
+        ShowApi = ReactiveCommand.Create(() =>
         {
-            Content = new TextBox{ Text = "Settings page will follow soon!" };
+            Content = new TextBlock { Text = "Api page will follow soon!" };
+            //TODO just enable to add/delete a topic or namespace
+            //and observe any given topics in any given namespace as a tree view with live view
         });
 
         //ShowDialog = new Interaction<MusicStoreViewModel, AlbumViewModel?>();

@@ -42,8 +42,8 @@
 					<Button Name="SettingsButton"
 					        VerticalAlignment="Stretch"
 					        HorizontalAlignment="Stretch"
-					        Command="{Binding OpenSettings}"
-					        Grid.Row="3" Grid.Column="1">
+					        Command="{Binding ShowSettings}"
+					        Grid.Row="1" Grid.Column="1">
 						<StackPanel Orientation="Horizontal" Spacing="10">
 						<PathIcon Margin="0,0,0,0"
 								  Data="{StaticResource SettingsIcon}">							
@@ -51,10 +51,25 @@
 						<TextBlock IsVisible="{Binding PaneState}">Settings</TextBlock>
 						</StackPanel>
 					</Button>
+					<Button Name="ApiButton"
+					        VerticalAlignment="Stretch"
+					        HorizontalAlignment="Stretch"
+					        Command="{Binding ShowApi}"
+					        Grid.Row="2" Grid.Column="1">
+						<StackPanel Orientation="Horizontal" Spacing="10">
+							<PathIcon Margin="0,0,0,0"
+							          Data="{StaticResource SettingsIcon}">							
+							</PathIcon>
+							<TextBlock IsVisible="{Binding PaneState}">Api</TextBlock>
+						</StackPanel>
+					</Button>
 				</Grid>
 			</SplitView.Pane>
 			<DockPanel LastChildFill="True">
-				<UserControl Content="{Binding Content}"/>
+				<UserControl 
+					HorizontalContentAlignment="Center"
+					VerticalContentAlignment="Center"
+					Content="{Binding Content}"/>
 			</DockPanel>
 		</SplitView>
 	</DockPanel>
