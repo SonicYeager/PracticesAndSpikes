@@ -1,9 +1,8 @@
-﻿namespace PulsarWorker.Data.Entities
+﻿namespace PulsarWorker.Data.Entities;
+
+public class PulsarMessageEntity
 {
-    public class PulsarMessageEntity
-    {
-        public string MessageId { get; set; }
-        public DateTime ReceivedAt { get; set; }
-        //public string MessageContentId { get; set; }
-    }
+    public string MessageId { get; set; } = null!;
+    public DateTime ReceivedAt { get; set; }
+    //public string MessageContentId { get; set; }
 }

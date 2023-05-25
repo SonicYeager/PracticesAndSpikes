@@ -1,8 +1,7 @@
 ﻿using ReactiveUI;
 
-namespace PulsarWorker.Desktop.ViewModels
+namespace PulsarWorker.Desktop.ViewModels;
+
+public class ViewModelBase : ReactiveObject
 {
-    public class ViewModelBase : ReactiveObject
-    {
-    }
 }

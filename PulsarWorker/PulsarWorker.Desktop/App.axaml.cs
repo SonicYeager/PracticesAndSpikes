@@ -5,18 +5,25 @@ using Microsoft.Extensions.DependencyInjection;
 using PulsarWorker.Desktop.ViewModels;
 using PulsarWorker.Desktop.Views;
 using System;
+using PulsarWorker.Desktop.Models;
 
 namespace PulsarWorker.Desktop;
 
 public class App : Application
 {
-    public IServiceProvider ServiceProvider { get; set; } = null!;
-    public IServiceCollection ServiceCollection { get; } = new ServiceCollection();
+    private IServiceProvider ServiceProvider { get; set; } = null!;
+    private IServiceCollection ServiceCollection { get; } = new ServiceCollection();
 
     public override void Initialize()
     {
-        ServiceCollection.AddTransient<MainWindowViewModel>();
-        ServiceCollection.AddTransient<MainWindow>(d => new MainWindow
+        ServiceCollection.AddTransient<IPulsarNode, RootPulsarNode>();
+        ServiceCollection.AddSingleton<MainWindowViewModel>();
+        ServiceCollection.AddSingleton<PulsarApiViewModel>();
+        ServiceCollection.AddSingleton<PulsarApi>(d => new PulsarApi()
+        {
+            DataContext = d.GetRequiredService<PulsarApiViewModel>()
+        });
+        ServiceCollection.AddSingleton<MainWindow>(d => new MainWindow
         {
             DataContext = d.GetRequiredService<MainWindowViewModel>(),
         });

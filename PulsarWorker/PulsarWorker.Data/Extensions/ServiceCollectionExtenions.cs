@@ -1,13 +1,12 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using PulsarWorker.Data.AutoMapper;
 
-namespace PulsarWorker.Data.Extensions
+namespace PulsarWorker.Data.Extensions;
+
+public static class ServiceCollectionExtensions
 {
-    public static class ServiceCollectionExtensions
+    public static IServiceCollection AddConfiguredAutoMapper(this IServiceCollection service)
     {
-        public static IServiceCollection AddConfiguredAutoMapper(this IServiceCollection service)
-        {
-            return service.AddAutoMapper(typeof(AutoMapperConfig));
-        }
+        return service.AddAutoMapper(typeof(AutoMapperConfig));
     }
 }

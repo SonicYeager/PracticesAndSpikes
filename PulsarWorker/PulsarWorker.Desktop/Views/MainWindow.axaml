@@ -6,7 +6,8 @@
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="PulsarWorker.Desktop.Views.MainWindow"
         Icon="/Assets/avalonia-logo.ico"
-        Title="PulsarWorker.Desktop">
+        Title="PulsarWorker.Desktop"
+        ExtendClientAreaToDecorationsHint="True">
 
     <Design.DataContext>
         <vm:MainWindowViewModel/>
@@ -58,7 +59,7 @@
 					        Grid.Row="2" Grid.Column="1">
 						<StackPanel Orientation="Horizontal" Spacing="10">
 							<PathIcon Margin="0,0,0,0"
-							          Data="{StaticResource SettingsIcon}">							
+							          Data="{StaticResource ListIcon}">							
 							</PathIcon>
 							<TextBlock IsVisible="{Binding PaneState}">Api</TextBlock>
 						</StackPanel>

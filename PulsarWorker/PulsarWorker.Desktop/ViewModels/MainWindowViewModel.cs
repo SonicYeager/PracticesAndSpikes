@@ -1,11 +1,14 @@
 ﻿using System.Windows.Input;
 using Avalonia.Controls;
+using PulsarWorker.Desktop.Views;
 using ReactiveUI;
 
 namespace PulsarWorker.Desktop.ViewModels;
 
 public class MainWindowViewModel : ViewModelBase
 {
+    private readonly PulsarApi _pulsarApiView;
+
     private bool _paneOpen = false;
 
     public bool PaneState
@@ -15,7 +18,7 @@ public class MainWindowViewModel : ViewModelBase
     }
 
     public ICommand ShowSettings { get; }
-    
+
     public ICommand ShowApi { get; }
 
     public ICommand TogglePane { get; }
@@ -30,27 +33,19 @@ public class MainWindowViewModel : ViewModelBase
 
     //public Interaction<MusicStoreViewModel, AlbumViewModel?> ShowDialog { get; }
 
-    //public ObservableCollection<AlbumViewModel> Albums { get; } = new();
-
-    public MainWindowViewModel()
+    public MainWindowViewModel(PulsarApi pulsarApiView)
     {
+        _pulsarApiView = pulsarApiView;
+
         TogglePane = ReactiveCommand.Create(() => { PaneState = !PaneState; });
         ShowSettings = ReactiveCommand.Create(() =>
         {
             Content = new TextBlock { Text = "Settings page will follow soon!" };
             //TODO add ability to set host address and in future to configure auth
         });
-        ShowApi = ReactiveCommand.Create(() =>
-        {
-            Content = new TextBlock { Text = "Api page will follow soon!" };
-            //TODO just enable to add/delete a topic or namespace
-            //and observe any given topics in any given namespace as a tree view with live view
-        });
+        ShowApi = ReactiveCommand.Create(() => { Content = _pulsarApiView; });
 
         //ShowDialog = new Interaction<MusicStoreViewModel, AlbumViewModel?>();
-
-        //this.WhenAnyValue(x => x.Albums.Count)
-        //    .Subscribe(x => CollectionEmpty = x == 0);
 
         //RxApp.MainThreadScheduler.Schedule(LoadAlbums);
     }

@@ -27,7 +27,8 @@ public class FSPulsarClientWorker : BackgroundService
         }
     }
 
-    internal static async Task ProcessMessages(IConsumer<byte[]> consumer, ILogger logger, Func<Message<byte[]>, Task> f,
+    internal static async Task ProcessMessages(IConsumer<byte[]> consumer, ILogger logger,
+        Func<Message<byte[]>, Task> f,
         CancellationToken ct)
     {
         try
@@ -47,6 +48,7 @@ public class FSPulsarClientWorker : BackgroundService
                     logger.LogError(e, "Can't process message {0}, MessageId={1}", consumer.Topic, message.MessageId);
                     await consumer.NegativeAcknowledge(message.MessageId);
                 }
+
                 if (success)
                 {
                     await consumer.AcknowledgeAsync(message.MessageId);
@@ -82,12 +84,12 @@ public class FSPulsarClientWorker : BackgroundService
             .SubscribeAsync();
 
         var cts = new CancellationTokenSource();
-        Task.Run(() => ProcessMessages(consumer, logger, (message) =>
+        await Task.Run(() => ProcessMessages(consumer, logger, (message) =>
         {
             var messageText = Encoding.UTF8.GetString(message.Data);
-            logger.LogInformation("Received: {0}", messageText);
+            logger.LogInformation("Received: {MessageText}", messageText);
             return Task.CompletedTask;
-        }, cts.Token));
+        }, cts.Token), cts.Token);
 
         for (var i = 0; i < 100; i++)
         {
@@ -95,7 +97,7 @@ public class FSPulsarClientWorker : BackgroundService
         }
 
         cts.Dispose();
-        await Task.Delay(200); // wait for pending acknowledgments to complete
+        await Task.Delay(200, cts.Token); // wait for pending acknowledgments to complete
         await consumer.DisposeAsync();
         await producer.DisposeAsync();
         await client.CloseAsync();
@@ -106,7 +108,7 @@ public class FSPulsarClientWorker : BackgroundService
         PulsarClient.Logger = _logger;
         while (!stoppingToken.IsCancellationRequested)
         {
-            _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
+            _logger.LogInformation("Worker running at: {Time}", DateTimeOffset.Now);
             await RunRealWorld(_logger);
             await Task.Delay(10000, stoppingToken);
         }
