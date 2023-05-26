@@ -12,3 +12,10 @@ public interface IPulsarNode
     
     public bool IsExpanded { get; set; }
 }
+
+public class EmptyPulsarNode : IPulsarNode
+{
+    public IObservableCollection<IPulsarNode> SubNodes { get; init; } = new ObservableCollectionExtended<IPulsarNode>();
+    public string Name { get; init; } = "PLACEHOLDER";
+    public bool IsExpanded { get; set; } = false;
+}

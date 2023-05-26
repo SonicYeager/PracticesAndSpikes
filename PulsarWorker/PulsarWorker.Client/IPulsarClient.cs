@@ -1,8 +1,9 @@
 ﻿namespace PulsarWorker.Client;
 
-public interface IPulsarApi
+public interface IPulsarClient
 {
     public Task<IEnumerable<string>?> GetClusters();
+    public Task<IEnumerable<string>?> GetTenants();
     
     public Task<IEnumerable<string>?> GetNamespaces(string tenant);
 

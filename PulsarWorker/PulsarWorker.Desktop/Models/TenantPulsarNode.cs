@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Reactive.Concurrency;
-using System.Threading;
 using System.Threading.Tasks;
+using Avalonia.Controls;
 using DynamicData;
 using DynamicData.Binding;
 using PulsarWorker.Client;
@@ -10,23 +10,24 @@ using ReactiveUI;
 namespace PulsarWorker.Desktop.Models;
 
 /// <summary>
-/// Fetches all available Namespaces.
+/// Fetches Topics for given namespace name.
 /// </summary>
-public class RootPulsarNode : ReactiveObject, IPulsarNode
+public class TenantPulsarNode : ReactiveObject, IPulsarNode
 {
     private readonly IPulsarClient _pulsarClient;
-    public RootPulsarNode(IPulsarClient pulsarClient)
+    public TenantPulsarNode(string name, IPulsarClient pulsarClient)
     {
+        Name = name;
         _pulsarClient = pulsarClient;
     }
+
+    public IObservableCollection<IPulsarNode> SubNodes { get; init; }
+        = new ObservableCollectionExtended<IPulsarNode>()
+        {
+            new TopicPulsarNode("PLACEHOLDER")
+        };
+    public string Name { get; init; }
     
-    public IObservableCollection<IPulsarNode> SubNodes { get; init; } = new ObservableCollectionExtended<IPulsarNode>()
-    {
-        new EmptyPulsarNode()
-    };
-
-    public string Name { get; init; } = "Tenants";
-
     private bool _isExpanded = false;
     private bool _loaded = false;
 
@@ -48,11 +49,11 @@ public class RootPulsarNode : ReactiveObject, IPulsarNode
 
     private async void LoadAsync()
     {
-        var tenants = await _pulsarClient.GetTenants();
-        if (tenants != null)
-            foreach (var tenant in tenants)
+        var namespaces = await _pulsarClient.GetNamespaces(Name);
+        if (namespaces != null)
+            foreach (var namespc in namespaces)
             {
-                SubNodes.Add(new TenantPulsarNode(tenant, _pulsarClient));
+                SubNodes.Add(new NamespacePulsarNode(namespc, Name, _pulsarClient));
             }
 
         _loaded = true;

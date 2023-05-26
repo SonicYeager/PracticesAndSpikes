@@ -3,6 +3,7 @@ using System.Reactive.Concurrency;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using DynamicData.Binding;
+using PulsarWorker.Client;
 using ReactiveUI;
 
 namespace PulsarWorker.Desktop.Models;
@@ -12,15 +13,24 @@ namespace PulsarWorker.Desktop.Models;
 /// </summary>
 public class NamespacePulsarNode : ReactiveObject, IPulsarNode
 {
-    public NamespacePulsarNode(string name)
+    private readonly IPulsarClient _pulsarClient;
+    private readonly string _tenant;
+    public NamespacePulsarNode(string name, string tenant, IPulsarClient pulsarClient)
     {
         Name = name;
+        _pulsarClient = pulsarClient;
+        _tenant = tenant;
     }
 
-    public IObservableCollection<IPulsarNode> SubNodes { get; init; } = new ObservableCollectionExtended<IPulsarNode>();
+    public IObservableCollection<IPulsarNode> SubNodes { get; init; }
+        = new ObservableCollectionExtended<IPulsarNode>()
+        {
+            new TopicPulsarNode("PLACEHOLDER")
+        };
     public string Name { get; init; }
     
     private bool _isExpanded = false;
+    private bool _loaded = false;
 
     public bool IsExpanded
     {
@@ -29,20 +39,24 @@ public class NamespacePulsarNode : ReactiveObject, IPulsarNode
         {
             if (this.RaiseAndSetIfChanged(ref _isExpanded, value))
             {
-                RxApp.MainThreadScheduler.Schedule(LoadAsync);
+                if (_isExpanded && !_loaded)
+                {
+                    SubNodes.Clear();
+                    RxApp.MainThreadScheduler.Schedule(LoadAsync);
+                }
             }
         }
     }
 
     private async void LoadAsync()
     {
-        await Task.Run(() =>
-        {
-            SubNodes.Add(new TopicPulsarNode("location"));
-            Task.Delay(Random.Shared.Next(0, 100));
-            SubNodes.Add(new TopicPulsarNode("store"));
-            Task.Delay(Random.Shared.Next(0, 100));
-            SubNodes.Add(new TopicPulsarNode("load"));
-        });
+        var topics = await _pulsarClient.GetTopics(_tenant, Name);
+        if (topics != null)
+            foreach (var topic in topics)
+            {
+                SubNodes.Add(new TopicPulsarNode(topic));
+            }
+
+        _loaded = true;
     }
 }
