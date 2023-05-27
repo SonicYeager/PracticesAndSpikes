@@ -8,7 +8,7 @@ services:
       - "6650:6650"
       - "8080:8080"
     volumes:
-      - ./pulsar/data:/pulsar/data
+      - /pulsar/data #./pulsar/data:/pulsar/data for bind mount
     command: ["bin/pulsar", "standalone"]
     restart: always
 
