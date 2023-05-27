@@ -9,7 +9,7 @@ public class PulsarClient : IPulsarClient
     public PulsarClient(HttpClient client)
     {
         _client = client;
-        _client.BaseAddress ??= new Uri("http://localhost:8080");
+        _client.BaseAddress ??= new("http://localhost:8080");
     }
 
     public async Task<IEnumerable<string>?> GetClusters()

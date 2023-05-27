@@ -16,6 +16,6 @@ public class DesignTimeDatabaseContextFactory : IDesignTimeDbContextFactory<Data
         var optionsBuilder = new DbContextOptionsBuilder<DatabaseContext>();
         optionsBuilder.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
 
-        return new DatabaseContext(optionsBuilder.Options);
+        return new(optionsBuilder.Options);
     }
 }

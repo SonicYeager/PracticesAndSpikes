@@ -9,7 +9,7 @@ public class ApachePulsarProducerWorker : BackgroundService
 {
     private static async Task Produce()
     {
-        await using var client = PulsarClient.Builder().ServiceUrl(new Uri("pulsar://localhost:6650"))
+        await using var client = PulsarClient.Builder().ServiceUrl(new("pulsar://localhost:6650"))
             .Build();
 
         await using var producer = client.NewProducer(Schema.String)

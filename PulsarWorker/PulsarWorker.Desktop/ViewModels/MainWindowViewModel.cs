@@ -1,5 +1,7 @@
-﻿using System.Windows.Input;
+﻿using System;
+using System.Windows.Input;
 using Avalonia.Controls;
+using Microsoft.Extensions.DependencyInjection;
 using PulsarWorker.Desktop.Views;
 using ReactiveUI;
 
@@ -7,10 +9,9 @@ namespace PulsarWorker.Desktop.ViewModels;
 
 public class MainWindowViewModel : ViewModelBase
 {
-    private readonly PulsarApi _pulsarApiView;
-
+    private readonly IServiceProvider _serviceProvider;
+    
     private bool _paneOpen = false;
-
     public bool PaneState
     {
         get => _paneOpen;
@@ -18,9 +19,7 @@ public class MainWindowViewModel : ViewModelBase
     }
 
     public ICommand ShowSettings { get; }
-
     public ICommand ShowApi { get; }
-
     public ICommand TogglePane { get; }
 
     private Control _content = new TextBlock { Text = "Here follows some content soon!" };
@@ -33,9 +32,9 @@ public class MainWindowViewModel : ViewModelBase
 
     //public Interaction<MusicStoreViewModel, AlbumViewModel?> ShowDialog { get; }
 
-    public MainWindowViewModel(PulsarApi pulsarApiView)
+    public MainWindowViewModel(IServiceProvider serviceProvider)
     {
-        _pulsarApiView = pulsarApiView;
+        _serviceProvider = serviceProvider;
 
         TogglePane = ReactiveCommand.Create(() => { PaneState = !PaneState; });
         ShowSettings = ReactiveCommand.Create(() =>
@@ -43,7 +42,12 @@ public class MainWindowViewModel : ViewModelBase
             Content = new TextBlock { Text = "Settings page will follow soon!" };
             //TODO add ability to set host address and in future to configure auth
         });
-        ShowApi = ReactiveCommand.Create(() => { Content = _pulsarApiView; });
+        ShowApi = ReactiveCommand.Create(async () =>
+        {
+            var apiView = _serviceProvider.GetRequiredService<PulsarApi>();
+            await (apiView.DataContext as PulsarApiViewModel)?.LoadAsync()!;
+            Content = apiView;
+        });
 
         //ShowDialog = new Interaction<MusicStoreViewModel, AlbumViewModel?>();
 
