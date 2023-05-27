@@ -3,25 +3,37 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:PulsarWorker.Desktop.ViewModels"
+             xmlns:models="clr-namespace:PulsarWorker.Desktop.Models"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="PulsarWorker.Desktop.Views.PulsarApi">
 
     <Design.DataContext>
         <viewModels:PulsarApiViewModel />
     </Design.DataContext>
-    
-    <TreeView Items="{Binding Nodes}"
-              Width="400" Height="480"
-              HorizontalAlignment="Left">
-        <TreeView.Styles>
-            <Style Selector="TreeViewItem">
-                <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
-            </Style>
-        </TreeView.Styles>
-        <TreeView.ItemTemplate>
-            <TreeDataTemplate ItemsSource="{Binding SubNodes}">
-                <TextBlock Text="{Binding Name}"/>
-            </TreeDataTemplate>
-        </TreeView.ItemTemplate>
-    </TreeView>
+    <StackPanel>
+        <TreeView Items="{Binding Nodes}"
+                  Width="400" Height="480"
+                  HorizontalAlignment="Left">
+            <TreeView.Styles>
+                <Style Selector="TreeViewItem">
+                    <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+                </Style>
+            </TreeView.Styles>
+            <TreeView.ItemTemplate>
+                <TreeDataTemplate ItemsSource="{Binding SubNodes}">
+                    <TextBlock Text="{Binding Name}">
+                        <TextBlock.Styles>
+                            <Style Selector="MenuFlyoutPresenter MenuItem" x:DataType="models:IAction">
+                                <Setter Property="Header" Value="{Binding Header}"/>
+                                <Setter Property="Command" Value="{Binding Command}"/>
+                            </Style>
+                        </TextBlock.Styles>
+                        <TextBlock.ContextFlyout>
+                            <MenuFlyout Items="{Binding Actions}"/>
+                        </TextBlock.ContextFlyout>
+                    </TextBlock>
+                </TreeDataTemplate>
+            </TreeView.ItemTemplate>
+        </TreeView>
+    </StackPanel>
 </UserControl>

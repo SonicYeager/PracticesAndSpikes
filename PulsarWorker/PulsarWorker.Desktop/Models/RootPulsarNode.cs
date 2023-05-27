@@ -1,10 +1,9 @@
-﻿using System;
-using System.Reactive.Concurrency;
-using System.Threading;
+﻿using System.Reactive.Concurrency;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
-using DynamicData;
 using DynamicData.Binding;
 using PulsarWorker.Client;
+using PulsarWorker.Desktop.ViewModels;
 using ReactiveUI;
 
 namespace PulsarWorker.Desktop.Models;
@@ -15,11 +14,14 @@ namespace PulsarWorker.Desktop.Models;
 public class RootPulsarNode : ReactiveObject, IPulsarNode
 {
     private readonly IPulsarClient _pulsarClient;
+
     public RootPulsarNode(IPulsarClient pulsarClient)
     {
         _pulsarClient = pulsarClient;
+
+        Actions.Add(new Action("Create Tenant", ReactiveCommand.Create(async () => await CreateTenant())));
     }
-    
+
     public IObservableCollection<IPulsarNode> SubNodes { get; init; } = new ObservableCollectionExtended<IPulsarNode>()
     {
         new EmptyPulsarNode()
@@ -44,6 +46,17 @@ public class RootPulsarNode : ReactiveObject, IPulsarNode
                 }
             }
         }
+    }
+
+    public IObservableCollection<IAction> Actions { get; set; } = new ObservableCollectionExtended<IAction>();
+
+    public Interaction<ViewModelBase, IPulsarNode?> Interaction;
+
+    private async Task CreateTenant()
+    {
+        var res = await Interaction.Handle(new CreateTenantDialogViewModel(_pulsarClient));
+        if (res != null)
+            SubNodes.Add(res);
     }
 
     private async void LoadAsync()

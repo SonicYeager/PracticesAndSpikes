@@ -1,6 +1,4 @@
 ﻿using System.Reactive.Concurrency;
-using System.Threading.Tasks;
-using Avalonia.Controls;
 using DynamicData.Binding;
 using ReactiveUI;
 
@@ -32,6 +30,8 @@ public class TopicPulsarNode : ReactiveObject, IPulsarNode
             }
         }
     }
+
+    public IObservableCollection<IAction> Actions { get; set; } = new ObservableCollectionExtended<IAction>();
 
     private static void LoadAsync()
     {

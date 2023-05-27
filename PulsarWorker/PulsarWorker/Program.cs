@@ -1,5 +1,4 @@
 using PulsarWorker.DotPulsarWorker;
-using PulsarWorker.FsWorker;
 
 var host = Host.CreateDefaultBuilder(args)
     .ConfigureServices(services =>

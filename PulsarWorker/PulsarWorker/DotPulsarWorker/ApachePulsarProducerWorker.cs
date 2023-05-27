@@ -1,9 +1,6 @@
-using System.Text;
 using System.Text.Json;
 using DotPulsar;
 using DotPulsar.Extensions;
-using PulsarWorker.Data;
-using PulsarWorker.Data.PulsarMessages;
 using BaseMessage = PulsarWorker.Data.BaseMessage;
 
 namespace PulsarWorker.DotPulsarWorker;
