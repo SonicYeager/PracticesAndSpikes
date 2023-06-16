@@ -3,22 +3,44 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:PulsarWorker.Desktop.ViewModels"
-             xmlns:models="clr-namespace:PulsarWorker.Desktop.Models"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="PulsarWorker.Desktop.Views.PulsarApi">
 
     <Design.DataContext>
         <viewModels:PulsarApiViewModel />
     </Design.DataContext>
-    <StackPanel>
-        <TreeView Items="{Binding Nodes}"
-                  Width="400" Height="480"
-                  HorizontalAlignment="Left">
-            <TreeView.ItemTemplate>
-                <TreeDataTemplate ItemsSource="{Binding SubNodes}">
-                    <TextBlock Text="{Binding Name}"/>
-                </TreeDataTemplate>
-            </TreeView.ItemTemplate>
-        </TreeView>
-    </StackPanel>
+    <Grid ColumnDefinitions="2*,3*">
+
+        <StackPanel>
+            <TextBlock Text="PulsarNodes"
+                       FontSize="18"
+                       FontWeight="Bold"
+                       Margin="0,0,0,5" />
+
+            <TreeView Items="{Binding Nodes}"
+                      Width="400"
+                      HorizontalAlignment="Stretch"
+                      Margin="0,5,0,0">
+                <TreeView.ItemTemplate>
+                    <TreeDataTemplate ItemsSource="{Binding SubNodes}">
+                        <TextBlock Text="{Binding Name}" />
+                    </TreeDataTemplate>
+                </TreeView.ItemTemplate>
+            </TreeView>
+
+        </StackPanel>
+
+        <StackPanel Grid.Column="1"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center">
+            <TextBlock Text="Detail Page coming soon..."
+                       FontSize="16"
+                       FontWeight="Bold"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       Margin="10" />
+            <!-- Add InspectionPanel (detail page for selected node (incl interactions)) -->
+        </StackPanel>
+    </Grid>
+
 </UserControl>
