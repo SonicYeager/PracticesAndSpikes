@@ -1,6 +1,6 @@
 ﻿namespace PulsarWorker.Data.Entities;
 
-public class PulsarMessageEntity
+public sealed class PulsarMessageEntity
 {
     public string MessageId { get; set; } = null!;
     public DateTime ReceivedAt { get; set; }

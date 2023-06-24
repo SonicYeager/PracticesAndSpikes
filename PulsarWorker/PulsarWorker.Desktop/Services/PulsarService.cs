@@ -9,7 +9,7 @@ using ReactiveUI;
 
 namespace PulsarWorker.Desktop.Services;
 
-public class PulsarService
+public sealed class PulsarService
 {
     private readonly IPulsarClient _pulsarClient;
 
@@ -47,17 +47,14 @@ public class PulsarService
         return await Load(
             nmspc,
             removeSelf,
-            async parent => await _pulsarClient.GetTopics(tenant, parent),
-            async (node, rmSlf) => await GetTopicNode(node, rmSlf));
+            async parent => await _pulsarClient.GetTopics(tenant, parent), static async (node, rmSlf) => await GetTopicNode(node, rmSlf));
     }
 
-    private async Task<PulsarNode> GetTopicNode(string nmspc, Action<PulsarNode> removeSelf)
+    private static async Task<PulsarNode> GetTopicNode(string nmspc, Action<PulsarNode> removeSelf)
     {
         return await Load(
             nmspc,
-            removeSelf,
-            _ => Task.FromResult<IEnumerable<string>?>(null),
-            (_, _) => Task.FromResult<PulsarNode>(default!));
+            removeSelf, static _ => Task.FromResult<IEnumerable<string>?>(null), static (_, _) => Task.FromResult<PulsarNode>(default!));
     }
 
     private static async Task<PulsarNode> Load(string parentNode, Action<PulsarNode> removeSelf,
@@ -73,7 +70,7 @@ public class PulsarService
             }
 
         var tenantNode = new PulsarNode(collection, parentNode, ReactiveCommand.Create(removeSelf),
-            ReactiveCommand.Create(() => { }));
+            ReactiveCommand.Create(static () => { }));
         return tenantNode;
     }
 }

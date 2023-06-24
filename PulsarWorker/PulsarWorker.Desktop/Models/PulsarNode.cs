@@ -7,7 +7,7 @@ namespace PulsarWorker.Desktop.Models;
 /// <summary>
 /// Fetches all available Namespaces.
 /// </summary>
-public class PulsarNode
+public sealed class PulsarNode
 {
     public PulsarNode(ObservableCollection<PulsarNode> subNodes, string name, IReactiveCommand deleteCommand,
         IReactiveCommand addCommand)

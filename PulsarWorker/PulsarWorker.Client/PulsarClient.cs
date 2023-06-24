@@ -2,7 +2,7 @@
 
 namespace PulsarWorker.Client;
 
-public class PulsarClient : IPulsarClient
+public sealed class PulsarClient : IPulsarClient
 {
     private readonly HttpClient _client;
 

@@ -6,7 +6,7 @@ using System;
 
 namespace PulsarWorker.Desktop;
 
-public class ViewLocator : IDataTemplate
+public sealed class ViewLocator : IDataTemplate
 {
     private readonly IServiceProvider _serviceProvider;
     public ViewLocator(IServiceProvider serviceProvider)
@@ -19,11 +19,12 @@ public class ViewLocator : IDataTemplate
         var type = Type.GetType(name);
 
         if (type != null)
-        {
             return (Control)_serviceProvider.GetRequiredService(type);
-        }
 
-        return new TextBlock { Text = "Not Found: " + name };
+        return new TextBlock
+        {
+            Text = "Not Found: " + name,
+        };
     }
 
     public bool Match(object data)

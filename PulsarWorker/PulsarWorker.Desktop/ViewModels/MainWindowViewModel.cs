@@ -7,10 +7,10 @@ using ReactiveUI;
 
 namespace PulsarWorker.Desktop.ViewModels;
 
-public class MainWindowViewModel : ViewModelBase
+public sealed class MainWindowViewModel : ViewModelBase
 {
     private readonly IServiceProvider _serviceProvider;
-    
+
     private bool _paneOpen = false;
     public bool PaneState
     {
@@ -22,7 +22,10 @@ public class MainWindowViewModel : ViewModelBase
     public ICommand ShowApi { get; }
     public ICommand TogglePane { get; }
 
-    private Control _content = new TextBlock { Text = "Here follows some content soon!" };
+    private Control _content = new TextBlock
+    {
+        Text = "Here follows some content soon!",
+    };
 
     public Control Content
     {
@@ -39,7 +42,10 @@ public class MainWindowViewModel : ViewModelBase
         TogglePane = ReactiveCommand.Create(() => { PaneState = !PaneState; });
         ShowSettings = ReactiveCommand.Create(() =>
         {
-            Content = new TextBlock { Text = "Settings page will follow soon!" };
+            Content = new TextBlock
+            {
+                Text = "Settings page will follow soon!"
+            };
             //TODO add ability to set host address and in future to configure auth
         });
         ShowApi = ReactiveCommand.Create(async () =>

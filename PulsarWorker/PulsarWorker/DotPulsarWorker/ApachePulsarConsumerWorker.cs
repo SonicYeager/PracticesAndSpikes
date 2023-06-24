@@ -5,7 +5,7 @@ using BaseMessage = PulsarWorker.Data.BaseMessage;
 
 namespace PulsarWorker.DotPulsarWorker;
 
-public class ApachePulsarConsumerWorker : BackgroundService
+public sealed class ApachePulsarConsumerWorker : BackgroundService
 {
     private static async Task RunRealWorld(CancellationToken cancellationToken)
     {

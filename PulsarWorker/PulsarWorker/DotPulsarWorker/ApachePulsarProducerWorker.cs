@@ -5,7 +5,7 @@ using BaseMessage = PulsarWorker.Data.BaseMessage;
 
 namespace PulsarWorker.DotPulsarWorker;
 
-public class ApachePulsarProducerWorker : BackgroundService
+public sealed class ApachePulsarProducerWorker : BackgroundService
 {
     private static async Task Produce()
     {

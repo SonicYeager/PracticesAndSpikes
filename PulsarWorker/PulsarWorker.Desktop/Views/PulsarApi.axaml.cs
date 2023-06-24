@@ -3,7 +3,7 @@ using Avalonia.Markup.Xaml;
 
 namespace PulsarWorker.Desktop.Views;
 
-public partial class PulsarApi : UserControl
+public sealed partial class PulsarApi : UserControl
 {
     public PulsarApi()
     {

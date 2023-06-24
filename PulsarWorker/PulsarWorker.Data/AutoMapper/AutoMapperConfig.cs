@@ -4,7 +4,7 @@ using PulsarWorker.Data.PulsarMessages;
 
 namespace PulsarWorker.Data.AutoMapper;
 
-public class AutoMapperConfig : Profile
+public sealed class AutoMapperConfig : Profile
 {
     public AutoMapperConfig()
     {

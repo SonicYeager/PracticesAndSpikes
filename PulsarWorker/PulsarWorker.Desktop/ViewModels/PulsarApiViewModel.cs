@@ -6,7 +6,7 @@ using PulsarWorker.Desktop.Services;
 
 namespace PulsarWorker.Desktop.ViewModels;
 
-public class PulsarApiViewModel : ViewModelBase
+public sealed class PulsarApiViewModel : ViewModelBase
 {
     private PulsarService _service;
 

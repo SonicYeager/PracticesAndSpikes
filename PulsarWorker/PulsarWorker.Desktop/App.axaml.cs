@@ -12,27 +12,27 @@ using PulsarApi = PulsarWorker.Desktop.Views.PulsarApi;
 
 namespace PulsarWorker.Desktop;
 
-public class App : Application
+public sealed class App : Application
 {
     private IServiceProvider ServiceProvider { get; set; } = null!;
     private IServiceCollection ServiceCollection { get; } = new ServiceCollection();
 
     public override void Initialize()
     {
-        ServiceCollection.AddTransient<HttpClient>(d => new()
+        ServiceCollection.AddTransient<HttpClient>(static d => new()
         {
-            BaseAddress = new("http://localhost:8080")
+            BaseAddress = new("http://localhost:8080"),
         });
         ServiceCollection.AddTransient<IPulsarClient, PulsarClient>();
         ServiceCollection.AddTransient<PulsarService>();
         ServiceCollection.AddTransient<MainWindowViewModel>();
         ServiceCollection.AddTransient<PulsarApiViewModel>();
-        
-        ServiceCollection.AddTransient<PulsarApi>(d => new()
+
+        ServiceCollection.AddTransient<PulsarApi>(static d => new()
         {
             DataContext = d.GetRequiredService<PulsarApiViewModel>(),
         });
-        ServiceCollection.AddSingleton<MainWindow>(d => new()
+        ServiceCollection.AddSingleton<MainWindow>(static d => new()
         {
             DataContext = d.GetRequiredService<MainWindowViewModel>(),
         });
@@ -46,9 +46,7 @@ public class App : Application
     public override void OnFrameworkInitializationCompleted()
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-        {
             desktop.MainWindow = ServiceProvider.GetRequiredService<MainWindow>();
-        }
 
         base.OnFrameworkInitializationCompleted();
     }
