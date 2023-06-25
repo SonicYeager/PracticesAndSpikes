@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
-using DynamicData.Binding;
 using PulsarWorker.Client;
 using PulsarWorker.Desktop.Models;
 using ReactiveUI;

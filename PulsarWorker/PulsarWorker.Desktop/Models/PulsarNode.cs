@@ -1,5 +1,4 @@
 ﻿using System.Collections.ObjectModel;
-using DynamicData.Binding;
 using ReactiveUI;
 
 namespace PulsarWorker.Desktop.Models;

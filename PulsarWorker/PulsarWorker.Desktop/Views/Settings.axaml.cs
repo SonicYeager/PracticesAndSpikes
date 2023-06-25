@@ -1,11 +1,11 @@
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 
 namespace PulsarWorker.Desktop.Views;
 
-public sealed partial class MainWindow : Window
+public partial class Settings : UserControl
 {
-    public MainWindow()
+    public Settings()
     {
         AvaloniaXamlLoader.Load(this);
     }

@@ -19,7 +19,7 @@ public class FSPulsarClientWorker : BackgroundService
         try
         {
             var messageId = await producer.SendAsync(message);
-            logger.LogInformation("MessageSent to {0}. MessageId={1}", producer.Topic, messageId);
+            logger.LogInformation("MessageSent to {0}. Id={1}", producer.Topic, messageId);
         }
         catch (Exception ex)
         {
@@ -45,7 +45,7 @@ public class FSPulsarClientWorker : BackgroundService
                 }
                 catch (Exception e)
                 {
-                    logger.LogError(e, "Can't process message {0}, MessageId={1}", consumer.Topic, message.MessageId);
+                    logger.LogError(e, "Can't process message {0}, Id={1}", consumer.Topic, message.MessageId);
                     await consumer.NegativeAcknowledge(message.MessageId);
                 }
 

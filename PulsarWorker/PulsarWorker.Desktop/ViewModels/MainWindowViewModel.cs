@@ -40,13 +40,11 @@ public sealed class MainWindowViewModel : ViewModelBase
         _serviceProvider = serviceProvider;
 
         TogglePane = ReactiveCommand.Create(() => { PaneState = !PaneState; });
-        ShowSettings = ReactiveCommand.Create(() =>
+        ShowSettings = ReactiveCommand.Create(async () =>
         {
-            Content = new TextBlock
-            {
-                Text = "Settings page will follow soon!"
-            };
-            //TODO add ability to set host address and in future to configure auth
+            var settingsView = _serviceProvider.GetRequiredService<Settings>();
+            await (settingsView.DataContext as SettingsViewModel)?.LoadAsync()!;
+            Content = settingsView;
         });
         ShowApi = ReactiveCommand.Create(async () =>
         {

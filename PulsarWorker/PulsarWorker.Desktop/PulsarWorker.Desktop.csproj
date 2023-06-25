@@ -31,5 +31,12 @@
     </ItemGroup>
     <ItemGroup>
       <ProjectReference Include="..\PulsarWorker.Client\PulsarWorker.Client.csproj" />
+      <ProjectReference Include="..\PulsarWorker.Database\PulsarWorker.Database.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+      <None Remove="appsettings.json" />
+      <Content Include="appsettings.json">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
     </ItemGroup>
 </Project>

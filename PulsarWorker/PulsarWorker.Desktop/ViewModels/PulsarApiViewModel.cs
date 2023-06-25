@@ -1,6 +1,5 @@
 ﻿using System.Collections.ObjectModel;
 using System.Threading.Tasks;
-using DynamicData.Binding;
 using PulsarWorker.Desktop.Models;
 using PulsarWorker.Desktop.Services;
 
