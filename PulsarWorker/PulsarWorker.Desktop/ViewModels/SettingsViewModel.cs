@@ -1,9 +1,6 @@
 ﻿using System.Collections.ObjectModel;
-using System.Linq;
 using System.Threading.Tasks;
-using DynamicData;
 using PulsarWorker.Desktop.Models;
-using PulsarWorker.Desktop.Views.Components;
 
 namespace PulsarWorker.Desktop.ViewModels;
 

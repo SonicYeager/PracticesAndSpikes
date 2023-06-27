@@ -25,20 +25,24 @@ public sealed class SettingsModel
         var settingsEntities = context.Set<SettingsEntity>().Where(s => s.UserId == userId);
         foreach (var settingsEntity in settingsEntities)
         {
-            object setting = null!;
-
             if (settingsEntity.Key == "Pulsar Host")
             {
-                setting = new TextSetting
-                {
-                    DataContext = new TextSettingViewModel("Pulsar Host")
-                    {
-                        Text = settingsEntity.Value,
-                    },
-                };
+                var textSetting = CreateTextSetting("Pulsar Host", settingsEntity.Value);
+                observableCollection.Add(textSetting);
             }
-
-            observableCollection.Add(setting);
         }
+    }
+
+    private static TextSetting CreateTextSetting(string host, string value)
+    {
+        var textSettingViewModel = new TextSettingViewModel(host)
+        {
+            Text = value,
+        };
+
+        return new TextSetting
+        {
+            DataContext = textSettingViewModel,
+        };
     }
 }

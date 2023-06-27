@@ -9,7 +9,7 @@
     <Design.DataContext>
         <viewModels:PulsarApiViewModel />
     </Design.DataContext>
-    
+
     <Grid ColumnDefinitions="2*,3*">
 
         <StackPanel>

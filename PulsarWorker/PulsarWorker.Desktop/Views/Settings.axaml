@@ -6,25 +6,28 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="PulsarWorker.Desktop.Views.Settings">
 
+    <UserControl.Styles>
+        <Style Selector="TextBlock"> <!-- Defined style globally -->
+            <Setter Property="FontSize" Value="18" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Margin" Value="0,0,0,5" />
+        </Style>
+    </UserControl.Styles>
+
     <Design.DataContext>
         <viewModels:SettingsViewModel />
     </Design.DataContext>
 
-    <Grid ColumnDefinitions="2*,3*">
-
-        <StackPanel>
-            <TextBlock Text="Settings"
-                       FontSize="18"
-                       FontWeight="Bold"
-                       Margin="0,0,0,5" />
+    <DockPanel LastChildFill="False">
+        <StackPanel DockPanel.Dock="Left">
+            <TextBlock Text="Settings" />
 
             <ItemsRepeater Items="{Binding PersistedOptions}"
                            Width="400"
                            HorizontalAlignment="Stretch"
                            Margin="0,5,0,0">
-                <UserControl Content="{Binding }"/>
+                <UserControl Content="{Binding }" />
             </ItemsRepeater>
-
         </StackPanel>
-    </Grid>
+    </DockPanel>
 </UserControl>
