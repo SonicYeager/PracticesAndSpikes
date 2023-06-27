@@ -1,3 +1,4 @@
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -19,7 +20,7 @@ public sealed class SettingsModel
         _dbContextOptions = dbContextOptions;
     }
 
-    public async Task GetPersistedSettings(ObservableCollection<object> observableCollection, int userId)
+    public async Task GetPersistedSettings(ObservableCollection<object> observableCollection, Func<Task> onSuccess, int userId = 1)
     {
         await using var context = Repository.Connect(_dbContextOptions);
         var settingsEntities = context.Set<SettingsEntity>().Where(s => s.UserId == userId);
@@ -27,15 +28,15 @@ public sealed class SettingsModel
         {
             if (settingsEntity.Key == "Pulsar Host")
             {
-                var textSetting = CreateTextSetting("Pulsar Host", settingsEntity.Value);
+                var textSetting = CreateTextSetting("Pulsar Host", settingsEntity.Value, onSuccess);
                 observableCollection.Add(textSetting);
             }
         }
     }
 
-    private static TextSetting CreateTextSetting(string host, string value)
+    private TextSetting CreateTextSetting(string host, string? value, Func<Task> onSuccess)
     {
-        var textSettingViewModel = new TextSettingViewModel(host)
+        var textSettingViewModel = new TextSettingViewModel(host, async (key, newValue) => await PersistSetting(key, newValue, onSuccess))
         {
             Text = value,
         };
@@ -44,5 +45,15 @@ public sealed class SettingsModel
         {
             DataContext = textSettingViewModel,
         };
+    }
+
+    private async Task PersistSetting(string key, object? value, Func<Task> onSuccess, int userId = 1)
+    {
+        await using var context = Repository.Connect(_dbContextOptions);
+
+        var existing = await context.Set<SettingsEntity>().FirstAsync(s => s.UserId == userId && s.Key == key);
+        existing.Value = value as string;
+        await context.SaveChangesAsync();
+        await onSuccess();
     }
 }

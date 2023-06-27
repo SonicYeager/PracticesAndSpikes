@@ -21,13 +21,12 @@
     <DockPanel LastChildFill="False">
         <StackPanel DockPanel.Dock="Left">
             <TextBlock Text="Settings" />
-
-            <ItemsRepeater Items="{Binding PersistedOptions}"
+            <ItemsControl ItemsSource="{Binding PersistedOptions}"
                            Width="400"
                            HorizontalAlignment="Stretch"
                            Margin="0,5,0,0">
-                <UserControl Content="{Binding }" />
-            </ItemsRepeater>
+
+            </ItemsControl>
         </StackPanel>
     </DockPanel>
 </UserControl>

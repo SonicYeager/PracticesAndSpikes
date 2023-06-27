@@ -6,6 +6,7 @@ using PulsarWorker.Desktop.ViewModels;
 using PulsarWorker.Desktop.Views;
 using System;
 using System.Net.Http;
+using Avalonia.Controls.Notifications;
 using Microsoft.Extensions.Configuration;
 using PulsarWorker.Client;
 using PulsarWorker.Data.AutoMapper;
@@ -49,25 +50,30 @@ namespace PulsarWorker.Desktop
             Services.AddTransient<SettingsModel>();
             Services.AddTransient(static _ => new HttpClient
             {
-                BaseAddress = new("http://localhost:8080"),
+                BaseAddress = new("http://localhost:8080"), //TODO enable change of address via settings
             });
             Services.AddTransient<IPulsarClient, PulsarClient>();
             Services.AddTransient<PulsarTreeModel>();
             Services.AddTransient<MainWindowViewModel>();
             Services.AddTransient<PulsarApiViewModel>();
             Services.AddTransient<SettingsViewModel>();
-            Services.AddTransient(_ => new Settings
+            Services.AddTransient<Settings>(_ => new()
             {
                 DataContext = ServiceProvider.GetRequiredService<SettingsViewModel>(),
             });
-            Services.AddTransient(_ => new PulsarApi
+            Services.AddTransient<PulsarApi>(_ => new()
             {
                 DataContext = ServiceProvider.GetRequiredService<PulsarApiViewModel>(),
             });
-            Services.AddSingleton(_ => new MainWindow
+            Services.AddSingleton<MainWindow>(_ => new()
             {
                 DataContext = ServiceProvider.GetRequiredService<MainWindowViewModel>(),
             });
+            Services.AddSingleton<IManagedNotificationManager, WindowNotificationManager>(
+                _ => new(ServiceProvider.GetRequiredService<MainWindow>())
+                {
+                    Position = NotificationPosition.BottomRight, MaxItems = 5,
+                });
         }
 
         private void BuildServiceProvider()

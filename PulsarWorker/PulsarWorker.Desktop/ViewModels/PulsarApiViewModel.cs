@@ -12,12 +12,6 @@ public sealed class PulsarApiViewModel : ViewModelBase
     public PulsarApiViewModel(PulsarTreeModel treeModel)
     {
         _treeModel = treeModel;
-
-        //this.WhenAnyValue(x => x.Nodes.When(n => n.)) //TODO abuse this for interaction?
-        //    .Subscribe(x =>
-        //    {
-        //        if(x > 1) throw new InvalidOperationException("Cannot have more than one root node!");
-        //    });
     }
 
     public async Task LoadAsync()

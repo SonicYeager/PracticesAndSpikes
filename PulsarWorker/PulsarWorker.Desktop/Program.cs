@@ -1,6 +1,7 @@
 ﻿using Avalonia;
 using Avalonia.ReactiveUI;
 using System;
+using Avalonia.Dialogs;
 
 namespace PulsarWorker.Desktop;
 
@@ -18,5 +19,6 @@ file static class Program
         => AppBuilder.Configure<App>()
             .UsePlatformDetect()
             .LogToTrace()
+            .UseManagedSystemDialogs()
             .UseReactiveUI();
 }
