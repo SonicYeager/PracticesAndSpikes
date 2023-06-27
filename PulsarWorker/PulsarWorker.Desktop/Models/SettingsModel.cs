@@ -40,7 +40,7 @@ public sealed class SettingsModel
             Text = value,
         };
 
-        return new TextSetting
+        return new()
         {
             DataContext = textSettingViewModel,
         };

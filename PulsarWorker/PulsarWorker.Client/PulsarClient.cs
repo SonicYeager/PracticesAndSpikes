@@ -14,22 +14,22 @@ public sealed class PulsarClient : IPulsarClient
 
     public async Task<IEnumerable<string>?> GetClusters()
     {
-        return await GetResourcesAsync(new Uri("/admin/v2/clusters", UriKind.Relative));
+        return await GetResourcesAsync(new("/admin/v2/clusters", UriKind.Relative));
     }
 
     public async Task<IEnumerable<string>?> GetTenants()
     {
-        return await GetResourcesAsync(new Uri("/admin/v2/tenants", UriKind.Relative));
+        return await GetResourcesAsync(new("/admin/v2/tenants", UriKind.Relative));
     }
 
     public async Task<IEnumerable<string>?> GetNamespaces(string tenant)
     {
-        return await GetResourcesAsync(new Uri($"/admin/v2/namespaces/{tenant}", UriKind.Relative));
+        return await GetResourcesAsync(new($"/admin/v2/namespaces/{tenant}", UriKind.Relative));
     }
 
     public async Task<IEnumerable<string>?> GetTopics(string tenant, string pulsarNamespace)
     {
-        return await GetResourcesAsync(new Uri($"/persistent/{tenant}/{pulsarNamespace}", UriKind.Relative));
+        return await GetResourcesAsync(new($"/persistent/{tenant}/{pulsarNamespace}", UriKind.Relative));
     }
 
     public async Task<HttpResponseMessage> DeleteTopic(string tenant, string pulsarNamespace, string topic)

@@ -1,17 +1,17 @@
 ﻿using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using PulsarWorker.Desktop.Models;
-using PulsarWorker.Desktop.Services;
+using PulsarWorker.Desktop.ViewModels.Components;
 
 namespace PulsarWorker.Desktop.ViewModels;
 
 public sealed class PulsarApiViewModel : ViewModelBase
 {
-    private PulsarService _service;
+    private PulsarTreeModel _treeModel;
 
-    public PulsarApiViewModel(PulsarService service)
+    public PulsarApiViewModel(PulsarTreeModel treeModel)
     {
-        _service = service;
+        _treeModel = treeModel;
 
         //this.WhenAnyValue(x => x.Nodes.When(n => n.)) //TODO abuse this for interaction?
         //    .Subscribe(x =>
@@ -22,9 +22,9 @@ public sealed class PulsarApiViewModel : ViewModelBase
 
     public async Task LoadAsync()
     {
-        await _service.GetPulsarNodeTree(Nodes);
+        await _treeModel.GetPulsarNodeTree(Nodes);
     }
 
-    public ObservableCollection<PulsarNode> Nodes { get; init; } = new();
+    public ObservableCollection<PulsarNodeViewModel> Nodes { get; init; } = new();
 
 }

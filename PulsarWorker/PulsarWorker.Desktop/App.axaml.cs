@@ -11,7 +11,6 @@ using PulsarWorker.Client;
 using PulsarWorker.Data.AutoMapper;
 using PulsarWorker.Database.Extensions;
 using PulsarWorker.Desktop.Models;
-using PulsarWorker.Desktop.Services;
 using PulsarApi = PulsarWorker.Desktop.Views.PulsarApi;
 
 namespace PulsarWorker.Desktop
@@ -53,7 +52,7 @@ namespace PulsarWorker.Desktop
                 BaseAddress = new("http://localhost:8080"),
             });
             Services.AddTransient<IPulsarClient, PulsarClient>();
-            Services.AddTransient<PulsarService>();
+            Services.AddTransient<PulsarTreeModel>();
             Services.AddTransient<MainWindowViewModel>();
             Services.AddTransient<PulsarApiViewModel>();
             Services.AddTransient<SettingsViewModel>();

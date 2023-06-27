@@ -1,14 +1,11 @@
 ﻿using System.Collections.ObjectModel;
 using ReactiveUI;
 
-namespace PulsarWorker.Desktop.Models;
+namespace PulsarWorker.Desktop.ViewModels.Components;
 
-/// <summary>
-/// Fetches all available Namespaces.
-/// </summary>
-public sealed class PulsarNode
+public class PulsarNodeViewModel : ViewModelBase
 {
-    public PulsarNode(ObservableCollection<PulsarNode> subNodes, string name, IReactiveCommand deleteCommand,
+    public PulsarNodeViewModel(ObservableCollection<PulsarNodeViewModel> subNodes, string name, IReactiveCommand deleteCommand,
         IReactiveCommand addCommand)
     {
         SubNodes = subNodes;
@@ -17,7 +14,7 @@ public sealed class PulsarNode
         AddCommand = addCommand;
     }
 
-    public ObservableCollection<PulsarNode> SubNodes { get; init; }
+    public ObservableCollection<PulsarNodeViewModel> SubNodes { get; init; }
     public string Name { get; init; }
     public IReactiveCommand DeleteCommand { get; init; }
     public IReactiveCommand AddCommand { get; set; }
