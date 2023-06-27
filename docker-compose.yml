@@ -1,22 +1,31 @@
-
 version: "3.8"
+
 services:
+
+  # Pulsar messaging service
   pulsar:
     container_name: local_pulsar
     image: apachepulsar/pulsar:latest
+    command: ["bin/pulsar", "standalone"]
+    volumes:
+      - /pulsar/data # For bind mount, use: ./pulsar/data:/pulsar/data
     ports:
       - "6650:6650"
       - "8080:8080"
-    volumes:
-      - /pulsar/data #./pulsar/data:/pulsar/data for bind mount
-    command: ["bin/pulsar", "standalone"]
     restart: always
 
+  # Pulsar worker service
+  pulsar-worker:
+    container_name: pulsar_worker
+    image: pulsar-worker
+    restart: always
+
+  # MariaDB service
   mariadb:
     container_name: local_db
     image: mariadb:latest
-    ports:
-      - "3306:3306"
     environment:
       - MARIADB_ROOT_PASSWORD=my-secret
+    ports:
+      - "3306:3306"
     restart: always

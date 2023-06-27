@@ -9,18 +9,18 @@ public sealed class ApachePulsarProducerWorker : BackgroundService
 {
     private static async Task Produce()
     {
-        await using var client = PulsarClient.Builder().ServiceUrl(new("pulsar://localhost:6650"))
+        await using var client = PulsarClient.Builder().ServiceUrl(new("pulsar://pulsar:6650"))
             .Build();
 
         await using var producer = client.NewProducer(Schema.String)
             .Topic("persistent://public/default/mytopic")
             .Create();
 
-        for (var i = 0; i < Random.Shared.Next(10); i++)
+        for (var i = 0; i < 10; i++)
         {
             var data = new BaseMessage(Guid.NewGuid().ToString(), DateTime.Now);
             var encoded = JsonSerializer.Serialize(data);
-            
+
             await producer.Send(encoded);
         }
     }

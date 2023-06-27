@@ -9,7 +9,7 @@ public sealed class ApachePulsarConsumerWorker : BackgroundService
 {
     private static async Task RunRealWorld(CancellationToken cancellationToken)
     {
-        await using var client = PulsarClient.Builder().ServiceUrl(new("pulsar://localhost:6650"))
+        await using var client = PulsarClient.Builder().ServiceUrl(new("pulsar://pulsar:6650"))
             .Build();
 
         await using var consumer = client.NewConsumer(Schema.String)
@@ -20,9 +20,9 @@ public sealed class ApachePulsarConsumerWorker : BackgroundService
         await foreach (var message in consumer.Messages(cancellationToken))
         {
             var decoded = JsonSerializer.Deserialize<BaseMessage>(message.Value());
-            
+
             Console.WriteLine("Received: " + decoded?.MessageId);
-            await consumer.Acknowledge(message, cancellationToken: cancellationToken);
+            await consumer.Acknowledge(message, cancellationToken);
         }
     }
 
