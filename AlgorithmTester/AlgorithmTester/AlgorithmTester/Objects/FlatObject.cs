@@ -2,5 +2,5 @@
 
 public class FlatObject
 {
-    public string Name { get; set; } = "Name?";
+    public decimal Weight { get; set; } = 3.5m;
 }

@@ -44,5 +44,9 @@ public class ValidatesName : IValidationRule<Person>
     {
         if (entity.Collection.Count >= 0)
             return new ValidationFailure("Can not be empty.", FieldPathCreator<Person>.GetPath(e => e.Collection[1]));
+        else
+        {
+            throw new NotImplementedException();
+        }
     }
 }
