@@ -19,6 +19,8 @@ services:
     container_name: pulsar_worker
     image: pulsar-worker
     restart: always
+    depends_on:
+      - pulsar
 
   # MariaDB service
   mariadb:
@@ -29,3 +31,17 @@ services:
     ports:
       - "3306:3306"
     restart: always
+
+  # NuGet (BaGet) server for local dev nugets
+  baget:
+    container_name: BaGet
+    image: loicsharma/baget:latest
+    env_file:
+      - /BaGetVolume/baget.env
+    ports:
+      - "5555:80"
+    volumes:
+        - /BaGetVolume/baget-data:/var/baget
+    restart: always
+
+  #TODO add smtp4dev service
