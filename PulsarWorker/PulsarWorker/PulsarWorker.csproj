@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Worker">
 
     <PropertyGroup>
-        <TargetFramework>net7.0</TargetFramework>
+        <TargetFramework>net8.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <UserSecretsId>dotnet-PulsarWorker-9C4775C2-C7C5-447B-943A-4B02D3368B65</UserSecretsId>
@@ -10,10 +10,10 @@
 
     <ItemGroup>
         <PackageReference Include="AutoBogus.Conventions" Version="2.13.1" />
-        <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
+        <PackageReference Include="AutoMapper" Version="12.0.2-preview.0.4" />
         <PackageReference Include="DotPulsar" Version="2.11.0" />
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
-        <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0-preview.5.23280.8" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0-preview.5.23280.8" />
         <PackageReference Include="Pulsar.Client" Version="2.12.2" />
     </ItemGroup>
 
