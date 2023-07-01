@@ -3,10 +3,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace PulsarWorker.Database.Context;
 
-public class PulsarWorkerDbContext : DbContext
+public sealed class PulsarWorkerDbContext : DbContext
 {
     public PulsarWorkerDbContext(DbContextOptions<PulsarWorkerDbContext> options) : base(options)
     {
+        Database.EnsureCreated();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

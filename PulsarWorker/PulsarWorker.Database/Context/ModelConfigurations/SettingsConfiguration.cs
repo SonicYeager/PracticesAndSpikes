@@ -23,6 +23,13 @@ public class SettingsConfiguration : IEntityTypeConfiguration<SettingsEntity>
                 Value = "",
                 UserId = 1,
             },
+            new()
+            {
+                Id = 2,
+                Key = "App Theme",
+                Value = "Dark",
+                UserId = 1,
+            },
         });
     }
 }

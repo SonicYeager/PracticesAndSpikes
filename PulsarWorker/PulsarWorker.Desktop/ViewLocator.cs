@@ -13,9 +13,9 @@ public sealed class ViewLocator : IDataTemplate
     {
         _serviceProvider = serviceProvider;
     }
-    public Control Build(object data)
+    public Control Build(object? data)
     {
-        var name = data.GetType().FullName!.Replace("ViewModel", "View");
+        var name = data?.GetType().FullName!.Replace("ViewModel", "View");
         var type = Type.GetType(name);
 
         if (type != null)
@@ -27,7 +27,7 @@ public sealed class ViewLocator : IDataTemplate
         };
     }
 
-    public bool Match(object data)
+    public bool Match(object? data)
     {
         return data is ViewModelBase;
     }

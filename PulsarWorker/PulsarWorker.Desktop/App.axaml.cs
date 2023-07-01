@@ -7,11 +7,13 @@ using PulsarWorker.Desktop.Views;
 using System;
 using System.Net.Http;
 using Avalonia.Controls.Notifications;
+using Avalonia.Styling;
 using Microsoft.Extensions.Configuration;
 using PulsarWorker.Client;
 using PulsarWorker.Data.AutoMapper;
 using PulsarWorker.Database.Extensions;
 using PulsarWorker.Desktop.Models;
+using PulsarWorker.Desktop.Services;
 using PulsarApi = PulsarWorker.Desktop.Views.PulsarApi;
 
 namespace PulsarWorker.Desktop
@@ -44,14 +46,11 @@ namespace PulsarWorker.Desktop
             Services.AddDatabase(connectionString);
         }
 
-        private void RegisterServices()
+        private new void RegisterServices()
         {
             Services.AddAutoMapper(typeof(AutoMapperConfig));
             Services.AddTransient<SettingsModel>();
-            Services.AddTransient(static _ => new HttpClient
-            {
-                BaseAddress = new("http://localhost:8080"), //TODO enable change of address via settings
-            });
+            Services.AddTransient<HttpClient, SettingsDependentHttpClient>();
             Services.AddTransient<IPulsarClient, PulsarClient>();
             Services.AddTransient<PulsarTreeModel>();
             Services.AddTransient<MainWindowViewModel>();
@@ -65,6 +64,8 @@ namespace PulsarWorker.Desktop
             {
                 DataContext = ServiceProvider.GetRequiredService<PulsarApiViewModel>(),
             });
+            Services.AddSingleton<SettingsManager>();
+            Services.AddSingleton<UserManager>();
             Services.AddSingleton<MainWindow>(_ => new()
             {
                 DataContext = ServiceProvider.GetRequiredService<MainWindowViewModel>(),
@@ -74,6 +75,7 @@ namespace PulsarWorker.Desktop
                 {
                     Position = NotificationPosition.BottomRight, MaxItems = 5,
                 });
+            Services.AddSingleton<App>(_ => this);
         }
 
         private void BuildServiceProvider()
@@ -85,6 +87,19 @@ namespace PulsarWorker.Desktop
         {
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
                 desktop.MainWindow = ServiceProvider.GetRequiredService<MainWindow>();
+
+            var settingsManager = ServiceProvider.GetRequiredService<SettingsManager>();
+            settingsManager.OnSettingChanged += (key, value) =>
+            {
+                if (key == "App Theme")
+                    RequestedThemeVariant = (value as string) switch
+                    {
+                        "Default" => ThemeVariant.Default,
+                        "Dark" => ThemeVariant.Dark,
+                        "Light" => ThemeVariant.Light,
+                        _ => throw new ArgumentOutOfRangeException(nameof(value), "Theme value could not be parsed."),
+                    };
+            };
 
             base.OnFrameworkInitializationCompleted();
         }
