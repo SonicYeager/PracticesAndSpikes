@@ -10,8 +10,10 @@
     <ItemGroup>
         <PackageReference Include="AutoMapper.Extensions.ExpressionMapping" Version="6.0.4" />
         <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
+        <PackageReference Include="Bogus" Version="34.0.2" />
         <PackageReference Include="HotChocolate.Analyzers" Version="13.3.1" />
         <PackageReference Include="HotChocolate.AspNetCore" Version="13.3.1" />
+        <PackageReference Include="HotChocolate.Data.AutoMapper" Version="13.3.1" />
         <PackageReference Include="HotChocolate.Data.EntityFramework" Version="13.3.1" />
         <PackageReference Include="HotChocolate.Types.Analyzers" Version="13.3.1" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.0-preview.5.23302.2"/>
@@ -21,6 +23,7 @@
         </PackageReference>
         <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="7.0.0" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+
     </ItemGroup>
 
 

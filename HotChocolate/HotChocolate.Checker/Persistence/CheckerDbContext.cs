@@ -7,7 +7,6 @@ public sealed class CheckerDbContext : DbContext
 {
     public CheckerDbContext(DbContextOptions<CheckerDbContext> options) : base(options)
     {
-        Database.EnsureCreated();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

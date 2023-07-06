@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Diagnostics;
+using Microsoft.EntityFrameworkCore;
 
 namespace HotChocolate.Checker.Persistence;
 
@@ -8,7 +9,21 @@ public static class ServiceCollectionExtensions
     {
         return service
             .AddSingleton<DbContextOptions<CheckerDbContext>>(_ => new DbContextOptionsBuilder<CheckerDbContext>()
+                .UseLoggerFactory(LoggerFactory.Create(static builder =>
+                {
+                    builder
+                        .AddDebug()
+                        .AddConsole();
+                }))
                 .UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
-                .Options);
+                .Options)
+            .AddDbContextPool<CheckerDbContext>(o => o
+                .UseLoggerFactory(LoggerFactory.Create(static builder =>
+                {
+                    builder
+                        .AddDebug()
+                        .AddConsole();
+                }))
+                .UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
     }
 }

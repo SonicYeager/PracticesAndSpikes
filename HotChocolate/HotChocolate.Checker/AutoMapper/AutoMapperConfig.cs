@@ -8,7 +8,7 @@ public sealed class AutoMapperConfig : Profile
 {
     public AutoMapperConfig()
     {
-        CreateMap<User, UserEntity>()
-            .ReverseMap();
+        CreateMap<UserEntity, User>();
+        CreateMap<BookEntity, Book>();
     }
 }

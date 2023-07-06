@@ -8,7 +8,7 @@ public class DesignTimeDatabaseContextFactory : IDesignTimeDbContextFactory<Chec
     public CheckerDbContext CreateDbContext(string[] args)
     {
         var configuration = new ConfigurationBuilder()
-            .AddJsonFile(System.IO.Path.GetFullPath("../PulsarWorker/appsettings.json"))
+            .AddJsonFile(System.IO.Path.GetFullPath("../HotChocolate.Checker/appsettings.json"))
             .Build();
         var connectionString = configuration.GetConnectionString("Checker");
         Console.WriteLine(connectionString);
