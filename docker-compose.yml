@@ -15,12 +15,12 @@ services:
     restart: always
 
   # Pulsar worker service
-  pulsar-worker:
-    container_name: pulsar_worker
-    image: pulsar-worker
-    restart: always
-    depends_on:
-      - pulsar
+  # pulsar-worker:
+  #   container_name: pulsar_worker
+  #   image: pulsar-worker
+  #   restart: always
+  #   depends_on:
+  #     - pulsar
 
   # MariaDB service
   mariadb:

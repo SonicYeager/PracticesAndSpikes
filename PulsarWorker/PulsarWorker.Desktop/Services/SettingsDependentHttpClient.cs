@@ -3,7 +3,8 @@ using System.Net.Http;
 
 namespace PulsarWorker.Desktop.Services;
 
-public class SettingsDependentHttpClient : HttpClient
+public class SettingsDependentHttpClient : HttpClient 
+    //TODO sadly BaseAddress cannot be changed after first request -> supply new client internally (or wrap including interface provided by PulsarWorker.Client)?
 {
     public SettingsDependentHttpClient(SettingsManager settingsManager)
     {
