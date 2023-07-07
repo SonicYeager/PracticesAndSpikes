@@ -1,4 +1,5 @@
-﻿using HotChocolate.Checker.GraphQL.Types;
+﻿using HotChocolate.Checker.Extensions;
+using HotChocolate.Checker.GraphQL.Types;
 using HotChocolate.Checker.Persistence;
 using HotChocolate.Checker.Persistence.Entities;
 using HotChocolate.Resolvers;
@@ -15,5 +16,14 @@ public sealed class Query
     public IQueryable<Book> Books([Service] CheckerDbContext checkerDbContext, IResolverContext resolverContext)
     {
         return checkerDbContext.Set<BookEntity>().ProjectTo<BookEntity, Book>(resolverContext);
+    }
+
+    [UsePaging]
+    [UseProjection]
+    [UseFiltering]
+    [UseSorting]
+    public IQueryable<Book> BooksFix([Service] CheckerDbContext checkerDbContext, IResolverContext resolverContext)
+    {
+        return checkerDbContext.Set<BookEntity>().ProjectToFix<BookEntity, Book>(resolverContext);
     }
 }

@@ -8,7 +8,9 @@ public sealed class AutoMapperConfig : Profile
 {
     public AutoMapperConfig()
     {
-        CreateMap<UserEntity, User>();
-        CreateMap<BookEntity, Book>();
+        CreateMap<UserEntity, User>()
+            .ForAllMembers(static o => o.ExplicitExpansion());
+        CreateMap<BookEntity, Book>()
+            .ForAllMembers(static o => o.ExplicitExpansion());
     }
 }
