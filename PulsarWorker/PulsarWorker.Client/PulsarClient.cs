@@ -4,14 +4,20 @@ namespace PulsarWorker.Client;
 
 public sealed class PulsarClient : IPulsarClient
 {
-    private readonly HttpClient _client;
+    private readonly HttpClientFactory _httpClientFactory;
+    private HttpClient? _client;
 
-    public PulsarClient(HttpClient client)
+    public PulsarClient(HttpClientFactory factory)
     {
-        _client = client;
-        _client.BaseAddress ??= new("http://localhost:8080");
+        _httpClientFactory = factory;
+        _client ??= _httpClientFactory.GetHttpClient(new("http://localhost:8080"));
     }
 
+    public void ChangeBaseAddress(Uri newBaseAddress)
+    {
+        _client?.Dispose();
+        _client ??= _httpClientFactory.GetHttpClient(newBaseAddress);
+    }
     public async Task<IEnumerable<string>?> GetClusters()
     {
         return await GetResourcesAsync(new("/admin/v2/clusters", UriKind.Relative));
@@ -47,6 +53,15 @@ public sealed class PulsarClient : IPulsarClient
         {
             Console.WriteLine(e);
             return null;
+        }
+    }
+
+    public void Dispose()
+    {
+        if (_client is not null)
+        {
+            _client.CancelPendingRequests();
+            _client.Dispose();
         }
     }
 }

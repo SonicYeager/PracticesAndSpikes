@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using PulsarWorker.Client;
+using PulsarWorker.Desktop.Services;
 using PulsarWorker.Desktop.ViewModels.Components;
 using ReactiveUI;
 
@@ -11,10 +12,18 @@ namespace PulsarWorker.Desktop.Models;
 public sealed class PulsarTreeModel
 {
     private readonly IPulsarClient _pulsarClient;
+    private readonly SettingsManager _settingsManager;
 
-    public PulsarTreeModel(IPulsarClient pulsarClient)
+    public PulsarTreeModel(IPulsarClient pulsarClient, SettingsManager settingsManager)
     {
         _pulsarClient = pulsarClient;
+        _settingsManager = settingsManager;
+
+        _settingsManager.OnSettingChanged += (key, value) =>
+        {
+            if (key == AvailableSettings.PulsarHostOptionKey && value is string hostAddress && !string.IsNullOrEmpty(hostAddress))
+                _pulsarClient.ChangeBaseAddress(new(hostAddress));
+        };
     }
 
     public async Task GetPulsarNodeTree(ObservableCollection<PulsarNodeViewModel> collection)
@@ -53,7 +62,8 @@ public sealed class PulsarTreeModel
     {
         return await Load(
             nmspc,
-            removeSelf, static _ => Task.FromResult<IEnumerable<string>?>(null), static (_, _) => Task.FromResult<PulsarNodeViewModel>(default!));
+            removeSelf, static _ => Task.FromResult<IEnumerable<string>?>(null),
+            static (_, _) => Task.FromResult<PulsarNodeViewModel>(default!));
     }
 
     private static async Task<PulsarNodeViewModel> Load(string parentNode, Action<PulsarNodeViewModel> removeSelf,

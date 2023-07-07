@@ -9,6 +9,12 @@ using PulsarWorker.Database.Extensions;
 
 namespace PulsarWorker.Desktop.Services;
 
+public static class AvailableSettings
+{
+    public const string PulsarHostOptionKey = "Pulsar Host";
+    public const string AppThemeOptionKey = "App Theme";
+}
+
 public sealed class SettingsManager
 {
     private readonly DbContextOptions<PulsarWorkerDbContext> _dbContextOptions;

@@ -50,7 +50,7 @@ namespace PulsarWorker.Desktop
         {
             Services.AddAutoMapper(typeof(AutoMapperConfig));
             Services.AddTransient<SettingsModel>();
-            Services.AddTransient<HttpClient, SettingsDependentHttpClient>();
+            Services.AddTransient<HttpClientFactory>();
             Services.AddTransient<IPulsarClient, PulsarClient>();
             Services.AddTransient<PulsarTreeModel>();
             Services.AddTransient<MainWindowViewModel>();

@@ -18,15 +18,20 @@ public sealed class SettingsModel
     private readonly DbContextOptions<PulsarWorkerDbContext> _dbContextOptions;
     private readonly SettingsManager _settingsManager;
 
-    private static readonly string[] ThemeChoices =
-    {
-        "Default", "Dark", "Light",
-    };
+    private static readonly string[] ThemeChoices;
 
     public SettingsModel(DbContextOptions<PulsarWorkerDbContext> dbContextOptions, SettingsManager settingsManager)
     {
         _dbContextOptions = dbContextOptions;
         _settingsManager = settingsManager;
+    }
+
+    static SettingsModel()
+    {
+        ThemeChoices = new[]
+        {
+            "Default", "Dark", "Light",
+        };
     }
 
     public async Task GetPersistedSettings(ObservableCollection<object> observableCollection, Func<Task> onSuccess, int userId)
@@ -37,13 +42,13 @@ public sealed class SettingsModel
         {
             switch (settingsEntity.Key)
             {
-                case "Pulsar Host":
+                case AvailableSettings.PulsarHostOptionKey:
                 {
                     var textSetting = CreateTextSetting("Pulsar Host", settingsEntity.Value, onSuccess);
                     observableCollection.Add(textSetting);
                     break;
                 }
-                case "App Theme":
+                case AvailableSettings.AppThemeOptionKey:
                 {
                     var textSetting = CreateMultipleChoiceSetting("App Theme", ThemeChoices, settingsEntity.Value, onSuccess);
                     observableCollection.Add(textSetting);
