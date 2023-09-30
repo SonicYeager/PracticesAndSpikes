@@ -3,16 +3,16 @@ version: "3.8"
 services:
 
   # Pulsar messaging service
-  pulsar:
-    container_name: local_pulsar
-    image: apachepulsar/pulsar:latest
-    command: ["bin/pulsar", "standalone"]
-    volumes:
-      - /pulsar/data # For bind mount, use: ./pulsar/data:/pulsar/data
-    ports:
-      - "6650:6650"
-      - "8080:8080"
-    restart: always
+  #pulsar:
+  #  container_name: local_pulsar
+  #  image: apachepulsar/pulsar:latest
+  #  command: ["bin/pulsar", "standalone"]
+  #  volumes:
+  #    - /pulsar/data # For bind mount, use: ./pulsar/data:/pulsar/data
+  #  ports:
+  #    - "6650:6650"
+  #    - "8080:8080"
+  #  restart: always
 
   # Pulsar worker service
   # pulsar-worker:
@@ -33,15 +33,15 @@ services:
     restart: always
 
   # NuGet (BaGet) server for local dev nugets
-  baget:
-    container_name: BaGet
-    image: loicsharma/baget:latest
-    env_file:
-      - /BaGetVolume/baget.env
-    ports:
-      - "5555:80"
-    volumes:
-        - /BaGetVolume/baget-data:/var/baget
-    restart: always
+  #baget:
+  #  container_name: BaGet
+  #  image: loicsharma/baget:latest
+  #  env_file:
+  #    - /BaGetVolume/baget.env
+  #  ports:
+  #    - "5555:80"
+  #  volumes:
+  #      - /BaGetVolume/baget-data:/var/baget
+  #  restart: always
 
   #TODO add smtp4dev service

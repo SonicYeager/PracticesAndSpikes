@@ -1,15 +1,23 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8"?>
+
 <Shell
     x:Class="Practice.Maui.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:Practice.Maui"
+    xmlns:views="clr-namespace:Practice.Maui.Views"
     Shell.FlyoutBehavior="Disabled"
     Title="Practice.Maui">
 
-    <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" />
+    <TabBar>
+        <ShellContent
+            Title="Overview"
+            ContentTemplate="{DataTemplate views:OverviewPage}"
+            Route="Overview" />
+        <ShellContent
+            Title="Settings"
+            ContentTemplate="{DataTemplate views:SettingsPage}"
+            Route="Settings" />
+    </TabBar>
 
 </Shell>
