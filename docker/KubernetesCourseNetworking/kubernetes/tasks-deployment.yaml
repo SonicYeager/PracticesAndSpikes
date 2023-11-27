@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tasks-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tasks
+  template:
+    metadata:
+      labels:
+        app: tasks
+    spec:
+      containers:
+      - name: tasks
+        image: sonicyeager/kub-demo-tasks:latest
+        env:
+          - name: TASKS_FOLDER
+            value: tasks
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"

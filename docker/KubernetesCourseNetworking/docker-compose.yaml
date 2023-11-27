@@ -6,6 +6,8 @@ services:
     build: ./users-api
     ports: 
       - "8080:8080"
+    environment:
+      AUTH_ADDRESS: auth
   tasks:
     build: ./tasks-api
     ports: 
