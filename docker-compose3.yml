@@ -2,6 +2,26 @@ version: "3.8"
 
 services:
 
+  # Pulsar messaging service
+  #pulsar:
+  #  container_name: local_pulsar
+  #  image: apachepulsar/pulsar:latest
+  #  command: ["bin/pulsar", "standalone"]
+  #  volumes:
+  #    - /pulsar/data # For bind mount, use: ./pulsar/data:/pulsar/data
+  #  ports:
+  #    - "6650:6650"
+  #    - "8080:8080"
+  #  restart: always
+
+  # Pulsar worker service
+  # pulsar-worker:
+  #   container_name: pulsar_worker
+  #   image: pulsar-worker
+  #   restart: always
+  #   depends_on:
+  #     - pulsar
+
   # MariaDB service
   mariadb:
     container_name: local_db
@@ -12,9 +32,8 @@ services:
       - "3306:3306"
     restart: always
 
-# smtp4dev service
+  # smtp4dev service
   smtp4dev:
-    container_name: smtp4dev
     image: rnwood/smtp4dev
     restart: always
     ports:
@@ -74,6 +93,18 @@ services:
 
       #Specifies the port the IMAP server will listen on - allows standard email clients to view/retrieve messages
       #"ServerOptions__ImapPort"=143
+
+  # NuGet (BaGet) server for local dev nugets
+  #baget:
+  #  container_name: BaGet
+  #  image: loicsharma/baget:latest
+  #  env_file:
+  #    - /BaGetVolume/baget.env
+  #  ports:
+  #    - "5555:80"
+  #  volumes:
+  #      - /BaGetVolume/baget-data:/var/baget
+  #  restart: always
 
 volumes:
   smtp4dev-data:
