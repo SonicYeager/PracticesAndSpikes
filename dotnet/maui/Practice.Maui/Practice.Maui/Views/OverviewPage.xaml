@@ -35,7 +35,7 @@
 
             <Button
                 x:Name="CounterBtn"
-                Text="Click me"
+                Text="{Binding ClickedButtonText}"
                 SemanticProperties.Hint="Counts the number of times you click"
                 Command="{Binding ButtonClicked}"
                 HorizontalOptions="Center" />

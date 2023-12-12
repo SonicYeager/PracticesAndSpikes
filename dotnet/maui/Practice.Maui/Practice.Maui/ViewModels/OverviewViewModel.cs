@@ -1,10 +1,12 @@
-﻿using CommunityToolkit.Mvvm.Input;
+﻿using System.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 namespace Practice.Maui.ViewModels;
 
-public sealed class OverviewViewModel
+public sealed class OverviewViewModel : ObservableObject
 {
-    private int _count = 0;
+    private int _count;
     public string ClickedButtonText
     {
         get => _count == 1 ? $"Clicked {_count} time" : $"Clicked {_count} times";
@@ -17,8 +19,10 @@ public sealed class OverviewViewModel
 
     public IAsyncRelayCommand ButtonClicked { get; }
 
-    private async Task Clicked()
+    private Task Clicked()
     {
         _count++;
+        OnPropertyChanged(nameof(ClickedButtonText));
+        return Task.CompletedTask;
     }
 }
