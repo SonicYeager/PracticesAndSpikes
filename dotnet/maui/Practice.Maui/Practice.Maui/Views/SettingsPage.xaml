@@ -7,22 +7,32 @@
     <ContentPage.BindingContext>
         <viewModels:SettingsViewModel />
     </ContentPage.BindingContext>
-    
+
     <Grid RowDefinitions="3*,*">
-        <Label Text="Options are added soon!" Grid.Row="0" VerticalOptions="Center" HorizontalOptions="Center"/>
-        <VerticalStackLayout 
-            Grid.Row="1" 
-            VerticalOptions="Fill" 
+        <Label Text="Options are added soon!" Grid.Row="0" VerticalOptions="Center" HorizontalOptions="Center" />
+        <VerticalStackLayout
+            Grid.Row="1"
+            Padding="5"
+            VerticalOptions="End"
             HorizontalOptions="Fill"
-            BackgroundColor="Beige" Spacing="5">
-            <Label Text="Impressum" VerticalOptions="Center" HorizontalOptions="Center"/>
+            BackgroundColor="{StaticResource White}" Spacing="5">
+            <VerticalStackLayout.Shadow>
+                <Shadow Brush="Black"
+                        Offset="20,20"
+                        Radius="40"
+                        Opacity="0.8" />
+            </VerticalStackLayout.Shadow>
+            <Label Text="About"
+                   VerticalOptions="Center"
+                   HorizontalOptions="Center"
+                   FontAttributes="Bold"/>
             <HorizontalStackLayout VerticalOptions="Center" HorizontalOptions="Center">
-                <Label Text="Creator: "/>
-                <Label Text="SonicYeager"/>
+                <Label Text="Creator: " />
+                <Label Text="SonicYeager" />
             </HorizontalStackLayout>
             <HorizontalStackLayout VerticalOptions="Center" HorizontalOptions="Center">
-                <Label Text="Contact: "/>
-                <Label Text="kimstone.yeager@gmail.com"/>
+                <Label Text="Contact: " />
+                <Label Text="kimstone.yeager@gmail.com" />
             </HorizontalStackLayout>
         </VerticalStackLayout>
     </Grid>

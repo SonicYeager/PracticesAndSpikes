@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System.Collections.ObjectModel;
+using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -6,23 +7,22 @@ namespace Practice.Maui.ViewModels;
 
 public sealed class OverviewViewModel : ObservableObject
 {
-    private int _count;
-    public string ClickedButtonText
-    {
-        get => _count == 1 ? $"Clicked {_count} time" : $"Clicked {_count} times";
-    }
-
     public OverviewViewModel()
     {
-        ButtonClicked = new AsyncRelayCommand(Clicked);
+        Apogs =
+        [
+            new()
+            {
+                Title = "Test Image", Url = new("https://http.cat/images/404.jpg"), HdUrl = new("https://http.cat/images/404.jpg"),
+            },
+        ];
+        SelectApogCommand = new AsyncRelayCommand(SelectApog);
     }
+    public ObservableCollection<ApodViewModel> Apogs { get; }
+    public ICommand SelectApogCommand { get; }
 
-    public IAsyncRelayCommand ButtonClicked { get; }
-
-    private Task Clicked()
+    private Task SelectApog()
     {
-        _count++;
-        OnPropertyChanged(nameof(ClickedButtonText));
-        return Task.CompletedTask;
+        throw new NotSupportedException();
     }
 }

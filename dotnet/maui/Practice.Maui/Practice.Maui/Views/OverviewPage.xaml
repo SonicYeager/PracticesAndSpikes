@@ -1,46 +1,43 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8"?>
+
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:viewModels="clr-namespace:Practice.Maui.ViewModels"
              x:Class="Practice.Maui.Views.OverviewPage">
-    
+
     <ContentPage.BindingContext>
         <viewModels:OverviewViewModel />
     </ContentPage.BindingContext>
 
+    <!--
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Add" Command="{Binding NewCommand}" IconImageSource="{FontImage Glyph='+', Color=White, Size=22}" />
+    </ContentPage.ToolbarItems>
+    -->
+
     <ScrollView>
-        <VerticalStackLayout
-            Spacing="25"
-            Padding="30,0"
-            VerticalOptions="Center">
+        <!-- Display notes in a list -->
+        <CollectionView x:Name="apog_collection"
+                        ItemsSource="{Binding Apogs}"
+                        Margin="20"
+                        SelectionMode="Single"
+                        SelectionChangedCommand="{Binding SelectApogCommand}"
+                        SelectionChangedCommandParameter="{Binding Source={RelativeSource Self}, Path=SelectedItem}">
+            <!-- Designate how the collection of items are laid out -->
+            <CollectionView.ItemsLayout>
+                <LinearItemsLayout Orientation="Vertical" ItemSpacing="10" />
+            </CollectionView.ItemsLayout>
 
-            <Image
-                Source="dotnet_bot.png"
-                SemanticProperties.Description="Cute dot net bot waving hi to you!"
-                HeightRequest="200"
-                HorizontalOptions="Center" />
-
-            <Label
-                Text="Hello, World!"
-                SemanticProperties.HeadingLevel="Level1"
-                FontSize="32"
-                HorizontalOptions="Center" />
-
-            <Label
-                Text="Welcome to .NET Multi-platform App UI"
-                SemanticProperties.HeadingLevel="Level2"
-                SemanticProperties.Description="Welcome to dot net Multi platform App U I"
-                FontSize="18"
-                HorizontalOptions="Center" />
-
-            <Button
-                x:Name="CounterBtn"
-                Text="{Binding ClickedButtonText}"
-                SemanticProperties.Hint="Counts the number of times you click"
-                Command="{Binding ButtonClicked}"
-                HorizontalOptions="Center" />
-
-        </VerticalStackLayout>
+            <!-- Define the appearance of each item in the list -->
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <StackLayout>
+                        <Label Text="{Binding Title}" FontSize="22" />
+                        <Image Source="{Binding Url}" />
+                    </StackLayout>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
     </ScrollView>
 
 </ContentPage>
