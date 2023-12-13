@@ -31,10 +31,21 @@
             <!-- Define the appearance of each item in the list -->
             <CollectionView.ItemTemplate>
                 <DataTemplate>
-                    <StackLayout>
-                        <Label Text="{Binding Title}" FontSize="22" />
-                        <Image Source="{Binding Url}" />
-                    </StackLayout>
+                    <Border StrokeShape="RoundRectangle 10"
+                            Background="{StaticResource Gray100}"
+                            Padding="5">
+                        <StackLayout>
+                            <Image Source="{Binding Url}" HeightRequest="240" HorizontalOptions="Fill" />
+                            <Label Text="{Binding Title}" FontSize="22" HorizontalOptions="Center" FontAttributes="Bold" />
+                            <Grid RowDefinitions="*,*,*"
+                                  ColumnDefinitions="*,4*">
+                                <Label Grid.Column="0" Grid.Row="0" Text="Date" FontAttributes="Bold" />
+                                <Label Grid.Column="0" Grid.Row="1" Text="Copyright" FontAttributes="Bold" />
+                                <Label Grid.Column="1" Grid.Row="0" Text="{Binding Date}" />
+                                <Label Grid.Column="1" Grid.Row="1" Text="{Binding Copyright}" />
+                            </Grid>
+                        </StackLayout>
+                    </Border>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>

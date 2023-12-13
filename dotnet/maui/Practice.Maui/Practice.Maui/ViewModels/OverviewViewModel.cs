@@ -13,7 +13,31 @@ public sealed class OverviewViewModel : ObservableObject
         [
             new()
             {
-                Title = "Test Image", Url = new("https://http.cat/images/404.jpg"), HdUrl = new("https://http.cat/images/404.jpg"),
+                Title = "Test Image",
+                Url = new("https://http.cat/images/404.jpg"),
+                Date = DateTime.Now,
+                Copyright = "Lorem Ipsum Dolores Lorem Ipsum Dolores",
+            },
+            new()
+            {
+                Title = "Test Image",
+                Url = new("https://http.cat/images/404.jpg"),
+                Date = DateTime.Now,
+                Copyright = "Lorem Ipsum Dolores Lorem Ipsum Dolores",
+            },
+            new()
+            {
+                Title = "Test Image",
+                Url = new("https://http.cat/images/404.jpg"),
+                Date = DateTime.Now,
+                Copyright = "Lorem Ipsum Dolores Lorem Ipsum Dolores",
+            },
+            new()
+            {
+                Title = "Test Image",
+                Url = new("https://http.cat/images/404.jpg"),
+                Date = DateTime.Now,
+                Copyright = "Lorem Ipsum Dolores Lorem Ipsum Dolores",
             },
         ];
         SelectApogCommand = new AsyncRelayCommand(SelectApog);
