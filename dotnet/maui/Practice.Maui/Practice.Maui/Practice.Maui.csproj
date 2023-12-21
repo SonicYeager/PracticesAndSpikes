@@ -57,6 +57,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="CommunityToolkit.Maui" Version="7.0.1" />
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2"/>
         <PackageReference Include="LiveChartsCore.SkiaSharpView.Maui" Version="2.0.0-rc2" />
         <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)"/>
@@ -65,6 +66,8 @@
         <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.0" />
 
         <PackageReference Include="Refit" Version="7.0.0" />
+
+        <PackageReference Include="Refit.HttpClientFactory" Version="7.0.0" />
     </ItemGroup>
 
     <ItemGroup>

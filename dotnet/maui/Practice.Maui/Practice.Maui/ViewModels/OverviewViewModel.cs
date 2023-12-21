@@ -2,51 +2,57 @@
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Practice.Maui.Models;
+using CommunityToolkit.Maui.Alerts;
+using CommunityToolkit.Maui.Core;
 
 namespace Practice.Maui.ViewModels;
 
 public sealed class OverviewViewModel : ObservableObject
 {
-    public OverviewViewModel()
+    /// <summary>
+    /// The Model date is fetched from.
+    /// </summary>
+    private readonly ApodModel _apodModel;
+
+    public OverviewViewModel(ApodModel apodModel)
     {
-        Apogs =
-        [
-            new()
-            {
-                Title = "Test Image",
-                Url = new("https://http.cat/images/404.jpg"),
-                Date = DateTime.Now,
-                Copyright = "Lorem Ipsum Dolores Lorem Ipsum Dolores",
-            },
-            new()
-            {
-                Title = "Test Image",
-                Url = new("https://http.cat/images/404.jpg"),
-                Date = DateTime.Now,
-                Copyright = "Lorem Ipsum Dolores Lorem Ipsum Dolores",
-            },
-            new()
-            {
-                Title = "Test Image",
-                Url = new("https://http.cat/images/404.jpg"),
-                Date = DateTime.Now,
-                Copyright = "Lorem Ipsum Dolores Lorem Ipsum Dolores",
-            },
-            new()
-            {
-                Title = "Test Image",
-                Url = new("https://http.cat/images/404.jpg"),
-                Date = DateTime.Now,
-                Copyright = "Lorem Ipsum Dolores Lorem Ipsum Dolores",
-            },
-        ];
+        _apodModel = apodModel;
+        Apods = [];
+        Initialization = Initialize();
         SelectApogCommand = new AsyncRelayCommand(SelectApog);
     }
-    public ObservableCollection<ApodViewModel> Apogs { get; }
+
+    public ObservableCollection<ApodViewModel> Apods { get; }
     public ICommand SelectApogCommand { get; }
+
+    public Task Initialization { get; private set; }
+
+    /// <summary>
+    /// Initializes the Apods.
+    /// </summary>
+    private async Task Initialize()
+    {
+        try
+        {
+            var apods = await Task.Run(() => Task.FromResult(_apodModel.GetLast30Apods()));
+            await foreach (var apod in apods)
+            {
+                Apods.Add(apod);
+            }
+        }
+        catch (Exception e)
+        {
+            var cancellationTokenSource = new CancellationTokenSource();
+
+            var toast = Toast.Make(e.Message);
+
+            await toast.Show(cancellationTokenSource.Token);
+        }
+    }
 
     private Task SelectApog()
     {
-        throw new NotSupportedException();
+        return Task.CompletedTask;
     }
 }

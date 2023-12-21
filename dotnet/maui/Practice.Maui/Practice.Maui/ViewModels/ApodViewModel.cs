@@ -1,6 +1,6 @@
 ﻿namespace Practice.Maui.ViewModels;
 
-public class ApodViewModel
+public sealed record ApodViewModel
 {
     public string Copyright { get; set; }
     public DateTime Date { get; set; }

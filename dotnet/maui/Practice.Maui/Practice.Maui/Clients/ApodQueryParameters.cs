@@ -1,11 +1,18 @@
-﻿namespace Practice.Maui.Clients;
+﻿using Refit;
 
-public class ApodQueryParameters
+namespace Practice.Maui.Clients;
+
+public sealed class ApodQueryParameters
 {
-    public DateTime Date { get; set; }
-    public DateTime StartDate { get; set; }
-    public DateTime EndDate { get; set; }
-    public int Count { get; set; }
-    public bool Thumbs { get; set; }
-    public string ApiKey { get; set; }
+    [AliasAs("date")] public string Date { get; set; }
+
+    [AliasAs("start_date")] public string? StartDate { get; set; }
+
+    [AliasAs("end_date")] public string EndDate { get; set; }
+
+    [AliasAs("count")] public int? Count { get; set; }
+
+    [AliasAs("thumbs")] public bool Thumbs { get; set; } = false;
+
+    [AliasAs("api_key")] public required string ApiKey { get; set; } = "DEMO_KEY";
 }

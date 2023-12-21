@@ -2,13 +2,7 @@
 
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:viewModels="clr-namespace:Practice.Maui.ViewModels"
              x:Class="Practice.Maui.Views.OverviewPage">
-
-    <ContentPage.BindingContext>
-        <viewModels:OverviewViewModel />
-    </ContentPage.BindingContext>
-
     <!--
     <ContentPage.ToolbarItems>
         <ToolbarItem Text="Add" Command="{Binding NewCommand}" IconImageSource="{FontImage Glyph='+', Color=White, Size=22}" />
@@ -18,7 +12,7 @@
     <ScrollView>
         <!-- Display notes in a list -->
         <CollectionView x:Name="apog_collection"
-                        ItemsSource="{Binding Apogs}"
+                        ItemsSource="{Binding Apods, Mode=TwoWay}"
                         Margin="20"
                         SelectionMode="Single"
                         SelectionChangedCommand="{Binding SelectApogCommand}"
