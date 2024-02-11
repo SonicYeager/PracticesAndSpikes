@@ -3,18 +3,12 @@ using Practice.Maui.ViewModels;
 
 namespace Practice.Maui.Models;
 
-public sealed class ApodModel
+public sealed class ApodModel(INasaApodApi nasaApodApi)
 {
-    private readonly INasaApodApi _nasaApodApi;
-
-    public ApodModel(INasaApodApi nasaApodApi)
-    {
-        _nasaApodApi = nasaApodApi;
-    }
 
     public async IAsyncEnumerable<ApodViewModel> GetLast30Apods()
     {
-        var apods = await _nasaApodApi.GetApods(new()
+        var apods = await nasaApodApi.GetApods(new()
         {
             ApiKey = "DEMO_KEY",
             StartDate = DateTime.Today.AddDays(-30).ToString("yyyy-MM-dd"),
@@ -23,7 +17,7 @@ public sealed class ApodModel
 
         foreach (var apod in apods)
         {
-            yield return new ApodViewModel
+            yield return new()
             {
                 Copyright = apod.Copyright,
                 Url = apod.Url,

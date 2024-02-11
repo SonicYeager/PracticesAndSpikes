@@ -12,7 +12,7 @@
 
     <ScrollView>
         <!-- Display notes in a list -->
-        <CollectionView x:Name="apog_collection"
+        <CollectionView x:Name="ApogCollection"
                         ItemsSource="{Binding Apods, Mode=TwoWay}"
                         Margin="20"
                         SelectionMode="Single"
@@ -26,8 +26,13 @@
             <!-- Define the appearance of each item in the list -->
             <CollectionView.ItemTemplate>
                 <DataTemplate>
-                        <StackLayout>
-                            <Image Source="{Binding Url}" HeightRequest="240" HorizontalOptions="Fill" />
+                        <VerticalStackLayout>
+                            <Image HeightRequest="240" Aspect="AspectFill">
+                                <Image.Source>
+                                    <UriImageSource Uri="{Binding Url}"
+                                                    CacheValidity="10:00:00:00" />
+                                </Image.Source>
+                            </Image>
                             <Label Text="{Binding Title}" FontSize="22" HorizontalOptions="Center" FontAttributes="Bold" />
                             <Grid RowDefinitions="*,*,*"
                                   ColumnDefinitions="*,4*">
@@ -36,7 +41,7 @@
                                 <Label Grid.Column="1" Grid.Row="0" Text="{Binding Date}" />
                                 <Label Grid.Column="1" Grid.Row="1" Text="{Binding Copyright}" />
                             </Grid>
-                        </StackLayout>
+                        </VerticalStackLayout>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
         </CollectionView>
