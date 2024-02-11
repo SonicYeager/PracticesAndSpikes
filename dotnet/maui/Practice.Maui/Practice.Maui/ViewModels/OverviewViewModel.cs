@@ -35,8 +35,7 @@ public sealed class OverviewViewModel : ObservableObject
     {
         try
         {
-            var apods = await Task.Run(() => Task.FromResult(_apodModel.GetLast30Apods()));
-            await foreach (var apod in apods)
+            await foreach (var apod in await Task.Run(() => Task.FromResult(_apodModel.GetLast30Apods())))
             {
                 Apods.Add(apod);
             }
@@ -44,9 +43,7 @@ public sealed class OverviewViewModel : ObservableObject
         catch (Exception e)
         {
             var cancellationTokenSource = new CancellationTokenSource();
-
             var toast = Toast.Make(e.Message);
-
             await toast.Show(cancellationTokenSource.Token);
         }
     }

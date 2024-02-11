@@ -20,8 +20,7 @@ public sealed class ApodModel(INasaApodApi nasaApodApi)
             yield return new()
             {
                 Copyright = apod.Copyright,
-                Url = apod.Url,
-                HdUrl = apod.HdUrl,
+                Image = ImageSource.FromUri(new(apod.HdUrl ?? apod.Url)),
                 MediaType = apod.MediaType,
                 ServiceVersion = apod.ServiceVersion,
                 Date = apod.Date,
