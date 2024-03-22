@@ -1,12 +1,13 @@
 ﻿using Google.Apis.Auth.OAuth2;
 using Google.Apis.Sheets.v4;
+using Google.Apis.Sheets.v4.Data;
 using Google.Apis.Util.Store;
 
 namespace Practice.Maui.Models;
 
 public sealed class FuelBookSheetModel
 {
-    private SheetsService? _sheetsService;
+    private SheetsService? _sheetsService; //TODO wrap me for code redundancy pls
     private readonly Task _initialization;
 
     public FuelBookSheetModel()
@@ -33,18 +34,24 @@ public sealed class FuelBookSheetModel
         });
     }
 
-    public async Task LoadSheet()
+    public async Task<IEnumerable<FuelBookRowModel>> LoadColumns()
     {
         if (_sheetsService != null)
         {
-            var sheet = await _sheetsService.Spreadsheets.Get("1RriUAwlyEdciGOMnjuXYdUEGYuz6tY0Z-0-Q04irLLw").ExecuteAsync();
-            var range = sheet.Sheets;
+            return (await LoadSheetColumns()).Select(static rd => new FuelBookRowModel(rd));
         }
-        else
-        {
-            await _initialization.WaitAsync(CancellationToken.None);
-            var sheet = await _sheetsService.Spreadsheets.Get("1RriUAwlyEdciGOMnjuXYdUEGYuz6tY0Z-0-Q04irLLw").ExecuteAsync();
-            var range = sheet.Sheets;
-        }
+
+        await _initialization.WaitAsync(CancellationToken.None);
+        return (await LoadSheetColumns()).Select(static rd => new FuelBookRowModel(rd));
+    }
+
+    private async Task<IEnumerable<RowData>> LoadSheetColumns()
+    {
+        var request = _sheetsService!.Spreadsheets.Get("1RriUAwlyEdciGOMnjuXYdUEGYuz6tY0Z-0-Q04irLLw");
+        request.IncludeGridData = true;
+        var sheet = await request.ExecuteAsync();
+        var mainSheet = sheet.Sheets.FirstOrDefault(static s => s.Properties.Title == "Main");
+        var validValues = mainSheet!.Data.First().RowData.Where(static r => r.Values[1].EffectiveValue != null).Skip(1);
+        return validValues;
     }
 }

@@ -10,6 +10,41 @@
     </ContentPage.ToolbarItems>
     -->
 
-    
+    <!-- Display notes in a list -->
+    <CollectionView x:Name="NotesCollection"
+                    ItemsSource="{Binding FuelStops}"
+                    Margin="20"
+                    SelectionMode="Single"
+                    SelectionChangedCommand="{Binding SelectFuelStopCommand}"
+                    SelectionChangedCommandParameter="{Binding Source={RelativeSource Self}, Path=SelectedItem}">
+        <!-- Designate how the collection of items are laid out -->
+        <CollectionView.ItemsLayout>
+            <LinearItemsLayout Orientation="Vertical" ItemSpacing="10" />
+        </CollectionView.ItemsLayout>
+
+        <!-- Define the appearance of each item in the list -->
+        <CollectionView.ItemTemplate>
+            <DataTemplate>
+                <Grid ColumnDefinitions="*,*">
+                    <VerticalStackLayout Grid.Column="0">
+                        <Label Text="Nummer" />
+                        <Label Text="Datum" />
+                        <Label Text="Kosten" />
+                        <Label Text="Liter" />
+                        <Label Text="KM-Stand" />
+                        <Label Text="Verbrauch pro 100 km" />
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Grid.Column="1">
+                        <Label Text="{Binding Number}" />
+                        <Label Text="{Binding Date}" />
+                        <Label Text="{Binding CostsInEuro}" />
+                        <Label Text="{Binding ConsumptionInLiters}" />
+                        <Label Text="{Binding RangeInKilometers}" />
+                        <Label Text="{Binding AverageConsumptionPerHundredKilometers}" />
+                    </VerticalStackLayout>
+                </Grid>
+            </DataTemplate>
+        </CollectionView.ItemTemplate>
+    </CollectionView>
 
 </ContentPage>
