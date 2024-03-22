@@ -10,53 +10,6 @@
     </ContentPage.ToolbarItems>
     -->
 
-    <ScrollView>
-        <!-- Display notes in a list -->
-        <CollectionView x:Name="ApogCollection"
-                        ItemsSource="{Binding Apods, Mode=TwoWay}"
-                        Margin="20"
-                        SelectionMode="Single"
-                        SelectionChangedCommand="{Binding SelectApogCommand}"
-                        SelectionChangedCommandParameter="{Binding Source={RelativeSource Self}, Path=SelectedItem}">
-            <!-- Designate how the collection of items are laid out -->
-            <CollectionView.ItemsLayout>
-                <LinearItemsLayout Orientation="Vertical" ItemSpacing="10" />
-            </CollectionView.ItemsLayout>
-
-            <!-- Define the appearance of each item in the list -->
-            <CollectionView.ItemTemplate>
-                <DataTemplate>
-                    <Frame CornerRadius="5" BackgroundColor="Transparent" HorizontalOptions="Fill">
-                        <HorizontalStackLayout Padding="5" HorizontalOptions="Fill">
-                            <Frame Margin="10"
-                                   CornerRadius="50"
-                                   IsClippedToBounds="True"
-                                   HorizontalOptions="Center"
-                                   VerticalOptions="Center">
-                                <Image Source="{Binding Image}"
-                                       Aspect="AspectFill"
-                                       Margin="-20"
-                                       HeightRequest="100"
-                                       WidthRequest="100" />
-                            </Frame>
-                            <VerticalStackLayout HorizontalOptions="Fill" MinimumWidthRequest="300">
-                                <Label Text="{Binding Title}" FontSize="22" HorizontalOptions="Start" FontAttributes="Bold"/>
-                                <Grid RowDefinitions="*,*,*"
-                                      ColumnDefinitions="*,*"
-                                      HorizontalOptions="Fill">
-                                    <Label Grid.Column="0" Grid.Row="0" Text="Date" FontAttributes="Bold" />
-                                    <Label Grid.Column="1" Grid.Row="0" Text="{Binding Date}" />
-                                    <Label Grid.Column="0" Grid.Row="1" Text="Copyright" FontAttributes="Bold" />
-                                    <Label Grid.Column="1" Grid.Row="1" Text="{Binding Copyright}" />
-                                    <Label Grid.Column="0" Grid.Row="2" Text="MediaType"/>
-                                    <Label Grid.Column="1" Grid.Row="2" Text="{Binding MediaType}" />
-                                </Grid>
-                            </VerticalStackLayout>
-                        </HorizontalStackLayout>
-                    </Frame>
-                </DataTemplate>
-            </CollectionView.ItemTemplate>
-        </CollectionView>
-    </ScrollView>
+    
 
 </ContentPage>
