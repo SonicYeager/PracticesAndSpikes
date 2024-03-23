@@ -5,10 +5,11 @@ using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Practice.Maui.Models;
+using Practice.Maui.Views;
 
 namespace Practice.Maui.ViewModels;
 
-public sealed class OverviewViewModel : ObservableObject
+public sealed class OverviewViewModel : ObservableObject, IQueryAttributable
 {
     /// <summary>
     /// The Model date is fetched from.
@@ -52,9 +53,41 @@ public sealed class OverviewViewModel : ObservableObject
         }
     }
 
-    private async Task SelectFuelStopAsync(FuelStopEntryViewModel fuelStop)
+    /// <inheritdoc />
+    public void ApplyQueryAttributes(IDictionary<string, object> query)
     {
-        //if (note != null)
-        //    await Shell.Current.GoToAsync($"{nameof(NotePage)}?load={note.Identifier}");
+        //if (query.TryGetValue("deleted", out var deleted))
+        //{
+        //    var noteId = deleted.ToString();
+        //    var matchedNote = FuelStops.FirstOrDefault(n => n.Identifier == noteId);
+        //
+        //    // If note exists, delete it
+        //    if (matchedNote != null)
+        //        FuelStops.Remove(matchedNote);
+        //}
+        //else if (query.TryGetValue("saved", out var saved))
+        //{
+        //    var noteId = saved.ToString();
+        //    var matchedNote = FuelStops.FirstOrDefault(n => n.Identifier == noteId);
+        //
+        //    // If note is found, update it
+        //    if (matchedNote != null)
+        //    {
+        //        matchedNote.Reload();
+        //        FuelStops.Move(FuelStops.IndexOf(matchedNote), 0);
+        //    }
+        //
+        //    // If note isn't found, it's new; add it.
+        //    else
+        //    {
+        //        FuelStops.Insert(0, new(Note.Load(noteId)));
+        //    }
+        //}
+    }
+
+    private static async Task SelectFuelStopAsync(FuelStopEntryViewModel fuelStop)
+    {
+        if (fuelStop != null)
+            await Shell.Current.GoToAsync($"{nameof(FuelStopPage)}?load={fuelStop.Number}");
     }
 }

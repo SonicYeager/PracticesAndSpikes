@@ -1,38 +1,53 @@
 ﻿using Google.Apis.Sheets.v4.Data;
+using Practice.Maui.Services;
 
 namespace Practice.Maui.Models;
 
 public sealed class FuelBookRowModel
 {
-    private readonly RowData? _rowData;
+    private readonly SheetServiceWrapper _sheetService;
 
-    public FuelBookRowModel(RowData row)
+    public FuelBookRowModel(SheetServiceWrapper sheetService)
     {
-        _rowData = row;
+        _sheetService = sheetService;
     }
 
+    public RowData? RowData { get; set; }
     public int Number
     {
-        get => (int)_rowData!.Values[0].EffectiveValue.NumberValue;
+        get => (int?)RowData?.Values[0].EffectiveValue.NumberValue ?? 0;
+        set => RowData!.Values[0].EffectiveValue.NumberValue = (double)value;
     }
     public DateOnly Date
     {
-        get => DateOnly.FromDateTime(DateTime.FromOADate(_rowData!.Values[1].EffectiveValue.NumberValue.Value).Date);
+        get => DateOnly.FromDateTime(DateTime.FromOADate(RowData?.Values[1].EffectiveValue.NumberValue.Value ?? 0).Date);
+        set => RowData!.Values[1].EffectiveValue.NumberValue = value.ToDateTime(TimeOnly.MinValue).ToOADate();
     }
     public decimal CostsInEuro
     {
-        get => (decimal)_rowData!.Values[2].EffectiveValue.NumberValue;
+        get => (decimal?)RowData?.Values[2].EffectiveValue.NumberValue ?? 0;
+        set => RowData!.Values[2].EffectiveValue.NumberValue = (double)value;
     }
     public decimal ConsumptionInLiters
     {
-        get => (decimal)_rowData!.Values[3].EffectiveValue.NumberValue;
+        get => (decimal?)RowData?.Values[3].EffectiveValue.NumberValue ?? 0;
+        set => RowData!.Values[3].EffectiveValue.NumberValue = (double)value;
     }
     public decimal RangeInKilometers
     {
-        get => (decimal)_rowData!.Values[4].EffectiveValue.NumberValue;
+        get => (decimal?)RowData?.Values[4].EffectiveValue.NumberValue ?? 0;
+        set => RowData!.Values[4].EffectiveValue.NumberValue = (double)value;
     }
     public decimal AverageConsumptionPerHundredKilometers
     {
-        get => (decimal)_rowData!.Values[5].EffectiveValue.NumberValue;
+        get => (decimal?)RowData?.Values[5].EffectiveValue.NumberValue ?? 0;
+        set => RowData!.Values[5].EffectiveValue.NumberValue = (double)value;
+    }
+
+    public async Task Load(int rowNumber)
+    {
+        var mainSheet = await _sheetService.GetMainSheet();
+        RowData = mainSheet!.Data.First().RowData
+            .FirstOrDefault(r => r.Values[0].EffectiveValue != null && (int?)r.Values[0].EffectiveValue.NumberValue == rowNumber);
     }
 }
