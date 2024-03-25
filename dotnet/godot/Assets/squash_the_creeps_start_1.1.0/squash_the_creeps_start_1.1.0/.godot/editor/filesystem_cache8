@@ -1,9 +1,12 @@
 ea4bc82a6ad023ab7ee23ee620429895
-::res://::1711297001
+::res://::1711392851
 default_bus_layout.tres::AudioBusLayout::-1::1711296976::0::1::::<><>::
 default_env.tres::Environment::-1::1711296976::0::1::::<><>::
 icon.png::CompressedTexture2D::6253720803582178561::1711296862::1711297002::1::::<><>::
-::res://art/::1711296862
+main.tscn::PackedScene::7200640800361969430::1711392845::0::1::::<><>::uid://bo2acpv2amy1c::::res://player.tscn
+player.cs::CSharpScript::-1::1711392142::0::1::::<><>::
+player.tscn::PackedScene::3424807087091379798::1711392845::0::1::::<><>::uid://dlukmnh13lxvh::::res://art/player.glb<>res://player.cs
+::res://art/::1711297003
 body.material::StandardMaterial3D::-1::1711296862::0::1::::<><>::
 eye.material::StandardMaterial3D::-1::1711296862::0::1::::<><>::
 House In a Forest Loop.ogg::AudioStreamOggVorbis::4073725207839299890::1711296862::1711297002::1::::<><>::
@@ -12,6 +15,6 @@ mob_body.material::StandardMaterial3D::-1::1711296862::0::1::::<><>::
 mob_eye.material::StandardMaterial3D::-1::1711296862::0::1::::<><>::
 player.glb::PackedScene::7973256180469759173::1711296862::1711297003::1::::<><>::
 pupil.material::StandardMaterial3D::-1::1711296862::0::1::::<><>::
-::res://fonts/::1711296862
+::res://fonts/::1711297002
 LICENSE.txt::TextFile::-1::1711296862::0::1::::<><>::
 Montserrat-Medium.ttf::FontFile::3643250900337056652::1711296862::1711297002::1::::<><>::
