@@ -1,12 +1,10 @@
-﻿#nullable enable
-using System.Windows.Input;
+﻿using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
 
 namespace Practice.Maui.ViewModels;
 
 public sealed class SettingsViewModel
 {
-    public ICommand ToggleTheme { get; }
 
     public SettingsViewModel()
     {
@@ -14,6 +12,7 @@ public sealed class SettingsViewModel
         Microsoft.Maui.Controls.Application.Current.RequestedThemeChanged += ToggleThemeAsync;
         ToggleTheme = new RelayCommand(ToggleThemeAsync);
     }
+    public ICommand ToggleTheme { get; }
 
     private static void ToggleThemeAsync()
     {

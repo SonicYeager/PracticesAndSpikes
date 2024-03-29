@@ -7,4 +7,5 @@ public interface ISheetServiceWrapper
 {
     Task Initialization { get; }
     Task<Sheet?> GetMainSheet();
+    Task UpdateRow(RowData rowData);
 }

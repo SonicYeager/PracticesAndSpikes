@@ -1,5 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using System.Windows.Input;
+﻿using System.Windows.Input;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Practice.Maui.Application.Models;
 
@@ -90,24 +90,40 @@ public sealed class FuelStopEntryViewModel : ObservableObject, IQueryAttributabl
             }
         }
     }
+    private bool _isSaving;
+    public bool IsSaving
+    {
+        get => _isSaving;
+        set
+        {
+            _isSaving = value;
+            OnPropertyChanged();
+        }
+    }
 
     /// <inheritdoc />
-    public void ApplyQueryAttributes(IDictionary<string, object> query)
+    void IQueryAttributable.ApplyQueryAttributes(IDictionary<string, object> query)
     {
         if (query.TryGetValue("load", out var value))
-        {
             Task.Run(async () =>
             {
                 await _fuelBookRowModel.Load(int.Parse((string)value));
                 RefreshProperties();
             });
-        }
     }
 
     private async Task Save()
     {
-        //_fuelBookRowModel.Save();
-        //await Shell.Current.GoToAsync($"..?saved={_fuelBookRowModel.Number}");
+        IsSaving = true;
+        try
+        {
+            await _fuelBookRowModel.Save();
+            await Shell.Current.GoToAsync($"..?saved={_fuelBookRowModel.Number}");
+        }
+        finally
+        {
+            IsSaving = false;
+        }
     }
 
     private async Task Delete()
@@ -124,5 +140,11 @@ public sealed class FuelStopEntryViewModel : ObservableObject, IQueryAttributabl
         OnPropertyChanged(nameof(ConsumptionInLiters));
         OnPropertyChanged(nameof(RangeInKilometers));
         OnPropertyChanged(nameof(AverageConsumptionPerHundredKilometers));
+    }
+
+    public async Task Reload()
+    {
+        await _fuelBookRowModel.Load(Number).ConfigureAwait(true);
+        RefreshProperties();
     }
 }

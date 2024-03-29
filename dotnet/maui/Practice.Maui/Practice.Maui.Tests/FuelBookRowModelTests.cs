@@ -4,9 +4,10 @@ using Practice.Maui.Application.Services;
 
 namespace Practice.Maui.Tests;
 
+[TestFixture]
+[TestOf(typeof(FuelBookRowModel))]
 public sealed class FuelBookRowModelTests
 {
-    private readonly ISheetServiceWrapper _sheetServiceWrapperSubstitute = Substitute.For<ISheetServiceWrapper>();
 
     [SetUp]
     public void Setup()
@@ -14,6 +15,7 @@ public sealed class FuelBookRowModelTests
         _sheetServiceWrapperSubstitute.ClearReceivedCalls();
         _sheetServiceWrapperSubstitute.GetMainSheet().Returns(TestDataProvider.CreateMainSheet(1));
     }
+    private readonly ISheetServiceWrapper _sheetServiceWrapperSubstitute = Substitute.For<ISheetServiceWrapper>();
 
     [Test]
     public async Task Load_WhenCalled_LoadsData()

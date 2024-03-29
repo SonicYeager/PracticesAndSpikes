@@ -1,6 +1,4 @@
-﻿using Application = Microsoft.Maui.Controls.Application;
-
-namespace Practice.Maui;
+﻿namespace Practice.Maui;
 
 public sealed partial class App : Microsoft.Maui.Controls.Application
 {

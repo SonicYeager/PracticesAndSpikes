@@ -21,16 +21,16 @@
             <Label Text="About"
                    VerticalOptions="Center"
                    HorizontalOptions="Center"
-                   FontAttributes="Bold"/>
+                   FontAttributes="Bold" />
             <!-- A HorizontalStackLayout containing two Labels. The first Label displays the text "Creator: " and the second Label displays the creator's name. -->
             <HorizontalStackLayout VerticalOptions="Center" HorizontalOptions="Center">
-                <Label Text="Creator: "/>
-                <Label Text="SonicYeager"/>
+                <Label Text="Creator: " />
+                <Label Text="SonicYeager" />
             </HorizontalStackLayout>
             <!-- A HorizontalStackLayout containing two Labels. The first Label displays the text "Contact: " and the second Label displays the contact email. -->
             <HorizontalStackLayout VerticalOptions="Center" HorizontalOptions="Center">
-                <Label Text="Contact: "/>
-                <Label Text="kimstone.yeager@gmail.com"/>
+                <Label Text="Contact: " />
+                <Label Text="kimstone.yeager@gmail.com" />
             </HorizontalStackLayout>
         </VerticalStackLayout>
     </Grid>

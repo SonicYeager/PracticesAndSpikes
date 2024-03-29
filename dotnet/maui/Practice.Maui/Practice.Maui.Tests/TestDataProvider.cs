@@ -90,4 +90,22 @@ internal static class TestDataProvider
             },
         };
     }
+
+    public static Sheet CreateMainSheetWithMultipleRows()
+    {
+        return new()
+        {
+            Data = new List<GridData>
+            {
+                new()
+                {
+                    RowData = new List<RowData>
+                    {
+                        CreateRowData(1, DateTime.FromOADate(1).Date, 2, 3, 4, 5),
+                        CreateRowData(6, DateTime.FromOADate(2).Date, 7, 8, 9, 10),
+                    },
+                },
+            },
+        };
+    }
 }

@@ -2,8 +2,8 @@
 
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:mct="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
-             x:Class="Practice.Maui.Views.OverviewPage">
+             x:Class="Practice.Maui.Views.OverviewPage"
+             NavigatedTo="ContentPage_NavigatedTo">
     <!--
     <ContentPage.ToolbarItems>
         <ToolbarItem Text="Add" Command="{Binding NewCommand}" IconImageSource="{FontImage Glyph='+', Color=White, Size=22}" />
@@ -11,7 +11,7 @@
     -->
 
     <!-- Display notes in a list -->
-    <CollectionView x:Name="NotesCollection"
+    <CollectionView x:Name="FuelStops"
                     ItemsSource="{Binding FuelStops}"
                     Margin="20"
                     SelectionMode="Single"

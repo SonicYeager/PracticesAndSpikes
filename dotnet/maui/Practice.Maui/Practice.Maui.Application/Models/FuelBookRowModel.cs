@@ -19,27 +19,47 @@ public sealed class FuelBookRowModel
     public int Number
     {
         get => (int?)RowData?.Values[0].EffectiveValue.NumberValue ?? 0;
-        set => RowData!.Values[0].EffectiveValue.NumberValue = (double)value;
+        set
+        {
+            RowData!.Values[0].EffectiveValue.NumberValue = (double)value;
+            RowData!.Values[0].UserEnteredValue.NumberValue = (double)value;
+        }
     }
     public DateOnly Date
     {
         get => DateOnly.FromDateTime(DateTime.FromOADate(RowData?.Values[1].EffectiveValue.NumberValue.Value ?? 0).Date);
-        set => RowData!.Values[1].EffectiveValue.NumberValue = value.ToDateTime(TimeOnly.MinValue).ToOADate();
+        set
+        {
+            RowData!.Values[1].EffectiveValue.NumberValue = value.ToDateTime(TimeOnly.MinValue).ToOADate();
+            RowData!.Values[1].UserEnteredValue.NumberValue = value.ToDateTime(TimeOnly.MinValue).ToOADate();
+        }
     }
     public decimal CostsInEuro
     {
         get => (decimal?)RowData?.Values[2].EffectiveValue.NumberValue ?? 0;
-        set => RowData!.Values[2].EffectiveValue.NumberValue = (double)value;
+        set
+        {
+            RowData!.Values[2].EffectiveValue.NumberValue = (double)value;
+            RowData!.Values[2].UserEnteredValue.NumberValue = (double)value;
+        }
     }
     public decimal ConsumptionInLiters
     {
         get => (decimal?)RowData?.Values[3].EffectiveValue.NumberValue ?? 0;
-        set => RowData!.Values[3].EffectiveValue.NumberValue = (double)value;
+        set
+        {
+            RowData!.Values[3].EffectiveValue.NumberValue = (double)value;
+            RowData!.Values[3].UserEnteredValue.NumberValue = (double)value;
+        }
     }
     public decimal RangeInKilometers
     {
         get => (decimal?)RowData?.Values[4].EffectiveValue.NumberValue ?? 0;
-        set => RowData!.Values[4].EffectiveValue.NumberValue = (double)value;
+        set
+        {
+            RowData!.Values[4].EffectiveValue.NumberValue = (double)value;
+            RowData!.Values[4].UserEnteredValue.NumberValue = (double)value;
+        }
     }
     public decimal AverageConsumptionPerHundredKilometers
     {
@@ -49,8 +69,16 @@ public sealed class FuelBookRowModel
 
     public async Task Load(int rowNumber)
     {
-        var mainSheet = await _sheetService.GetMainSheet();
-        RowData = mainSheet!.Data.First().RowData
+        var sheet = await _sheetService.GetMainSheet();
+        RowData = sheet?.Data.First().RowData
             .FirstOrDefault(r => r.Values[0].EffectiveValue != null && (int?)r.Values[0].EffectiveValue.NumberValue == rowNumber);
+    }
+
+    public async Task Save()
+    {
+        if (RowData is not null)
+        {
+            await _sheetService.UpdateRow(RowData);
+        }
     }
 }

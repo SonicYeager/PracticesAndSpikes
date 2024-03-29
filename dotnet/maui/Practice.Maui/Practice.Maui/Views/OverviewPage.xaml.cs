@@ -9,4 +9,9 @@ public sealed partial class OverviewPage : ContentPage
         BindingContext = viewModel;
         InitializeComponent();
     }
+
+    private void ContentPage_NavigatedTo(object sender, NavigatedToEventArgs e)
+    {
+        FuelStops.SelectedItem = null;
+    }
 }
