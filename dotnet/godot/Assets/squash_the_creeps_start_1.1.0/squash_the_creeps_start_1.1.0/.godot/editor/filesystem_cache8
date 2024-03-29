@@ -1,11 +1,11 @@
 ea4bc82a6ad023ab7ee23ee620429895
-::res://::1711392851
+::res://::1711561734
 default_bus_layout.tres::AudioBusLayout::-1::1711296976::0::1::::<><>::
 default_env.tres::Environment::-1::1711296976::0::1::::<><>::
 icon.png::CompressedTexture2D::6253720803582178561::1711296862::1711297002::1::::<><>::
-main.tscn::PackedScene::7200640800361969430::1711392845::0::1::::<><>::uid://bo2acpv2amy1c::::res://player.tscn
-player.cs::CSharpScript::-1::1711392142::0::1::::<><>::
-player.tscn::PackedScene::3424807087091379798::1711392845::0::1::::<><>::uid://dlukmnh13lxvh::::res://art/player.glb<>res://player.cs
+main.tscn::PackedScene::7200640800361969430::1711561730::0::1::::<><>::uid://bo2acpv2amy1c::::res://player.tscn
+Player.cs::CSharpScript::-1::1711393689::0::1::::<>CharacterBody3D<>::
+player.tscn::PackedScene::3424807087091379798::1711393425::0::1::::<><>::res://Player.cs<>uid://dlukmnh13lxvh::::res://art/player.glb
 ::res://art/::1711297003
 body.material::StandardMaterial3D::-1::1711296862::0::1::::<><>::
 eye.material::StandardMaterial3D::-1::1711296862::0::1::::<><>::

@@ -1,25 +1,33 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 
+<!-- The root ContentPage element for the SettingsPage view -->
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="Practice.Maui.Views.SettingsPage">
 
+    <!-- A Grid layout with two rows. The first row is 3 times the size of the second row. -->
     <Grid RowDefinitions="3*,*">
+        <!-- A Button in the first row of the Grid. When clicked, it executes the ToggleTheme command. -->
         <Button Text="ToggleTheme" Command="{Binding ToggleTheme}" Grid.Row="0" VerticalOptions="Center" HorizontalOptions="Center" />
+
+        <!-- A VerticalStackLayout in the second row of the Grid. It contains information about the creator and contact details. -->
         <VerticalStackLayout
             Grid.Row="1"
             Padding="5"
             VerticalOptions="End"
             HorizontalOptions="Fill"
             Spacing="5">
+            <!-- A Label displaying the text "About" -->
             <Label Text="About"
                    VerticalOptions="Center"
                    HorizontalOptions="Center"
                    FontAttributes="Bold"/>
+            <!-- A HorizontalStackLayout containing two Labels. The first Label displays the text "Creator: " and the second Label displays the creator's name. -->
             <HorizontalStackLayout VerticalOptions="Center" HorizontalOptions="Center">
                 <Label Text="Creator: "/>
                 <Label Text="SonicYeager"/>
             </HorizontalStackLayout>
+            <!-- A HorizontalStackLayout containing two Labels. The first Label displays the text "Contact: " and the second Label displays the contact email. -->
             <HorizontalStackLayout VerticalOptions="Center" HorizontalOptions="Center">
                 <Label Text="Contact: "/>
                 <Label Text="kimstone.yeager@gmail.com"/>

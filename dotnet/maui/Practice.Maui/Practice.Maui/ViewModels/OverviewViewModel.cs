@@ -4,7 +4,7 @@ using System.Windows.Input;
 using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using Practice.Maui.Models;
+using Practice.Maui.Application.Models;
 using Practice.Maui.Views;
 
 namespace Practice.Maui.ViewModels;
@@ -25,7 +25,7 @@ public sealed class OverviewViewModel : ObservableObject, IQueryAttributable
         _fuelBookSheetModel = fuelBookSheetModel;
         Initialization = Initialize();
         SelectFuelStopCommand = new AsyncRelayCommand<FuelStopEntryViewModel>(SelectFuelStopAsync);
-        FuelStops = new();
+        FuelStops = [];
     }
 
     /// <summary>

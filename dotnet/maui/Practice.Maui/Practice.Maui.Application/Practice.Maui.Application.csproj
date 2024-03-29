@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Google.Apis" Version="1.67.0" />
+        <PackageReference Include="Google.Apis.Sheets.v4" Version="1.67.0.3365" />
+    </ItemGroup>
+
+</Project>

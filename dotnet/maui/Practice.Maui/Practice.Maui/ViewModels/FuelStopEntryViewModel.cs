@@ -1,7 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using Practice.Maui.Models;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
+using Practice.Maui.Application.Models;
 
 namespace Practice.Maui.ViewModels;
 

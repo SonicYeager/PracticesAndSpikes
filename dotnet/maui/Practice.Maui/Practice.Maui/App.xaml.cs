@@ -2,7 +2,7 @@
 
 namespace Practice.Maui;
 
-public sealed partial class App : Application
+public sealed partial class App : Microsoft.Maui.Controls.Application
 {
     public App(AppShell appShell)
     {

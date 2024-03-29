@@ -1,5 +1,4 @@
-﻿using Practice.Maui.Services;
-using Practice.Maui.Views;
+﻿using Practice.Maui.Views;
 
 namespace Practice.Maui;
 

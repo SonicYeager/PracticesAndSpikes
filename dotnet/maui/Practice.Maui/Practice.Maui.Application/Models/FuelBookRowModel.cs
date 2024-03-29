@@ -1,13 +1,16 @@
-﻿using Google.Apis.Sheets.v4.Data;
-using Practice.Maui.Services;
+﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
+using Google.Apis.Sheets.v4.Data;
+using Practice.Maui.Application.Services;
 
-namespace Practice.Maui.Models;
+namespace Practice.Maui.Application.Models;
 
 public sealed class FuelBookRowModel
 {
-    private readonly SheetServiceWrapper _sheetService;
+    private readonly ISheetServiceWrapper _sheetService;
 
-    public FuelBookRowModel(SheetServiceWrapper sheetService)
+    public FuelBookRowModel(ISheetServiceWrapper sheetService)
     {
         _sheetService = sheetService;
     }

@@ -10,21 +10,21 @@ public sealed class SettingsViewModel
 
     public SettingsViewModel()
     {
-        Application.Current!.UserAppTheme = Application.Current.RequestedTheme;
-        Application.Current.RequestedThemeChanged += ToggleThemeAsync;
+        Microsoft.Maui.Controls.Application.Current!.UserAppTheme = Microsoft.Maui.Controls.Application.Current.RequestedTheme;
+        Microsoft.Maui.Controls.Application.Current.RequestedThemeChanged += ToggleThemeAsync;
         ToggleTheme = new RelayCommand(ToggleThemeAsync);
     }
 
     private static void ToggleThemeAsync()
     {
-        if (Application.Current!.UserAppTheme == AppTheme.Dark)
-            Application.Current.UserAppTheme = AppTheme.Light;
+        if (Microsoft.Maui.Controls.Application.Current!.UserAppTheme == AppTheme.Dark)
+            Microsoft.Maui.Controls.Application.Current.UserAppTheme = AppTheme.Light;
         else
-            Application.Current!.UserAppTheme = AppTheme.Dark;
+            Microsoft.Maui.Controls.Application.Current!.UserAppTheme = AppTheme.Dark;
     }
 
     private static void ToggleThemeAsync(object? s, AppThemeChangedEventArgs eventArgs)
     {
-        Application.Current!.UserAppTheme = eventArgs.RequestedTheme;
+        Microsoft.Maui.Controls.Application.Current!.UserAppTheme = eventArgs.RequestedTheme;
     }
 }

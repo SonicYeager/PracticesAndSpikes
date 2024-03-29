@@ -1,20 +1,25 @@
-﻿using Google.Apis.Auth.OAuth2;
+﻿using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Google.Apis.Auth.OAuth2;
 using Google.Apis.Sheets.v4;
 using Google.Apis.Sheets.v4.Data;
 using Google.Apis.Util.Store;
 
-namespace Practice.Maui.Services;
+namespace Practice.Maui.Application.Services;
 
-public class SheetServiceWrapper
+public sealed class SheetServiceWrapper : ISheetServiceWrapper
 {
     private SheetsService _sheetsService;
+    private readonly IFileSystem _fileSystem;
     public Task Initialization { get; }
 
-    public SheetServiceWrapper()
+    public SheetServiceWrapper(IFileSystem fileSystem)
     {
+        _fileSystem = fileSystem;
         Initialization = Task.Run(async () =>
         {
-            var stream = await FileSystem.Current.OpenAppPackageFileAsync("googleapi.json");
+            var stream = await _fileSystem.OpenReadAsync("googleapi.json");
             var scopes = new[]
             {
                 SheetsService.Scope.Spreadsheets,
@@ -25,7 +30,7 @@ public class SheetServiceWrapper
                 scopes,
                 "user",
                 CancellationToken.None,
-                new FileDataStore(FileSystem.Current.AppDataDirectory));
+                new FileDataStore(_fileSystem.AppDataDirectory));
 
             _sheetsService = new(new()
             {

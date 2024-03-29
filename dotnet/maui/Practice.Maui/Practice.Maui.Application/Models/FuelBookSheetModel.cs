@@ -1,12 +1,15 @@
-﻿using Practice.Maui.Services;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Practice.Maui.Application.Services;
 
-namespace Practice.Maui.Models;
+namespace Practice.Maui.Application.Models;
 
 public sealed class FuelBookSheetModel
 {
-    private readonly SheetServiceWrapper _sheetsService;
+    private readonly ISheetServiceWrapper _sheetsService;
 
-    public FuelBookSheetModel(SheetServiceWrapper sheetsService)
+    public FuelBookSheetModel(ISheetServiceWrapper sheetsService)
     {
         _sheetsService = sheetsService;
     }
