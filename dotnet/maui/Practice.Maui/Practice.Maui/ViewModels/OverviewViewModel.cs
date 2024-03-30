@@ -15,18 +15,22 @@ public sealed class OverviewViewModel : ObservableObject, IQueryAttributable
     ///     The Model date is fetched from.
     /// </summary>
     private readonly FuelBookSheetModel _fuelBookSheetModel;
+    private readonly IServiceProvider _serviceProvider;
 
-    public OverviewViewModel(FuelBookSheetModel fuelBookSheetModel)
+    public OverviewViewModel(FuelBookSheetModel fuelBookSheetModel, IServiceProvider serviceProvider)
     {
         _fuelBookSheetModel = fuelBookSheetModel;
+        _serviceProvider = serviceProvider;
         Initialization = Initialize();
         FuelStops = [];
         SelectFuelStopCommand = new AsyncRelayCommand<FuelStopEntryViewModel>(SelectFuelStopAsync);
+        NewCommand = new AsyncRelayCommand(NewFuelStopEntryAsync);
     }
 
     public ObservableCollection<FuelStopEntryViewModel> FuelStops { get; }
     public Task Initialization { get; private set; }
     public ICommand SelectFuelStopCommand { get; }
+    public ICommand NewCommand { get; }
 
     /// <inheritdoc />
     void IQueryAttributable.ApplyQueryAttributes(IDictionary<string, object> query)
@@ -51,10 +55,13 @@ public sealed class OverviewViewModel : ObservableObject, IQueryAttributable
             }
 
             // If note isn't found, it's new; add it.
-            //else
-            //{
-            //    FuelStops.Insert(0, new(Note.Load(noteId)));
-            //}
+            else
+            {
+                var newFuelStop = _serviceProvider.GetRequiredService<FuelStopEntryViewModel>();
+                newFuelStop.Number = int.Parse((string)saved);
+                FuelStops.Insert(0, newFuelStop);
+                Task.Run(async () => await newFuelStop.Reload()).ConfigureAwait(false);
+            }
         }
     }
 
@@ -87,5 +94,10 @@ public sealed class OverviewViewModel : ObservableObject, IQueryAttributable
     {
         if (fuelStop != null)
             await Shell.Current.GoToAsync($"{nameof(FuelStopPage)}?load={fuelStop.Number}");
+    }
+
+    private async Task NewFuelStopEntryAsync()
+    {
+        await Shell.Current.GoToAsync($"{nameof(FuelStopPage)}?isNew=true");
     }
 }

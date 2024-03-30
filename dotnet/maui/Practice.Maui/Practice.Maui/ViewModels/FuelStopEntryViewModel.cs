@@ -110,6 +110,12 @@ public sealed class FuelStopEntryViewModel : ObservableObject, IQueryAttributabl
                 await _fuelBookRowModel.Load(int.Parse((string)value));
                 RefreshProperties();
             });
+        if (query.TryGetValue("isNew", out var isNew))
+            Task.Run(async () =>
+            {
+                await _fuelBookRowModel.New();
+                RefreshProperties();
+            });
     }
 
     private async Task Save()

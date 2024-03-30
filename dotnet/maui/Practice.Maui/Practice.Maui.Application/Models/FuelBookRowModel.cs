@@ -77,8 +77,41 @@ public sealed class FuelBookRowModel
     public async Task Save()
     {
         if (RowData is not null)
-        {
             await _sheetService.UpdateRow(RowData);
+    }
+
+    public async Task New()
+    {
+        var sheet = await _sheetService.GetMainSheet();
+        var nextRow = sheet?.Data.First().RowData
+            .Skip(1)
+            .FirstOrDefault(static r => r.Values[1].EffectiveValue == null);
+        var nextRowNumber = sheet?.Data.First().RowData
+            .Skip(1)
+            .Where(static r => r.Values[1].EffectiveValue != null)
+            .Select(static r => (int)r.Values[0].EffectiveValue.NumberValue)
+            .Max() + 1;
+        nextRow.Values[0].EffectiveValue = new()
+        {
+            NumberValue = nextRowNumber,
+        };
+        nextRow.Values[0].UserEnteredValue = new()
+        {
+            NumberValue = nextRowNumber,
+        };
+
+        foreach (var value in nextRow.Values)
+        {
+            value.UserEnteredValue ??= new()
+            {
+                NumberValue = 0,
+            };
+            value.EffectiveValue ??= new()
+            {
+                NumberValue = 0,
+            };
         }
+
+        RowData = nextRow;
     }
 }

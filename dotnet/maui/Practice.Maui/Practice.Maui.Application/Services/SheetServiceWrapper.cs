@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Google.Apis.Auth.OAuth2;
@@ -17,6 +18,7 @@ public sealed class SheetServiceWrapper : ISheetServiceWrapper
 
     private readonly IFileSystem _fileSystem;
     private SheetsService _sheetsService;
+    private UserCredential _credential;
 
     public SheetServiceWrapper(IFileSystem fileSystem)
     {
@@ -29,7 +31,7 @@ public sealed class SheetServiceWrapper : ISheetServiceWrapper
                 SheetsService.Scope.Spreadsheets,
             };
 
-            var credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
+            _credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
                 (await GoogleClientSecrets.FromStreamAsync(stream)).Secrets,
                 scopes,
                 "user",
@@ -38,7 +40,7 @@ public sealed class SheetServiceWrapper : ISheetServiceWrapper
 
             _sheetsService = new(new()
             {
-                HttpClientInitializer = credential, ApplicationName = "Practice.Maui",
+                HttpClientInitializer = _credential, ApplicationName = "Practice.Maui",
             });
         });
     }
@@ -50,7 +52,7 @@ public sealed class SheetServiceWrapper : ISheetServiceWrapper
 
         var request = _sheetsService.Spreadsheets.Get(SheetId);
         request.IncludeGridData = true;
-        var sheet = await request.ExecuteAsync();
+        var sheet = await HandleRequest<Spreadsheet, SpreadsheetsResource.GetRequest>(request);
         return sheet.Sheets.FirstOrDefault(static s => s.Properties.Title == "Main");
     }
 
@@ -69,8 +71,8 @@ public sealed class SheetServiceWrapper : ISheetServiceWrapper
                         Range = new()
                         {
                             SheetId = GetSheetId(mainSheet),
-                            StartRowIndex = GetRowDataIndex(rowData, mainSheet),
-                            EndRowIndex = GetRowDataIndex(rowData, mainSheet) + 1,
+                            StartRowIndex = GetRowDataIndex(rowData, mainSheet) ?? GetNewRowDataIndex(mainSheet),
+                            EndRowIndex = (GetRowDataIndex(rowData, mainSheet) ?? GetNewRowDataIndex(mainSheet)) + 1,
                         },
                         Rows = new List<RowData>
                         {
@@ -83,7 +85,7 @@ public sealed class SheetServiceWrapper : ISheetServiceWrapper
         var request = _sheetsService.Spreadsheets.BatchUpdate(update, SheetId);
         try
         {
-            _ = await request.ExecuteAsync();
+            _ = await HandleRequest<BatchUpdateSpreadsheetResponse, SpreadsheetsResource.BatchUpdateRequest>(request);
         }
         catch (Exception e)
         {
@@ -91,16 +93,48 @@ public sealed class SheetServiceWrapper : ISheetServiceWrapper
         }
     }
 
-    private static int GetRowDataIndex(RowData rowData, Sheet? mainSheet)
+    private static int? GetRowDataIndex(RowData rowData, Sheet? mainSheet)
     {
         var first = mainSheet.Data.First().RowData
-            .First(rd => rd.Values[0].EffectiveValue.NumberValue == rowData.Values[0].EffectiveValue.NumberValue);
-        var index = mainSheet.Data.First().RowData.IndexOf(first);
-        return index;
+            .FirstOrDefault(rd => rd.Values[0].EffectiveValue.NumberValue == rowData.Values[0].EffectiveValue.NumberValue);
+        if (first is null) return null;
+
+        return mainSheet.Data.First().RowData.IndexOf(first);
+    }
+
+    private static int GetNewRowDataIndex(Sheet? mainSheet)
+    {
+        var first = mainSheet.Data.First().RowData.IndexOf(mainSheet.Data.First().RowData.Last());
+        return first + 1;
     }
 
     private static int? GetSheetId(Sheet? mainSheet)
     {
         return mainSheet.Properties.SheetId;
+    }
+
+    private async Task<TResponse> HandleRequest<TResponse, TRequest>(TRequest request) where TRequest : SheetsBaseServiceRequest<TResponse>
+    {
+        try
+        {
+            return await request.ExecuteAsync();
+        }
+        catch (HttpRequestException e) when (e.StatusCode == System.Net.HttpStatusCode.Unauthorized ||
+                                             e.StatusCode == System.Net.HttpStatusCode.Forbidden)
+        {
+            Trace.TraceWarning($"User Grant Expired with error: {e.Message}");
+            await Reauthorize();
+            return await request.ExecuteAsync();
+        }
+        catch (Exception e)
+        {
+            Trace.TraceError(e.ToString());
+            throw;
+        }
+    }
+
+    private async Task Reauthorize()
+    {
+        await GoogleWebAuthorizationBroker.ReauthorizeAsync(_credential, CancellationToken.None);
     }
 }
