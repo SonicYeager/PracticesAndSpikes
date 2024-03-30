@@ -16,16 +16,14 @@ public sealed class SheetServiceWrapper : ISheetServiceWrapper
 {
     private const string SheetId = "1F6RxzQ8J88yf_d5d08Y77THMjYgewPP6yUfQOvhLXIY";
 
-    private readonly IFileSystem _fileSystem;
-    private SheetsService _sheetsService;
-    private UserCredential _credential;
+    private SheetsService? _sheetsService;
+    private UserCredential? _credential;
 
     public SheetServiceWrapper(IFileSystem fileSystem)
     {
-        _fileSystem = fileSystem;
         Initialization = Task.Run(async () =>
         {
-            var stream = await _fileSystem.OpenReadAsync("googleapi.json");
+            var stream = await fileSystem.OpenReadAsync("googleapi.json");
             var scopes = new[]
             {
                 SheetsService.Scope.Spreadsheets,
@@ -36,7 +34,7 @@ public sealed class SheetServiceWrapper : ISheetServiceWrapper
                 scopes,
                 "user",
                 CancellationToken.None,
-                new FileDataStore(_fileSystem.AppDataDirectory));
+                new FileDataStore(fileSystem.AppDataDirectory));
 
             _sheetsService = new(new()
             {
@@ -44,13 +42,14 @@ public sealed class SheetServiceWrapper : ISheetServiceWrapper
             });
         });
     }
+
     public Task Initialization { get; }
 
     public async Task<Sheet?> GetMainSheet()
     {
         if (!Initialization.IsCompleted) await Initialization.WaitAsync(CancellationToken.None);
 
-        var request = _sheetsService.Spreadsheets.Get(SheetId);
+        var request = _sheetsService!.Spreadsheets.Get(SheetId);
         request.IncludeGridData = true;
         var sheet = await HandleRequest<Spreadsheet, SpreadsheetsResource.GetRequest>(request);
         return sheet.Sheets.FirstOrDefault(static s => s.Properties.Title == "Main");
@@ -82,7 +81,8 @@ public sealed class SheetServiceWrapper : ISheetServiceWrapper
                 },
             },
         };
-        var request = _sheetsService.Spreadsheets.BatchUpdate(update, SheetId);
+        if (!Initialization.IsCompleted) await Initialization.WaitAsync(CancellationToken.None);
+        var request = _sheetsService!.Spreadsheets.BatchUpdate(update, SheetId);
         try
         {
             _ = await HandleRequest<BatchUpdateSpreadsheetResponse, SpreadsheetsResource.BatchUpdateRequest>(request);
@@ -110,7 +110,7 @@ public sealed class SheetServiceWrapper : ISheetServiceWrapper
 
     private static int? GetSheetId(Sheet? mainSheet)
     {
-        return mainSheet.Properties.SheetId;
+        return mainSheet?.Properties.SheetId;
     }
 
     private async Task<TResponse> HandleRequest<TResponse, TRequest>(TRequest request) where TRequest : SheetsBaseServiceRequest<TResponse>
@@ -119,8 +119,7 @@ public sealed class SheetServiceWrapper : ISheetServiceWrapper
         {
             return await request.ExecuteAsync();
         }
-        catch (HttpRequestException e) when (e.StatusCode == System.Net.HttpStatusCode.Unauthorized ||
-                                             e.StatusCode == System.Net.HttpStatusCode.Forbidden)
+        catch (HttpRequestException e) when (e.StatusCode is System.Net.HttpStatusCode.Unauthorized or System.Net.HttpStatusCode.Forbidden)
         {
             Trace.TraceWarning($"User Grant Expired with error: {e.Message}");
             await Reauthorize();

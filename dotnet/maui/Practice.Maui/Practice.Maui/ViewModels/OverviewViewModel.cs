@@ -15,6 +15,7 @@ public sealed class OverviewViewModel : ObservableObject, IQueryAttributable
     ///     The Model date is fetched from.
     /// </summary>
     private readonly FuelBookSheetModel _fuelBookSheetModel;
+
     private readonly IServiceProvider _serviceProvider;
 
     public OverviewViewModel(FuelBookSheetModel fuelBookSheetModel, IServiceProvider serviceProvider)
@@ -66,7 +67,7 @@ public sealed class OverviewViewModel : ObservableObject, IQueryAttributable
     }
 
     /// <summary>
-    ///     Initializes the Apods.
+    ///    Initializes the ViewModel.
     /// </summary>
     private async Task Initialize()
     {
@@ -90,13 +91,13 @@ public sealed class OverviewViewModel : ObservableObject, IQueryAttributable
         }
     }
 
-    private static async Task SelectFuelStopAsync(FuelStopEntryViewModel fuelStop)
+    private static async Task SelectFuelStopAsync(FuelStopEntryViewModel? fuelStop)
     {
         if (fuelStop != null)
             await Shell.Current.GoToAsync($"{nameof(FuelStopPage)}?load={fuelStop.Number}");
     }
 
-    private async Task NewFuelStopEntryAsync()
+    private static async Task NewFuelStopEntryAsync()
     {
         await Shell.Current.GoToAsync($"{nameof(FuelStopPage)}?isNew=true");
     }

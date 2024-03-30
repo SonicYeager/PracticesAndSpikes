@@ -35,9 +35,9 @@ public sealed class FuelStopEntryViewModel : ObservableObject, IQueryAttributabl
         get => _fuelBookRowModel.Date.ToShortDateString();
         set
         {
-            if (_fuelBookRowModel.Date != DateOnly.Parse(value))
+            if (DateOnly.TryParse(value, out var date) && _fuelBookRowModel.Date != date)
             {
-                _fuelBookRowModel.Date = DateOnly.Parse(value);
+                _fuelBookRowModel.Date = date;
                 OnPropertyChanged();
             }
         }
