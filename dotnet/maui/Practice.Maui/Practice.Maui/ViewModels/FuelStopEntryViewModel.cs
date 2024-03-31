@@ -30,14 +30,14 @@ public sealed class FuelStopEntryViewModel : ObservableObject, IQueryAttributabl
             }
         }
     }
-    public string Date
+    public DateTime Date
     {
-        get => _fuelBookRowModel.Date.ToShortDateString();
+        get => _fuelBookRowModel.Date.ToDateTime(TimeOnly.MinValue);
         set
         {
-            if (DateOnly.TryParse(value, out var date) && _fuelBookRowModel.Date != date)
+            if (_fuelBookRowModel.Date != DateOnly.FromDateTime(value))
             {
-                _fuelBookRowModel.Date = date;
+                _fuelBookRowModel.Date = DateOnly.FromDateTime(value);
                 OnPropertyChanged();
             }
         }
@@ -81,14 +81,6 @@ public sealed class FuelStopEntryViewModel : ObservableObject, IQueryAttributabl
     public decimal AverageConsumptionPerHundredKilometers
     {
         get => _fuelBookRowModel.AverageConsumptionPerHundredKilometers;
-        set
-        {
-            if (_fuelBookRowModel.AverageConsumptionPerHundredKilometers != value)
-            {
-                _fuelBookRowModel.AverageConsumptionPerHundredKilometers = value;
-                OnPropertyChanged();
-            }
-        }
     }
     private bool _isSaving;
     public bool IsSaving

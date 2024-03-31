@@ -60,7 +60,7 @@ public sealed class OverviewViewModel : ObservableObject, IQueryAttributable
             {
                 var newFuelStop = _serviceProvider.GetRequiredService<FuelStopEntryViewModel>();
                 newFuelStop.Number = int.Parse((string)saved);
-                FuelStops.Insert(0, newFuelStop);
+                FuelStops.Add(newFuelStop);
                 Task.Run(async () => await newFuelStop.Reload()).ConfigureAwait(false);
             }
         }

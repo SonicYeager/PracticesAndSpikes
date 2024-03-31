@@ -6,11 +6,11 @@
     <ContentPage.Content>
         <VerticalStackLayout Spacing="10" Margin="5">
             <Editor Text="{Binding Number}" />
-            <Editor Text="{Binding Date}" />
+            <DatePicker Date="{Binding Date}" />
             <Editor Text="{Binding CostsInEuro}" />
             <Editor Text="{Binding ConsumptionInLiters}" />
             <Editor Text="{Binding RangeInKilometers}" />
-            <Editor Text="{Binding AverageConsumptionPerHundredKilometers}" />
+            <Editor Text="{Binding AverageConsumptionPerHundredKilometers}" IsReadOnly="True"/>
 
             <Grid ColumnDefinitions="*,*" ColumnSpacing="4">
                 <Button Text="Save"

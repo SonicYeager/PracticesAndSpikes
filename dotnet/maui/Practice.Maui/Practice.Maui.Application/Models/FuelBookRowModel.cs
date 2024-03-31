@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Google.Apis.Sheets.v4.Data;
@@ -21,17 +22,36 @@ public sealed class FuelBookRowModel
         get => (int?)RowData?.Values[0].EffectiveValue.NumberValue ?? 0;
         set
         {
-            RowData!.Values[0].EffectiveValue.NumberValue = (double)value;
-            RowData!.Values[0].UserEnteredValue.NumberValue = (double)value;
+            if (RowData is not null)
+            {
+                RowData!.Values[0].EffectiveValue.NumberValue = (double)value;
+                RowData!.Values[0].UserEnteredValue.NumberValue = (double)value;
+            }
         }
     }
     public DateOnly Date
     {
-        get => DateOnly.FromDateTime(DateTime.FromOADate(RowData?.Values[1].EffectiveValue.NumberValue.Value ?? 0).Date);
+        get
+        {
+            var dateTime = DateTime.FromOADate(RowData?.Values[1].EffectiveValue.NumberValue ?? DateTime.Today.ToOADate());
+            if (dateTime <= DateTime.MinValue || dateTime <= DateTime.Parse("2020-01-01"))
+                dateTime = DateTime.Today;
+            return DateOnly.FromDateTime(dateTime);
+        }
         set
         {
-            RowData!.Values[1].EffectiveValue.NumberValue = value.ToDateTime(TimeOnly.MinValue).ToOADate();
-            RowData!.Values[1].UserEnteredValue.NumberValue = value.ToDateTime(TimeOnly.MinValue).ToOADate();
+            if (RowData is not null)
+            {
+                try
+                {
+                    RowData.Values[1].EffectiveValue.NumberValue = value.ToDateTime(TimeOnly.MinValue).ToOADate();
+                    RowData.Values[1].UserEnteredValue.NumberValue = value.ToDateTime(TimeOnly.MinValue).ToOADate();
+                }
+                catch (Exception e)
+                {
+                    Trace.TraceWarning(e.ToString());
+                }
+            }
         }
     }
     public decimal CostsInEuro
@@ -39,8 +59,11 @@ public sealed class FuelBookRowModel
         get => (decimal?)RowData?.Values[2].EffectiveValue.NumberValue ?? 0;
         set
         {
-            RowData!.Values[2].EffectiveValue.NumberValue = (double)value;
-            RowData!.Values[2].UserEnteredValue.NumberValue = (double)value;
+            if (RowData is not null)
+            {
+                RowData!.Values[2].EffectiveValue.NumberValue = (double)value;
+                RowData!.Values[2].UserEnteredValue.NumberValue = (double)value;
+            }
         }
     }
     public decimal ConsumptionInLiters
@@ -48,8 +71,11 @@ public sealed class FuelBookRowModel
         get => (decimal?)RowData?.Values[3].EffectiveValue.NumberValue ?? 0;
         set
         {
-            RowData!.Values[3].EffectiveValue.NumberValue = (double)value;
-            RowData!.Values[3].UserEnteredValue.NumberValue = (double)value;
+            if (RowData is not null)
+            {
+                RowData!.Values[3].EffectiveValue.NumberValue = (double)value;
+                RowData!.Values[3].UserEnteredValue.NumberValue = (double)value;
+            }
         }
     }
     public decimal RangeInKilometers
@@ -57,14 +83,16 @@ public sealed class FuelBookRowModel
         get => (decimal?)RowData?.Values[4].EffectiveValue.NumberValue ?? 0;
         set
         {
-            RowData!.Values[4].EffectiveValue.NumberValue = (double)value;
-            RowData!.Values[4].UserEnteredValue.NumberValue = (double)value;
+            if (RowData is not null)
+            {
+                RowData!.Values[4].EffectiveValue.NumberValue = (double)value;
+                RowData!.Values[4].UserEnteredValue.NumberValue = (double)value;
+            }
         }
     }
     public decimal AverageConsumptionPerHundredKilometers
     {
         get => (decimal?)RowData?.Values[5].EffectiveValue.NumberValue ?? 0;
-        set => RowData!.Values[5].EffectiveValue.NumberValue = (double)value;
     }
 
     public async Task Load(int rowNumber)
