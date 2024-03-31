@@ -60,6 +60,12 @@ move_left={
 ]
 }
 
+[layer_names]
+
+2d_physics/layer_1="players"
+2d_physics/layer_2="enemies"
+2d_physics/layer_3="world"
+
 [rendering]
 
 quality/driver/driver_name="GLES2"
