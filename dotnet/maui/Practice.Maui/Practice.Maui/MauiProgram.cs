@@ -1,11 +1,11 @@
 ﻿using CommunityToolkit.Maui;
+using Google.Apis.Auth.OAuth2;
 using Microsoft.Extensions.Logging;
 using Practice.Maui.Application;
 using Practice.Maui.Application.Models;
 using Practice.Maui.Application.Services;
 using Practice.Maui.ViewModels;
 using Practice.Maui.Views;
-using IFileSystem = Practice.Maui.Application.Services.IFileSystem;
 
 namespace Practice.Maui;
 
@@ -33,7 +33,12 @@ public static class MauiProgram
         builder.Services.AddTransient<FuelBookSheetModel>();
         builder.Services.AddTransient<FuelBookRowModel>();
         builder.Services.AddTransient<ISheetServiceWrapper, SheetServiceWrapper>();
-        builder.Services.AddTransient<IFileSystem, MauiFileSystemWrapper>();
+        builder.Services.AddTransient<ISheetConfigProvider, MauiSheetConfigProviderWrapper>();
+
+        if (DeviceInfo.Platform == DevicePlatform.Android)
+            builder.Services.AddSingleton<ICodeReceiver, CodeReceiver>();
+        else
+            builder.Services.AddSingleton<ICodeReceiver, LocalServerCodeReceiver>();
 
 #if DEBUG
         builder.Logging.AddDebug();

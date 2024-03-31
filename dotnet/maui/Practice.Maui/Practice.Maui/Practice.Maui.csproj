@@ -24,7 +24,7 @@
         <ApplicationTitle>Practice.Maui</ApplicationTitle>
 
         <!-- App Identifier -->
-        <ApplicationId>com.companyname.practice.maui</ApplicationId>
+        <ApplicationId>com.cookaperture.practice.maui</ApplicationId>
 
         <!-- Versions -->
         <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
@@ -76,6 +76,9 @@
         <Compile Update="Views\OverviewPage.xaml.cs">
             <DependentUpon>MainPage.xaml</DependentUpon>
             <SubType>Code</SubType>
+        </Compile>
+        <Compile Update="Application\CodeReceiver.cs">
+          <ExcludeFromCurrentConfiguration>false</ExcludeFromCurrentConfiguration>
         </Compile>
     </ItemGroup>
 

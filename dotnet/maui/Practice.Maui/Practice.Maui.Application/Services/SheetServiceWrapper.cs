@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Sheets.v4;
 using Google.Apis.Sheets.v4.Data;
-using Google.Apis.Util.Store;
 
 namespace Practice.Maui.Application.Services;
 
@@ -19,22 +18,22 @@ public sealed class SheetServiceWrapper : ISheetServiceWrapper
     private SheetsService? _sheetsService;
     private UserCredential? _credential;
 
-    public SheetServiceWrapper(IFileSystem fileSystem)
+    public SheetServiceWrapper(ISheetConfigProvider sheetConfigProvider, ICodeReceiver codeReceiver)
     {
         Initialization = Task.Run(async () =>
         {
-            var stream = await fileSystem.OpenReadAsync("googleapi.json");
             var scopes = new[]
             {
                 SheetsService.Scope.Spreadsheets,
             };
 
             _credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
-                (await GoogleClientSecrets.FromStreamAsync(stream)).Secrets,
+                await sheetConfigProvider.GetClientSecrets(),
                 scopes,
                 "user",
                 CancellationToken.None,
-                new FileDataStore(fileSystem.AppDataDirectory));
+                sheetConfigProvider.FileDataStore,
+                codeReceiver);
 
             _sheetsService = new(new()
             {
