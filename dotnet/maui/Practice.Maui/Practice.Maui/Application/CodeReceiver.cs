@@ -1,8 +1,6 @@
 ﻿using Google.Apis.Auth.OAuth2;
 using Google.Apis.Auth.OAuth2.Requests;
 using Google.Apis.Auth.OAuth2.Responses;
-using Practice.Maui.Application;
-using Practice.Maui.Application.Services;
 
 namespace Practice.Maui.Application;
 

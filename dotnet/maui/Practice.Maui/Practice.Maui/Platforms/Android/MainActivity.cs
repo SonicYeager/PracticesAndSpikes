@@ -2,7 +2,6 @@
 using Android.Content.PM;
 using Android.OS;
 using Practice.Maui.Application;
-using Practice.Maui.Application.Services;
 
 namespace Practice.Maui;
 
