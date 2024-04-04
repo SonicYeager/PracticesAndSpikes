@@ -23,4 +23,10 @@ public partial class Main : Node
         // Spawn the mob by adding it to the Main scene.
         AddChild(mob);
     }
+
+    // We also specified this function name in PascalCase in the editor's connection window
+    private void OnPlayerHit()
+    {
+        GetNode<Timer>("MobTimer").Stop();
+    }
 }

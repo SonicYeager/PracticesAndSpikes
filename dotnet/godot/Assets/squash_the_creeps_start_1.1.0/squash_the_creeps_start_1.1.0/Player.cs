@@ -13,6 +13,10 @@ public partial class Player : CharacterBody3D
     // Vertical impulse applied to the character upon bouncing over a mob in meters per second.
     [Export] public int BounceImpulse { get; set; } = 16;
 
+    // Emitted when the player was hit by a mob.
+    [Signal]
+    public delegate void HitEventHandler();
+
     private Vector3 _targetVelocity = Vector3.Zero;
 
     public override void _PhysicsProcess(double delta)
@@ -86,5 +90,17 @@ public partial class Player : CharacterBody3D
         }
 
         MoveAndSlide();
+    }
+
+    private void Die()
+    {
+        EmitSignal(SignalName.Hit);
+        QueueFree();
+    }
+
+    // We also specified this function name in PascalCase in the editor's connection window
+    private void OnMobDetectorBodyEntered(Node3D body)
+    {
+        Die();
     }
 }

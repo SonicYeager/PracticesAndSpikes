@@ -1,6 +1,6 @@
+res://main.tscn
 res://player.tscn
+res://mob.tscn
 res://Main.cs
 res://Mob.cs
 res://Player.cs
-res://mob.tscn
-res://main.tscn
