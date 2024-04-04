@@ -102,10 +102,9 @@ public sealed class FuelBookRowModel
             .FirstOrDefault(r => r.Values[0].EffectiveValue != null && (int?)r.Values[0].EffectiveValue.NumberValue == rowNumber);
     }
 
-    public async Task Save()
+    public Task Save()
     {
-        if (RowData is not null)
-            await _sheetService.UpdateRow(RowData);
+        return RowData is not null ? _sheetService.UpdateRow(RowData) : Task.CompletedTask;
     }
 
     public async Task New()
@@ -113,12 +112,16 @@ public sealed class FuelBookRowModel
         var sheet = await _sheetService.GetMainSheet();
         var nextRow = sheet?.Data.First().RowData
             .Skip(1)
-            .FirstOrDefault(static r => r.Values[1].EffectiveValue == null);
+            .First(static r => r.Values[1].EffectiveValue == null);
         var nextRowNumber = sheet?.Data.First().RowData
             .Skip(1)
             .Where(static r => r.Values[1].EffectiveValue != null)
-            .Select(static r => (int)r.Values[0].EffectiveValue.NumberValue)
+            .Select(static r => (int?)r.Values[0].EffectiveValue.NumberValue)
             .Max() + 1;
+
+        if (nextRow is null)
+            throw new InvalidOperationException("No empty row found.");
+
         nextRow.Values[0].EffectiveValue = new()
         {
             NumberValue = nextRowNumber,

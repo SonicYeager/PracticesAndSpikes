@@ -1,9 +1,8 @@
-using System.Collections.Specialized;
 using System.Web;
 
 namespace Practice.Maui.Application;
 
-public static class LaunchUriHandler
+internal static class LaunchUriHandler
 {
     private static readonly TaskCompletionSource<LaunchResult> OnReturned = new();
 
@@ -17,16 +16,4 @@ public static class LaunchUriHandler
         OnReturned.SetResult(new(type, query));
         return true;
     }
-}
-
-public class LaunchResult
-{
-    public LaunchResult(LaunchType type, NameValueCollection query)
-    {
-        Type = type;
-        Query = query;
-    }
-
-    public LaunchType Type { get; }
-    public NameValueCollection Query { get; }
 }

@@ -44,19 +44,34 @@ public sealed class SheetServiceWrapper : ISheetServiceWrapper
 
     public Task Initialization { get; }
 
-    public async Task<Sheet?> GetMainSheet()
+    public async Task<Sheet> GetMainSheet()
     {
         if (!Initialization.IsCompleted) await Initialization.WaitAsync(CancellationToken.None);
 
         var request = _sheetsService!.Spreadsheets.Get(SheetId);
         request.IncludeGridData = true;
         var sheet = await HandleRequest<Spreadsheet, SpreadsheetsResource.GetRequest>(request);
-        return sheet.Sheets.FirstOrDefault(static s => s.Properties.Title == "Main");
+        return sheet.Sheets.First(static s => s.Properties.Title == "Main");
     }
 
     public async Task UpdateRow(RowData rowData)
     {
         var mainSheet = await GetMainSheet();
+        var update = CreateBatchUpdateSpreadsheetRequest(rowData, mainSheet);
+        if (!Initialization.IsCompleted) await Initialization.WaitAsync(CancellationToken.None);
+        var request = _sheetsService!.Spreadsheets.BatchUpdate(update, SheetId);
+        try
+        {
+            _ = await HandleRequest<BatchUpdateSpreadsheetResponse, SpreadsheetsResource.BatchUpdateRequest>(request);
+        }
+        catch (Exception e)
+        {
+            Trace.TraceError(e.ToString());
+        }
+    }
+
+    private static BatchUpdateSpreadsheetRequest CreateBatchUpdateSpreadsheetRequest(RowData rowData, Sheet mainSheet)
+    {
         var update = new BatchUpdateSpreadsheetRequest
         {
             Requests = new List<Request>
@@ -80,28 +95,24 @@ public sealed class SheetServiceWrapper : ISheetServiceWrapper
                 },
             },
         };
-        if (!Initialization.IsCompleted) await Initialization.WaitAsync(CancellationToken.None);
-        var request = _sheetsService!.Spreadsheets.BatchUpdate(update, SheetId);
-        try
-        {
-            _ = await HandleRequest<BatchUpdateSpreadsheetResponse, SpreadsheetsResource.BatchUpdateRequest>(request);
-        }
-        catch (Exception e)
-        {
-            Trace.TraceError(e.ToString());
-        }
+        return update;
     }
 
-    private static int? GetRowDataIndex(RowData rowData, Sheet? mainSheet)
+    private static int? GetRowDataIndex(RowData rowData, Sheet mainSheet)
     {
+        const double tolerance = 0.0001;
         var first = mainSheet.Data.First().RowData
-            .FirstOrDefault(rd => rd.Values[0].EffectiveValue.NumberValue == rowData.Values[0].EffectiveValue.NumberValue);
+            .FirstOrDefault(rd
+                => rd.Values[0].EffectiveValue.NumberValue is not null &&
+                   rowData.Values[0].EffectiveValue.NumberValue is not null &&
+                   Math.Abs(rd.Values[0].EffectiveValue.NumberValue!.Value - rowData.Values[0].EffectiveValue.NumberValue!.Value) <
+                   tolerance);
         if (first is null) return null;
 
         return mainSheet.Data.First().RowData.IndexOf(first);
     }
 
-    private static int GetNewRowDataIndex(Sheet? mainSheet)
+    private static int GetNewRowDataIndex(Sheet mainSheet)
     {
         var first = mainSheet.Data.First().RowData.IndexOf(mainSheet.Data.First().RowData.Last());
         return first + 1;
@@ -131,8 +142,8 @@ public sealed class SheetServiceWrapper : ISheetServiceWrapper
         }
     }
 
-    private async Task Reauthorize()
+    private Task Reauthorize()
     {
-        await GoogleWebAuthorizationBroker.ReauthorizeAsync(_credential, CancellationToken.None);
+        return GoogleWebAuthorizationBroker.ReauthorizeAsync(_credential, CancellationToken.None);
     }
 }

@@ -1,6 +1,6 @@
 namespace Practice.Maui.Application;
 
-public class LaunchUriBuilder
+internal sealed class LaunchUriBuilder
 {
     public const string RedirectPath = "oauth2/redirect";
 

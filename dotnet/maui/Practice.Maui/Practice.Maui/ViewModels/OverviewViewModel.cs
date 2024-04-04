@@ -40,7 +40,6 @@ public sealed class OverviewViewModel : ObservableObject, IQueryAttributable
         {
             var matchedNote = FuelStops.FirstOrDefault(n => n.Number == int.Parse((string)deleted));
 
-            // If note exists, delete it
             if (matchedNote != null)
                 FuelStops.Remove(matchedNote);
         }
@@ -48,14 +47,12 @@ public sealed class OverviewViewModel : ObservableObject, IQueryAttributable
         {
             var matchedNote = FuelStops.FirstOrDefault(n => n.Number == int.Parse((string)saved));
 
-            // If note is found, update it
             if (matchedNote is not null)
             {
                 Task.Run(async () => await matchedNote.Reload()).ConfigureAwait(false);
                 FuelStops.Move(FuelStops.IndexOf(matchedNote), FuelStops.IndexOf(matchedNote));
             }
 
-            // If note isn't found, it's new; add it.
             else
             {
                 var newFuelStop = _serviceProvider.GetRequiredService<FuelStopEntryViewModel>();
@@ -74,7 +71,8 @@ public sealed class OverviewViewModel : ObservableObject, IQueryAttributable
         var cancellationTokenSource = new CancellationTokenSource();
         try
         {
-            foreach (var row in (await _fuelBookSheetModel.LoadColumns()).Select(static c => new FuelStopEntryViewModel(c)))
+            foreach (var row
+                     in (await _fuelBookSheetModel.LoadColumns()).Select(static c => new FuelStopEntryViewModel(c)))
             {
                 FuelStops.Add(row);
             }
@@ -91,14 +89,13 @@ public sealed class OverviewViewModel : ObservableObject, IQueryAttributable
         }
     }
 
-    private static async Task SelectFuelStopAsync(FuelStopEntryViewModel? fuelStop)
+    private static Task SelectFuelStopAsync(FuelStopEntryViewModel? fuelStop)
     {
-        if (fuelStop != null)
-            await Shell.Current.GoToAsync($"{nameof(FuelStopPage)}?load={fuelStop.Number}");
+        return fuelStop != null ? Shell.Current.GoToAsync($"{nameof(FuelStopPage)}?load={fuelStop.Number}") : Task.CompletedTask;
     }
 
-    private static async Task NewFuelStopEntryAsync()
+    private static Task NewFuelStopEntryAsync()
     {
-        await Shell.Current.GoToAsync($"{nameof(FuelStopPage)}?isNew=true");
+        return Shell.Current.GoToAsync($"{nameof(FuelStopPage)}?isNew=true");
     }
 }

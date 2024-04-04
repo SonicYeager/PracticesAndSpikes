@@ -4,12 +4,15 @@ using Google.Apis.Auth.OAuth2.Responses;
 
 namespace Practice.Maui.Application;
 
-public class CodeReceiver : ICodeReceiver
+public sealed class CodeReceiver : ICodeReceiver
 {
     /// <summary>
     ///    Gets the redirect URI where the response will be sent.
     /// </summary>
-    public string RedirectUri => new LaunchUriBuilder(LaunchType.OAuth2Redirect).Build().AbsoluteUri;
+    public string RedirectUri
+    {
+        get => new LaunchUriBuilder(LaunchType.OAuth2Redirect).Build().AbsoluteUri;
+    }
 
     /// <summary>
     ///    Receives the authorization code.
