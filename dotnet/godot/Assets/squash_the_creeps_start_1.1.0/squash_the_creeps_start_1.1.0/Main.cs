@@ -22,11 +22,28 @@ public partial class Main : Node
 
         // Spawn the mob by adding it to the Main scene.
         AddChild(mob);
+
+        mob.Squashed += GetNode<ScoreLabel>("UserInterface/ScoreLabel").OnMobSquashed;
     }
 
     // We also specified this function name in PascalCase in the editor's connection window
     private void OnPlayerHit()
     {
         GetNode<Timer>("MobTimer").Stop();
+        GetNode<Control>("UserInterface/Retry").Show();
+    }
+
+    public override void _Ready()
+    {
+        GetNode<Control>("UserInterface/Retry").Hide();
+    }
+
+    public override void _UnhandledInput(InputEvent @event)
+    {
+        if (@event.IsActionPressed("ui_accept") && GetNode<Control>("UserInterface/Retry").Visible)
+        {
+            // This restarts the current scene.
+            GetTree().ReloadCurrentScene();
+        }
     }
 }
