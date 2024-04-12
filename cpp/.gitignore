@@ -1,0 +1,16 @@
+# Ignore Python virtual environment
+venv/
+build/
+
+# Ignore build artifacts
+*.o
+*.lo
+*.la
+# etc...
+
+# Ignore CMake generated files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+# etc...
