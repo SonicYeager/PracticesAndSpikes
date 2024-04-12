@@ -7,7 +7,7 @@
 
 ### Prerequisites
 - [mysys2](https://www.msys2.org/)
-    - Install `mingw-w64-x86_64-gcc`, `mingw-w64-x86_64-cmake` and `mingw-w64-x86_64-gdb` packages
+    - Install `mingw-w64-x86_64-gcc`, `mingw-w64-x86_64-cmake` and `mingw-w64-x86_64-gdb`, `mingw-w64-x86_64-make` packages
 - Python 3.8
     - install pip
     - install venv
@@ -24,5 +24,5 @@
 ### Sources
 
 - [setup-part-one](https://medium.com/@kushagra.mckv/conan-and-cmake-setup-for-c-development-on-vscode-73fdecdc43bf)
-- [conan-initial-setup]([https://](https://docs.conan.io/2/tutorial/consuming_packages/build_simple_cmake_project.html)
+- [conan-initial-setup](https://docs.conan.io/2/tutorial/consuming_packages/build_simple_cmake_project.html)
 
