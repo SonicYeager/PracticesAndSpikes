@@ -1,0 +1,9 @@
+{
+    "version": 4,
+    "vendor": {
+        "conan": {}
+    },
+    "include": [
+        "C:\\Data\\Playground\\PracticesAndSpikes\\cpp\\codewars-training\\build\\CMakePresets.json"
+    ]
+}
