@@ -4,7 +4,6 @@
         "conan": {}
     },
     "include": [
-        "E:\\Repositories\\PracticesAndSpikes\\cpp\\codewars-training\\build\\Release\\generators\\CMakePresets.json",
-        "E:\\Repositories\\PracticesAndSpikes\\cpp\\codewars-training\\build\\build\\Release\\generators\\CMakePresets.json"
+        "E:\\Repositories\\PracticesAndSpikes\\cpp\\codewars-training\\build\\Debug\\generators\\CMakePresets.json"
     ]
 }
