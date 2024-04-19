@@ -16,10 +16,10 @@ TEST(FixedTests, DigitalRoot)
 
 TEST(RandomTests, DigitalRoot)
 {
-    srand(time(NULL));
+    srand(time(nullptr));
     for(int i = 3; i < 103; i++)
     {
-        int C = std::rand();
+        const int C = std::rand();
         EXPECT_EQ(get_digital_root(C), (C-1) % 9 + 1);
     }
 }

@@ -39,3 +39,4 @@ CTestTestfile.cmake
 
 # Ignore Visual Studio Code files
 .vscode/
+cmake-build-debug/

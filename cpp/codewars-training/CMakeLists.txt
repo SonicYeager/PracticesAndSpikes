@@ -1,22 +1,13 @@
-cmake_minimum_required(VERSION 3.15)
-project(codewars-training CXX)
+cmake_minimum_required(VERSION 3.28)
+project(codewars_training)
 
-# GoogleTest requires at least C++14
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Automatically add all source files and headers
-file(GLOB SOURCES 
-"src/*.cpp" 
-"tests/*.cpp" 
-"src/digital_root/*.cpp"
-"src/high_and_low/*.cpp"
-)
-#file(GLOB HEADERS "include/*.hpp")
+add_library(codewars_training STATIC
+        digital_root/kata.cpp
+        include/digital_root/kata.hpp
+        high_and_low/kata.cpp
+        include/high_and_low/kata.hpp)
 
-include_directories(include/)
-
-find_package(GTest REQUIRED)
-
-add_executable(${PROJECT_NAME} ${SOURCES}) # ${HEADERS}
-target_link_libraries(${PROJECT_NAME} GTest::GTest)
+# Add the include directory of the static library
+target_include_directories(codewars_training PUBLIC include)
