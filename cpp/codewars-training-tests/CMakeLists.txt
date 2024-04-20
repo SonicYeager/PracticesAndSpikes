@@ -10,8 +10,9 @@ add_subdirectory(../codewars-training ${CMAKE_BINARY_DIR}/codewars-training)
 
 add_executable(codewars_training_tests
         main.cpp
-        digital_root_tests.cpp
-        high_and_low_tests.cpp)
+        tests/digital_root_tests.cpp
+        tests/high_and_low_tests.cpp
+        tests/string_ends_with_tests.cpp)
 
 # Add the include directory of the static library
 target_include_directories(codewars_training_tests PRIVATE ../codewars-training/include)

@@ -7,7 +7,9 @@ add_library(codewars_training STATIC
         digital_root/kata.cpp
         include/digital_root/kata.hpp
         high_and_low/kata.cpp
-        include/high_and_low/kata.hpp)
+        include/high_and_low/kata.hpp
+        string_ends_with/kata.cpp
+        include/string_ends_with/kata.hpp)
 
 # Add the include directory of the static library
 target_include_directories(codewars_training PUBLIC include)
