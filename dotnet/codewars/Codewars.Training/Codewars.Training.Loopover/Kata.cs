@@ -1,26 +1,19 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace Codewars.Training.Loopover;
 
 public static class Kata
 {
-    private static List<BoardNode> GetNeighbors(BoardNode BoardNode)
-    {
-        // TODO: Implement this function to generate all possible next states
-        // from the current state by applying all possible moves to the current
-        // board configuration.
-        return null;
-    }
-
-    public static IEnumerable<string> Solve(char[][] mixedUpBoard, char[][] solvedBoard)
+    public static List<string>? Solve(char[][] mixedUpBoard, char[][] solvedBoard)
     {
         var startNode = new BoardNode
         {
-            Board = mixedUpBoard, Moves = new(), Parent = null
+            Board = mixedUpBoard, Moves = new(), Parent = default,
         };
         var endNode = new BoardNode
         {
-            Board = solvedBoard, Moves = new(), Parent = null
+            Board = solvedBoard, Moves = new(), Parent = default,
         };
 
         var queue = new Queue<BoardNode>();
@@ -32,25 +25,94 @@ public static class Kata
         {
             var currentNode = queue.Dequeue();
 
-            // TODO: Implement a function to compare two boards
-            if (AreBoardsEqual(currentNode.Board, endNode.Board))
-            {
-                return currentNode.Moves;
-            }
+            if (AreBoardsEqual(currentNode.Board, endNode.Board)) return currentNode.Moves.Select(static m => m.ToString()).ToList();
 
             foreach (var neighbor in GetNeighbors(currentNode))
             {
-                // TODO: Implement a function to convert a board to a string
                 var boardString = BoardToString(neighbor.Board);
 
-                if (!visited.Contains(boardString))
-                {
-                    visited.Add(boardString);
-                    queue.Enqueue(neighbor);
-                }
+                if (visited.Add(boardString)) queue.Enqueue(neighbor);
             }
         }
 
         return null;
+    }
+
+    private static string BoardToString(char[][] neighborBoard)
+    {
+        return string.Join("", neighborBoard.Select(static row => new string(row)));
+    }
+
+    private static bool AreBoardsEqual(char[][] currentNodeBoard, char[][] endNodeBoard)
+    {
+        var currentBoardString = BoardToString(currentNodeBoard);
+        var endBoardString = BoardToString(endNodeBoard);
+
+        return currentBoardString == endBoardString;
+    }
+
+    private static List<BoardNode> GetNeighbors(BoardNode boardNode)
+    {
+        var neighbors = new List<BoardNode>();
+
+        for (var i = 0; i < boardNode.Board.Length; i++)
+        {
+            // Shift row i to the left and to the right
+            var movedLeft = new Move(MoveDirection.Left, i);
+            var leftShiftedBoard = movedLeft.Apply(boardNode.Board);
+            var movedRight = new Move(MoveDirection.Right, i);
+            var rightShiftedBoard = movedRight.Apply(boardNode.Board);
+
+            neighbors.Add(new()
+            {
+                Board = leftShiftedBoard,
+                Moves = new(boardNode.Moves)
+                {
+                    new($"L{i}"),
+                },
+                Parent = boardNode,
+            });
+
+            neighbors.Add(new()
+            {
+                Board = rightShiftedBoard,
+                Moves = new(boardNode.Moves)
+                {
+                    new($"R{i}"),
+                },
+                Parent = boardNode,
+            });
+        }
+
+        for (var i = 0; i < boardNode.Board[0].Length; i++)
+        {
+            // Shift column i up and down
+            var movedUp = new Move(MoveDirection.Up, i);
+            var upShiftedBoard = movedUp.Apply(boardNode.Board);
+            var movedDown = new Move(MoveDirection.Down, i);
+            var downShiftedBoard = movedDown.Apply(boardNode.Board);
+
+            neighbors.Add(new()
+            {
+                Board = upShiftedBoard,
+                Moves = new(boardNode.Moves)
+                {
+                    new($"U{i}"),
+                },
+                Parent = boardNode,
+            });
+
+            neighbors.Add(new()
+            {
+                Board = downShiftedBoard,
+                Moves = new(boardNode.Moves)
+                {
+                    new($"D{i}"),
+                },
+                Parent = boardNode,
+            });
+        }
+
+        return neighbors;
     }
 }

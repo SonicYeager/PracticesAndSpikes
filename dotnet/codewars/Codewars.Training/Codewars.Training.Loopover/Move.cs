@@ -40,15 +40,15 @@ public sealed class Move
         };
     }
 
-    public string ToString(MoveDirection direction, int index)
+    public override string ToString()
     {
-        return direction switch
+        return Direction switch
         {
-            MoveDirection.Up => Up(index),
-            MoveDirection.Down => Down(index),
-            MoveDirection.Left => Left(index),
-            MoveDirection.Right => Right(index),
-            _ => throw new ArgumentOutOfRangeException(nameof(direction), direction, null),
+            MoveDirection.Up => Up(Index),
+            MoveDirection.Down => Down(Index),
+            MoveDirection.Left => Left(Index),
+            MoveDirection.Right => Right(Index),
+            _ => throw new ArgumentOutOfRangeException(nameof(Direction), Direction, null),
         };
     }
 
@@ -59,7 +59,7 @@ public sealed class Move
 
     private static char[][] ShiftRowLeft(char[][] board, int rowIndex)
     {
-        var newBoard = (char[][])board.Clone();
+        var newBoard = DeepCopy(board);
         var row = new List<char>(newBoard[rowIndex]);
         var first = row[0];
         row.RemoveAt(0);
@@ -70,7 +70,7 @@ public sealed class Move
 
     private static char[][] ShiftRowRight(char[][] board, int rowIndex)
     {
-        var newBoard = (char[][])board.Clone();
+        var newBoard = DeepCopy(board);
         var row = new List<char>(newBoard[rowIndex]);
         var last = row[^1];
         row.RemoveAt(row.Count - 1);
@@ -81,7 +81,7 @@ public sealed class Move
 
     private static char[][] ShiftColumnUp(char[][] board, int columnIndex)
     {
-        var newBoard = (char[][])board.Clone();
+        var newBoard = DeepCopy(board);
         var column = board.Select(t => t[columnIndex]).ToList();
 
         var first = column[0];
@@ -97,7 +97,7 @@ public sealed class Move
 
     private static char[][] ShiftColumnDown(char[][] board, int columnIndex)
     {
-        var newBoard = (char[][])board.Clone();
+        var newBoard = DeepCopy(board);
         var column = board.Select(t => t[columnIndex]).ToList();
 
         var last = column[^1];
@@ -109,5 +109,19 @@ public sealed class Move
         }
 
         return newBoard;
+    }
+
+    private static char[][] DeepCopy(char[][] original)
+    {
+        var length = original.Length;
+        var copy = new char[length][];
+
+        for (var i = 0; i < length; i++)
+        {
+            copy[i] = new char[original[i].Length];
+            Array.Copy(original[i], copy[i], original[i].Length);
+        }
+
+        return copy;
     }
 }
