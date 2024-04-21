@@ -92,12 +92,19 @@ public sealed class AStarAlgorithm
         return string.Join("", neighborBoard.Select(static row => new string(row)));
     }
 
-    private static bool AreBoardsEqual(char[][] currentNodeBoard, char[][] endNodeBoard)
+    private static bool AreBoardsEqual(char[][] board1, char[][] board2)
     {
-        var currentBoardString = BoardToString(currentNodeBoard);
-        var endBoardString = BoardToString(endNodeBoard);
+        if (board1.Length != board2.Length || board1[0].Length != board2[0].Length) return false;
 
-        return currentBoardString == endBoardString;
+        for (var i = 0; i < board1.Length; i++)
+        {
+            for (var j = 0; j < board1[i].Length; j++)
+            {
+                if (board1[i][j] != board2[i][j]) return false;
+            }
+        }
+
+        return true;
     }
 
     private static List<BoardNode> GetNeighbors(BoardNode boardNode)
@@ -112,25 +119,32 @@ public sealed class AStarAlgorithm
             var movedRight = new Move(MoveDirection.Right, i);
             var rightShiftedBoard = movedRight.Apply(boardNode.Board);
 
-            neighbors.Add(new()
+            // Avoid moving a row that was just moved in the opposite direction
+            if (boardNode.Moves.Count == 0 || boardNode.Moves.Last().Direction != MoveDirection.Right || boardNode.Moves.Last().Index != i)
             {
-                Board = leftShiftedBoard,
-                Moves = new(boardNode.Moves)
+                neighbors.Add(new()
                 {
-                    new($"L{i}"),
-                },
-                Parent = boardNode,
-            });
+                    Board = leftShiftedBoard,
+                    Moves = new(boardNode.Moves)
+                    {
+                        new($"L{i}"),
+                    },
+                    Parent = boardNode,
+                });
+            }
 
-            neighbors.Add(new()
+            if (boardNode.Moves.Count == 0 || boardNode.Moves.Last().Direction != MoveDirection.Left || boardNode.Moves.Last().Index != i)
             {
-                Board = rightShiftedBoard,
-                Moves = new(boardNode.Moves)
+                neighbors.Add(new()
                 {
-                    new($"R{i}"),
-                },
-                Parent = boardNode,
-            });
+                    Board = rightShiftedBoard,
+                    Moves = new(boardNode.Moves)
+                    {
+                        new($"R{i}"),
+                    },
+                    Parent = boardNode,
+                });
+            }
         }
 
         for (var i = 0; i < boardNode.Board[0].Length; i++)
@@ -141,25 +155,32 @@ public sealed class AStarAlgorithm
             var movedDown = new Move(MoveDirection.Down, i);
             var downShiftedBoard = movedDown.Apply(boardNode.Board);
 
-            neighbors.Add(new()
+            // Avoid moving a column that was just moved in the opposite direction
+            if (boardNode.Moves.Count == 0 || boardNode.Moves.Last().Direction != MoveDirection.Down || boardNode.Moves.Last().Index != i)
             {
-                Board = upShiftedBoard,
-                Moves = new(boardNode.Moves)
+                neighbors.Add(new()
                 {
-                    new($"U{i}"),
-                },
-                Parent = boardNode,
-            });
+                    Board = upShiftedBoard,
+                    Moves = new(boardNode.Moves)
+                    {
+                        new($"U{i}"),
+                    },
+                    Parent = boardNode,
+                });
+            }
 
-            neighbors.Add(new()
+            if (boardNode.Moves.Count == 0 || boardNode.Moves.Last().Direction != MoveDirection.Up || boardNode.Moves.Last().Index != i)
             {
-                Board = downShiftedBoard,
-                Moves = new(boardNode.Moves)
+                neighbors.Add(new()
                 {
-                    new($"D{i}"),
-                },
-                Parent = boardNode,
-            });
+                    Board = downShiftedBoard,
+                    Moves = new(boardNode.Moves)
+                    {
+                        new($"D{i}"),
+                    },
+                    Parent = boardNode,
+                });
+            }
         }
 
         return neighbors;
