@@ -50,11 +50,11 @@ public sealed class LoopoverTests
             yield return new TestCaseData(
                 new char[][]
                 {
-                    ['p', 'o', 'n', 'm'], ['l', 'k', 'j', 'i'], ['h', 'g', 'f', 'e'], ['d', 'c', 'b', 'a']
+                    ['p', 'o', 'n', 'm'], ['l', 'k', 'j', 'i'], ['h', 'g', 'f', 'e'], ['d', 'c', 'b', 'a'],
                 },
                 new char[][]
                 {
-                    ['a', 'b', 'c', 'd'], ['e', 'f', 'g', 'h'], ['i', 'j', 'k', 'l'], ['m', 'n', 'o', 'p']
+                    ['a', 'b', 'c', 'd'], ['e', 'f', 'g', 'h'], ['i', 'j', 'k', 'l'], ['m', 'n', 'o', 'p'],
                 }
             ).SetName("Test4X4_WithAlreadySolvedBoard_ShouldReturnMoves");
 

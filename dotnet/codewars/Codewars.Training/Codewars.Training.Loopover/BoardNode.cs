@@ -2,9 +2,9 @@
 
 namespace Codewars.Training.Loopover;
 
-public sealed class BoardNode
+public sealed record BoardNode
 {
-    public char[][] Board { get; set; } = null!;
-    public List<Move> Moves { get; set; } = null!;
+    public char[][] Board { get; init; } = null!;
+    public List<Move> Moves { get; init; } = null!;
     public BoardNode? Parent { get; set; }
 }
