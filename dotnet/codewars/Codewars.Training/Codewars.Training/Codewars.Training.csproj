@@ -29,7 +29,6 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Codewars.Training.HighestAndLowest\Codewars.Training.HighestAndLowest.csproj" />
-      <ProjectReference Include="..\Codewars.Training.Loopover\Codewars.Training.Loopover.csproj" />
       <ProjectReference Include="..\Codewars.Training.RegexPinValidate\Codewars.Training.RegexPinValidate.csproj" />
       <ProjectReference Include="..\Codewars.Training.ReverseWords\Codewars.Training.ReverseWords.csproj" />
       <ProjectReference Include="..\Codewars.Training.SumOfDigits\Codewars.Training.SumOfDigits.csproj" />
