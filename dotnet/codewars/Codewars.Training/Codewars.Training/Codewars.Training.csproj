@@ -36,6 +36,7 @@
       <ProjectReference Include="..\Codewars.Training.ReverseWords\Codewars.Training.ReverseWords.csproj" />
       <ProjectReference Include="..\Codewars.Training.SumOfDigits\Codewars.Training.SumOfDigits.csproj" />
       <ProjectReference Include="..\Codewars.Training.TenMinuteWalk\Codewars.Training.TenMinuteWalk.csproj" />
+      <ProjectReference Include="..\Codewars.Training.WhichAreIn\Codewars.Training.WhichAreIn.csproj" />
     </ItemGroup>
 
 </Project>
