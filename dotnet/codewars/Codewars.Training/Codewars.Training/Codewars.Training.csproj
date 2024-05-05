@@ -35,6 +35,7 @@
       <ProjectReference Include="..\Codewars.Training.RegexPinValidate\Codewars.Training.RegexPinValidate.csproj" />
       <ProjectReference Include="..\Codewars.Training.ReplaceWithAlphabetPosition\Codewars.Training.ReplaceWithAlphabetPosition.csproj" />
       <ProjectReference Include="..\Codewars.Training.ReverseWords\Codewars.Training.ReverseWords.csproj" />
+      <ProjectReference Include="..\Codewars.Training.RomanNums\Codewars.Training.RomanNums.csproj" />
       <ProjectReference Include="..\Codewars.Training.SumOfDigits\Codewars.Training.SumOfDigits.csproj" />
       <ProjectReference Include="..\Codewars.Training.TenMinuteWalk\Codewars.Training.TenMinuteWalk.csproj" />
       <ProjectReference Include="..\Codewars.Training.WhichAreIn\Codewars.Training.WhichAreIn.csproj" />
