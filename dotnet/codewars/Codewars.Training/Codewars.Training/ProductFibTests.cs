@@ -151,7 +151,7 @@ public class ProdFibTests
             var f1 = someFibs[rn];
             var f2 = someFibs[rn + 1];
             var p = f1 * f2;
-            var r = new ulong[]
+            var r = new[]
             {
                 f1, f2, 1UL,
             };

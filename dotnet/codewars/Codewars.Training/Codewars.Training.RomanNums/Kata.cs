@@ -6,7 +6,7 @@ namespace Codewars.Training.RomanNums;
 
 public static class Kata
 {
-    private static readonly Dictionary<int, string> RomanDictionary = new Dictionary<int, string>
+    private static readonly Dictionary<int, string> RomanDictionary = new()
     {
         {
             1000, "M"
@@ -46,10 +46,10 @@ public static class Kata
         },
         {
             1, "I"
-        }
+        },
     };
 
-    public static string ToRoman(int n)
+    public static string? ToRoman(int n)
     {
         return RomanDictionary
             .Where(dict => n >= dict.Key)
@@ -63,7 +63,7 @@ public static class Kata
             romanNumeral.Length == 0
                 ? 0
                 : RomanDictionary
-                    .Where(dict => romanNumeral.StartsWith(dict.Value))
+                    .Where(dict => romanNumeral.StartsWith(dict.Value, StringComparison.InvariantCulture))
                     .Select(dict => dict.Key + FromRoman(romanNumeral[dict.Value.Length..]))
                     .FirstOrDefault();
     }

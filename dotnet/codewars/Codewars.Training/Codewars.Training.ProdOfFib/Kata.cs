@@ -10,7 +10,7 @@ public static class Kata
         previousNumbers.Push(1);
         previousNumbers.Push(0);
 
-        ulong lastProd = 0;
+        ulong lastProd;
 
         do
         {
@@ -18,10 +18,10 @@ public static class Kata
             var fib = previous + previousNumbers.Pop();
 
             if (previous * fib == prod)
-                return new ulong[]
-                {
+                return
+                [
                     previous, fib, 1,
-                };
+                ];
 
             lastProd = previous * fib;
 
@@ -31,9 +31,9 @@ public static class Kata
 
         var lastFib = previousNumbers.Pop();
         var lastPrevious = previousNumbers.Pop();
-        return new ulong[]
-        {
+        return
+        [
             lastPrevious, lastFib, 0,
-        };
+        ];
     }
 }
