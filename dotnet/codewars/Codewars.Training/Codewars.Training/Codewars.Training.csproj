@@ -31,6 +31,7 @@
       <ProjectReference Include="..\Codewars.Training.DuplicateEncoder\Codewars.Training.DuplicateEncoder.csproj" />
       <ProjectReference Include="..\Codewars.Training.HighestAndLowest\Codewars.Training.HighestAndLowest.csproj" />
       <ProjectReference Include="..\Codewars.Training.MoveZerosToEnd\Codewars.Training.MoveZerosToEnd.csproj" />
+      <ProjectReference Include="..\Codewars.Training.PaginationHelper\Codewars.Training.PaginationHelper.csproj" />
       <ProjectReference Include="..\Codewars.Training.ProdOfFib\Codewars.Training.ProdOfFib.csproj" />
       <ProjectReference Include="..\Codewars.Training.RegexPinValidate\Codewars.Training.RegexPinValidate.csproj" />
       <ProjectReference Include="..\Codewars.Training.ReplaceWithAlphabetPosition\Codewars.Training.ReplaceWithAlphabetPosition.csproj" />

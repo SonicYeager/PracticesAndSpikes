@@ -24,6 +24,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Codewars.Training.ProdOfFib
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Codewars.Training.RomanNums", "Codewars.Training.RomanNums\Codewars.Training.RomanNums.csproj", "{AC6FC6DC-B72C-4A19-B014-4782227CB491}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Codewars.Training.PaginationHelper", "Codewars.Training.PaginationHelper\Codewars.Training.PaginationHelper.csproj", "{9983FA6F-12F2-4BD3-ACAC-DCC01883C0E4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -78,5 +80,9 @@ Global
 		{AC6FC6DC-B72C-4A19-B014-4782227CB491}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AC6FC6DC-B72C-4A19-B014-4782227CB491}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AC6FC6DC-B72C-4A19-B014-4782227CB491}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9983FA6F-12F2-4BD3-ACAC-DCC01883C0E4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9983FA6F-12F2-4BD3-ACAC-DCC01883C0E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9983FA6F-12F2-4BD3-ACAC-DCC01883C0E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9983FA6F-12F2-4BD3-ACAC-DCC01883C0E4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
