@@ -12,6 +12,8 @@ add_library(codewars_training STATIC
         include/string_ends_with/kata.hpp
         include/descending_order/kata.hpp
         descending_order/kata.cpp
+        same/kata.cpp
+        include/same/kata.hpp
 )
 
 # Add the include directory of the static library

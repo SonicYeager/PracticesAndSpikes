@@ -14,6 +14,7 @@ add_executable(codewars_training_tests
         tests/high_and_low_tests.cpp
         tests/string_ends_with_tests.cpp
         tests/descending_order_tests.cpp
+        tests/same_tests.cpp
 )
 
 # Add the include directory of the static library
