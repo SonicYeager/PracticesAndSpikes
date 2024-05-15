@@ -1,0 +1,44 @@
+schema {
+  query: Query
+}
+
+type Query {
+  garages(where: GarageFilterInput order: [GarageSortInput!]): [Garage!]!
+}
+
+input GarageFilterInput {
+  and: [GarageFilterInput!]
+  or: [GarageFilterInput!]
+  id: StringOperationFilterInput
+  designation: StringOperationFilterInput
+}
+
+input GarageSortInput {
+  id: SortEnumType
+  designation: SortEnumType
+}
+
+input StringOperationFilterInput {
+  and: [StringOperationFilterInput!]
+  or: [StringOperationFilterInput!]
+  eq: String
+  neq: String
+  contains: String
+  ncontains: String
+  in: [String]
+  nin: [String]
+  startsWith: String
+  nstartsWith: String
+  endsWith: String
+  nendsWith: String
+}
+
+enum SortEnumType {
+  ASC
+  DESC
+}
+
+type Garage {
+  id: String!
+  designation: String!
+}
