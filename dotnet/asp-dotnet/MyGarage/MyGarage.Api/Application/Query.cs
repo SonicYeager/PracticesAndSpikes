@@ -1,28 +1,17 @@
-﻿using MyGarage.Api.Application.Types;
+﻿using Microsoft.EntityFrameworkCore;
+using MyGarage.Api.Application.Types;
+using MyGarage.Api.Persistence;
 
 namespace MyGarage.Api.Application;
 
 [QueryType]
 public static class Query
 {
+    [UseProjection]
     [UseFiltering]
     [UseSorting]
-    public static IQueryable<Garage> Garages()
+    public static IQueryable<Garage> Garages(MyGarageDbContext dbContext)
     {
-        return new List<Garage>
-        {
-            new()
-            {
-                Id = "2024_1", Designation = "Car",
-            },
-            new()
-            {
-                Id = "2024_2", Designation = "Motorcycle",
-            },
-            new()
-            {
-                Id = "2024_3", Designation = "Bicycle",
-            },
-        }.AsQueryable();
+        return dbContext.Set<Garage>().AsNoTracking();
     }
 }
