@@ -1,4 +1,6 @@
 ﻿using MyGarage.Api.Application.Types;
+using MyGarage.Api.Application.Types.Inputs;
+using MyGarage.Api.Application.Types.Payloads;
 using MyGarage.Api.Persistence;
 
 namespace MyGarage.Api.Application;
@@ -6,15 +8,23 @@ namespace MyGarage.Api.Application;
 [MutationType]
 public static class Mutation
 {
-    public static async Task<string> CreateGarage(MyGarageDbContext dbContext, string designation)
+    public static async Task<CreateGaragePayload?> CreateGarage(MyGarageDbContext dbContext, CreateGarageInput input)
     {
-        //TODO generate id
+        if (dbContext.Set<Garage>().Any(g => g.Designation == input.Designation))
+        {
+            return new(null, new ICreateGarageError[]
+            {
+                new GarageAlreadyExistsError("A garage with the same designation already exists."),
+            });
+        }
+
         var garage = new Garage
         {
-            Id = "ID", Designation = designation,
+            Designation = input.Designation,
         };
         dbContext.Set<Garage>().Add(garage);
         await dbContext.SaveChangesAsync();
-        return "success";
+
+        return new(garage, []);
     }
 }

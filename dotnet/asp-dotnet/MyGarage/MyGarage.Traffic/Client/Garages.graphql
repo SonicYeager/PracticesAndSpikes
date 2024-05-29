@@ -1,6 +1,32 @@
-﻿query GetGarages{
-    garages{
-        id
-        designation
+﻿query GetGarages($first: Int, $after: String) {
+    garages(first: $first, after: $after) {
+        edges {
+            node {
+                id
+                designation
+            }
+            cursor
+        }
+        pageInfo {
+            hasNextPage
+            hasPreviousPage
+            startCursor
+            endCursor
+        }
+        totalCount
+    }
+}
+
+mutation CreateGarage($input: CreateGarageInput!){
+    createGarage(input: $input) {
+        garage {
+            id
+            designation
+        }
+        errors {
+            ... on GarageAlreadyExistsError {
+                message
+            }
+        }
     }
 }

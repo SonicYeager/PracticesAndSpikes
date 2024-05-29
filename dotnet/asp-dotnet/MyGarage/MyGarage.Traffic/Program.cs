@@ -2,6 +2,7 @@ using MyGarage.Traffic;
 
 var builder = Host.CreateApplicationBuilder(args);
 builder.Services.AddHostedService<GetGaragesWorker>();
+builder.Services.AddHostedService<CreateGarageWorker>();
 
 builder.Services.AddMyGarageClient()
     .ConfigureHttpClient(static client => client.BaseAddress = new("https://localhost:5001/graphql"));

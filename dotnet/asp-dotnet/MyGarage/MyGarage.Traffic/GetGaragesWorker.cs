@@ -15,14 +15,14 @@ public sealed class GetGaragesWorker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        if (_logger.IsEnabled(LogLevel.Information))
+        {
+            _logger.LogInformation("{WorkerName} running at: {Time}", nameof(CreateGarageWorker), DateTimeOffset.Now);
+        }
+
         while (!stoppingToken.IsCancellationRequested)
         {
-            if (_logger.IsEnabled(LogLevel.Information))
-            {
-                _logger.LogInformation("GetGaragesWorker running at: {Time}", DateTimeOffset.Now);
-            }
-
-            var result = await _client.GetGarages.ExecuteAsync(stoppingToken);
+            var result = await _client.GetGarages.ExecuteAsync(10, null, stoppingToken);
 
             if (result.Errors.Any())
             {
@@ -33,11 +33,27 @@ public sealed class GetGaragesWorker : BackgroundService
             }
             else
             {
-                foreach (var garage in result.Data!.Garages)
+                if (result.Data!.Garages!.Edges!.Any())
                 {
-                    _logger.LogInformation("Garage: {Id} - {Designation}", garage.Id, garage.Designation);
+                    foreach (var garage in result.Data!.Garages!.Edges!.Select(static e => e.Node))
+                    {
+                        _logger.LogInformation("Garage: {Id} - {Designation}", garage.Id, garage.Designation);
+                    }
+                }
+
+                while (result.Data!.Garages!.PageInfo.HasNextPage)
+                {
+                    foreach (var garage in result.Data!.Garages!.Edges!.Select(static e => e.Node))
+                    {
+                        _logger.LogInformation("Garage: {Id} - {Designation}", garage.Id, garage.Designation);
+                    }
+
+                    result = await _client.GetGarages.ExecuteAsync(10,
+                        result.Data!.Garages!.Edges![result.Data!.Garages!.Edges.Count - 1].Cursor, stoppingToken);
                 }
             }
+
+            await Task.Delay(5000, stoppingToken);
         }
     }
 }

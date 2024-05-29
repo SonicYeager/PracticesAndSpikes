@@ -2,6 +2,6 @@
 
 public sealed record Garage
 {
-    public required string Id { get; init; } = string.Empty;
+    public int Id { get; init; }
     public required string Designation { get; init; } = string.Empty;
 }

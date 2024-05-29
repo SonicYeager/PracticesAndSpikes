@@ -23,8 +23,11 @@ namespace MyGarage.Api.Migrations
 
             modelBuilder.Entity("MyGarage.Api.Application.Types.Garage", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("varchar(255)");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Designation")
                         .IsRequired()

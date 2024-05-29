@@ -7,6 +7,7 @@ namespace MyGarage.Api.Application;
 [QueryType]
 public static class Query
 {
+    [UsePaging(IncludeTotalCount = true)]
     [UseProjection]
     [UseFiltering]
     [UseSorting]

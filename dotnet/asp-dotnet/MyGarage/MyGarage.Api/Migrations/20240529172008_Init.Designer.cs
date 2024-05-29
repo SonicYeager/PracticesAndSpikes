@@ -11,7 +11,7 @@ using MyGarage.Api.Persistence;
 namespace MyGarage.Api.Migrations
 {
     [DbContext(typeof(MyGarageDbContext))]
-    [Migration("20240515191502_Init")]
+    [Migration("20240529172008_Init")]
     partial class Init
     {
         /// <inheritdoc />
@@ -26,8 +26,11 @@ namespace MyGarage.Api.Migrations
 
             modelBuilder.Entity("MyGarage.Api.Application.Types.Garage", b =>
                 {
-                    b.Property<string>("Id")
-                        .HasColumnType("varchar(255)");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Designation")
                         .IsRequired()
