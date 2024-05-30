@@ -2,17 +2,17 @@
 using MyGarage.Api.Application.Types;
 using MyGarage.Api.Persistence;
 
-namespace MyGarage.Api.Application;
+namespace MyGarage.Api.Queries;
 
 [QueryType]
-public static class Query
+public static class VehiclesQuery
 {
     [UsePaging(IncludeTotalCount = true)]
     [UseProjection]
     [UseFiltering]
     [UseSorting]
-    public static IQueryable<Garage> Garages(MyGarageDbContext dbContext)
+    public static IQueryable<Vehicle> Vehicles(MyGarageDbContext dbContext)
     {
-        return dbContext.Set<Garage>().AsNoTracking();
+        return dbContext.Set<Vehicle>().AsNoTracking();
     }
 }

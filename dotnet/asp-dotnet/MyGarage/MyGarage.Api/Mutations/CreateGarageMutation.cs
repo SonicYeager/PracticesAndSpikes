@@ -1,12 +1,13 @@
 ﻿using MyGarage.Api.Application.Types;
-using MyGarage.Api.Application.Types.Inputs;
-using MyGarage.Api.Application.Types.Payloads;
+using MyGarage.Api.Application.Types.Inputs.CreateGarage;
+using MyGarage.Api.Application.Types.Payloads.CreateGarage;
+using MyGarage.Api.Application.Types.Payloads.Errors;
 using MyGarage.Api.Persistence;
 
-namespace MyGarage.Api.Application;
+namespace MyGarage.Api.Mutations;
 
 [MutationType]
-public static class Mutation
+public static class CreateGarageMutation
 {
     public static async Task<CreateGaragePayload?> CreateGarage(MyGarageDbContext dbContext, CreateGarageInput input)
     {

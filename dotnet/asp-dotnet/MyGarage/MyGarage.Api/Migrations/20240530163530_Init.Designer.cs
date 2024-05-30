@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MyGarage.Api.Persistence;
 
@@ -11,9 +12,11 @@ using MyGarage.Api.Persistence;
 namespace MyGarage.Api.Migrations
 {
     [DbContext(typeof(MyGarageDbContext))]
-    partial class MyGarageDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240530163530_Init")]
+    partial class Init
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

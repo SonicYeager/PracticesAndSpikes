@@ -1,56 +1,32 @@
-using MyGarage.Traffic.Client;
+using MyGarage.Traffic.Application;
 
 namespace MyGarage.Traffic;
 
 public sealed class GetGaragesWorker : BackgroundService
 {
     private readonly ILogger<GetGaragesWorker> _logger;
-    private readonly IMyGarageClient _client;
+    private readonly IMyGarageService _service;
 
-    public GetGaragesWorker(ILogger<GetGaragesWorker> logger, IMyGarageClient client)
+    public GetGaragesWorker(ILogger<GetGaragesWorker> logger, IMyGarageService service)
     {
         _logger = logger;
-        _client = client;
+        _service = service;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         if (_logger.IsEnabled(LogLevel.Information))
-        {
             _logger.LogInformation("{WorkerName} running at: {Time}", nameof(CreateGarageWorker), DateTimeOffset.Now);
-        }
 
         while (!stoppingToken.IsCancellationRequested)
         {
-            var result = await _client.GetGarages.ExecuteAsync(10, null, stoppingToken);
+            var result = _service.GetGarages(stoppingToken);
 
-            if (result.Errors.Any())
+
+            await foreach (var garage in result)
             {
-                foreach (var error in result.Errors)
-                {
-                    _logger.LogError("Error Fetching Garages: {Message}", error.Message);
-                }
-            }
-            else
-            {
-                if (result.Data!.Garages!.Edges!.Any())
-                {
-                    foreach (var garage in result.Data!.Garages!.Edges!.Select(static e => e.Node))
-                    {
-                        _logger.LogInformation("Garage: {Id} - {Designation}", garage.Id, garage.Designation);
-                    }
-                }
-
-                while (result.Data!.Garages!.PageInfo.HasNextPage)
-                {
-                    foreach (var garage in result.Data!.Garages!.Edges!.Select(static e => e.Node))
-                    {
-                        _logger.LogInformation("Garage: {Id} - {Designation}", garage.Id, garage.Designation);
-                    }
-
-                    result = await _client.GetGarages.ExecuteAsync(10,
-                        result.Data!.Garages!.Edges![result.Data!.Garages!.Edges.Count - 1].Cursor, stoppingToken);
-                }
+                _logger.LogInformation("Garage: {Id} - {Designation} with {VehicleCount} vehicles", garage.Id, garage.Designation,
+                    garage.Vehicles.Count);
             }
 
             await Task.Delay(5000, stoppingToken);

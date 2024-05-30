@@ -1,4 +1,27 @@
 type Query {
+  vehicles(
+    """
+    Returns the first _n_ elements from the list.
+    """
+    first: Int
+
+    """
+    Returns the elements in the list that come after the specified cursor.
+    """
+    after: String
+
+    """
+    Returns the last _n_ elements from the list.
+    """
+    last: Int
+
+    """
+    Returns the elements in the list that come before the specified cursor.
+    """
+    before: String
+    where: VehicleFilterInput
+    order: [VehicleSortInput!]
+  ): VehiclesConnection
   garages(
     """
     Returns the first _n_ elements from the list.
@@ -25,13 +48,75 @@ type Query {
 }
 
 type Mutation {
+  createVehicle(input: CreateVehicleInput!): CreateVehiclePayload
   createGarage(input: CreateGarageInput!): CreateGaragePayload
 }
 
+type VehicleAlreadyExistsError implements DefaultError {
+  message: String!
+}
+
+type GarageNotFoundError implements DefaultError {
+  message: String!
+}
+
+type GarageAlreadyExistsError implements DefaultError {
+  message: String!
+}
+
+interface DefaultError {
+  message: String!
+}
+
+union ICreateVehicleError = VehicleAlreadyExistsError | GarageNotFoundError
+
 union ICreateGarageError = GarageAlreadyExistsError
 
-type GarageAlreadyExistsError {
-  message: String!
+input VehicleFilterInput {
+  and: [VehicleFilterInput!]
+  or: [VehicleFilterInput!]
+  id: IntOperationFilterInput
+  designation: StringOperationFilterInput
+  licensePlate: StringOperationFilterInput
+  firstRegistration: DateTimeOperationFilterInput
+  odometer: DecimalOperationFilterInput
+  priceAtPurchase: DecimalOperationFilterInput
+  fuelCapacity: DecimalOperationFilterInput
+}
+
+input VehicleSortInput {
+  id: SortEnumType
+  designation: SortEnumType
+  licensePlate: SortEnumType
+  firstRegistration: SortEnumType
+  odometer: SortEnumType
+  priceAtPurchase: SortEnumType
+  fuelCapacity: SortEnumType
+}
+
+"""
+A connection to a list of items.
+"""
+type VehiclesConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+
+  """
+  A list of edges.
+  """
+  edges: [VehiclesEdge!]
+
+  """
+  A flattened list of the nodes.
+  """
+  nodes: [Vehicle!]
+
+  """
+  Identifies the total count of items in the connection.
+  """
+  totalCount: Int!
 }
 
 input GarageFilterInput {
@@ -39,6 +124,7 @@ input GarageFilterInput {
   or: [GarageFilterInput!]
   id: IntOperationFilterInput
   designation: StringOperationFilterInput
+  vehicles: ListFilterInputTypeOfVehicleFilterInput
 }
 
 input GarageSortInput {
@@ -101,6 +187,36 @@ input StringOperationFilterInput {
   nendsWith: String
 }
 
+input DateTimeOperationFilterInput {
+  eq: DateTime
+  neq: DateTime
+  in: [DateTime]
+  nin: [DateTime]
+  gt: DateTime
+  ngt: DateTime
+  gte: DateTime
+  ngte: DateTime
+  lt: DateTime
+  nlt: DateTime
+  lte: DateTime
+  nlte: DateTime
+}
+
+input DecimalOperationFilterInput {
+  eq: Decimal
+  neq: Decimal
+  in: [Decimal]
+  nin: [Decimal]
+  gt: Decimal
+  ngt: Decimal
+  gte: Decimal
+  ngte: Decimal
+  lt: Decimal
+  nlt: Decimal
+  lte: Decimal
+  nlte: Decimal
+}
+
 enum SortEnumType {
   ASC
   DESC
@@ -131,9 +247,42 @@ type PageInfo {
   endCursor: String
 }
 
+type Vehicle {
+  id: Int!
+  designation: String!
+  licensePlate: String
+  firstRegistration: DateTime!
+  odometer: Decimal!
+  priceAtPurchase: Decimal!
+  fuelCapacity: Decimal!
+}
+
+"""
+An edge in a connection.
+"""
+type VehiclesEdge {
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+
+  """
+  The item at the end of the edge.
+  """
+  node: Vehicle!
+}
+
+input ListFilterInputTypeOfVehicleFilterInput {
+  all: VehicleFilterInput
+  none: VehicleFilterInput
+  some: VehicleFilterInput
+  any: Boolean
+}
+
 type Garage {
   id: Int!
   designation: String!
+  vehicles: [Vehicle!]!
 }
 
 """
@@ -151,6 +300,16 @@ type GaragesEdge {
   node: Garage!
 }
 
+"""
+The `DateTime` scalar represents an ISO-8601 compliant date time type.
+"""
+scalar DateTime
+
+"""
+The built-in `Decimal` scalar type.
+"""
+scalar Decimal
+
 input CreateGarageInput {
   designation: String!
 }
@@ -158,4 +317,19 @@ input CreateGarageInput {
 type CreateGaragePayload {
   garage: Garage
   errors: [ICreateGarageError!]!
+}
+
+input CreateVehicleInput {
+  garageId: Int!
+  designation: String!
+  licensePlate: String
+  firstRegistration: DateTime!
+  odometer: Decimal!
+  priceAtPurchase: Decimal!
+  fuelCapacity: Decimal!
+}
+
+type CreateVehiclePayload {
+  vehicle: Vehicle
+  errors: [ICreateVehicleError!]!
 }

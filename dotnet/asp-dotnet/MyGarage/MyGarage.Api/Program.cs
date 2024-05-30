@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using MyGarage.Api.Application.Types.Payloads;
 using MyGarage.Api.Persistence;
 
 var builder = WebApplication.CreateSlimBuilder(args);
@@ -7,11 +6,11 @@ var builder = WebApplication.CreateSlimBuilder(args);
 builder.WebHost.UseKestrelHttpsConfiguration();
 builder.Services.AddGraphQLServer()
     .AddTypes()
-    .AddType<GarageAlreadyExistsError>()
     .AddFiltering()
     .AddSorting()
     .AddProjections()
     .AddMutationConventions()
+    .AddDefaultTransactionScopeHandler()
     .RegisterDbContext<MyGarageDbContext>(DbContextKind.Pooled);
 
 const string connectionString = "Server=localhost;Database=mygarage;user=root;password=my-secret;";
