@@ -1,5 +1,4 @@
 using MyGarage.Traffic.Application;
-using MyGarage.Traffic.Client;
 
 namespace MyGarage.Traffic;
 

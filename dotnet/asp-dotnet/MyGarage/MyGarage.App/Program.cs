@@ -1,3 +1,4 @@
+using MyGarage.App.Application;
 using MyGarage.App.Components;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -5,6 +6,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddMyGarageClient()
+    .ConfigureHttpClient(static client => client.BaseAddress = new("https://localhost:5001/graphql"));
+builder.Services.AddTransient<IMyGarageService, MyGarageService>();
 
 var app = builder.Build();
 
