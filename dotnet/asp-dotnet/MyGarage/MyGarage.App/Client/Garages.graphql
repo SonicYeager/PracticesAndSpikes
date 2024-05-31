@@ -1,0 +1,99 @@
+﻿query GetGarages($first: Int!, $after: String) {
+    garages(first: $first, after: $after) {
+        edges {
+            node {
+                id
+                designation
+                vehicles {
+                    id
+                    designation
+                    firstRegistration
+                    odometer
+                    priceAtPurchase
+                    fuelCapacity
+                }
+            }
+            cursor
+        }
+        pageInfo {
+            hasNextPage
+            hasPreviousPage
+            startCursor
+            endCursor
+        }
+        totalCount
+    }
+}
+
+query GetVehicles($first: Int!, $after: String) {
+    vehicles(first: $first, after: $after) {
+        edges {
+            node {
+                id
+                designation
+                licensePlate
+                firstRegistration
+                odometer
+                priceAtPurchase
+                fuelCapacity
+            }
+            cursor
+        }
+        pageInfo {
+            hasNextPage
+            hasPreviousPage
+            startCursor
+            endCursor
+        }
+        totalCount
+    }
+}
+
+mutation CreateGarage($designation: String!) {
+    createGarage(input: { designation: $designation }) {
+        garage {
+            id
+            designation
+        }
+        errors {
+            ... on GarageAlreadyExistsError {
+                message
+            }
+        }
+    }
+}
+
+mutation CreateVehicle($designation: String!,
+    $firstRegistration: DateTime!,
+    $licensePlate: String,
+    $fuelCapacity: Decimal!,
+    $garageId: Int!,
+    $odometer: Decimal!,
+    $priceAtPurchase: Decimal!) {
+    createVehicle(
+        input: {
+            designation: $designation
+            licensePlate: $licensePlate
+            firstRegistration: $firstRegistration
+            fuelCapacity: $fuelCapacity
+            garageId: $garageId
+            odometer: $odometer
+            priceAtPurchase: $priceAtPurchase
+        }
+    ) {
+        vehicle {
+            id
+            designation
+            licensePlate
+            firstRegistration
+            odometer
+            priceAtPurchase
+            fuelCapacity
+        }
+        errors {
+            ... on DefaultError {
+                message
+            }
+        }
+    }
+}
