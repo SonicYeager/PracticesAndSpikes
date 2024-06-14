@@ -1,53 +1,39 @@
-<script>
-	import Header from './Header.svelte';
-	import './styles.css';
+﻿<script>
+    // You can import and use any components or scripts here
+    import Footer from "$lib/components/Footer.svelte";
+    import Header from "$lib/components/Header.svelte";
 </script>
 
-<div class="app">
-	<Header />
+<Header/>
 
-	<main>
-		<slot />
-	</main>
+<main>
+    <slot></slot>
+</main>
 
-	<footer>
-		<p>visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to learn SvelteKit</p>
-	</footer>
-</div>
+<Footer/>
 
 <style>
-	.app {
-		display: flex;
-		flex-direction: column;
-		min-height: 100vh;
-	}
+    :global(body), :global(html) {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        margin: 0;
+        padding: 0;
+        background-color: #1d1d1d;
+        color: #f5f5f5;
+    }
 
-	main {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		padding: 1rem;
-		width: 100%;
-		max-width: 64rem;
-		margin: 0 auto;
-		box-sizing: border-box;
-	}
+    header {
+        position: sticky;
+        top: 0;
+    }
 
-	footer {
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		align-items: center;
-		padding: 12px;
-	}
+    main {
+        flex: 1;
+    }
 
-	footer a {
-		font-weight: bold;
-	}
-
-	@media (min-width: 480px) {
-		footer {
-			padding: 12px 0;
-		}
-	}
+    footer {
+        position: sticky;
+        bottom: 0;
+    }
 </style>

@@ -1,59 +1,74 @@
 <script>
-	import Counter from './Counter.svelte';
-	import welcome from '$lib/images/svelte-welcome.webp';
-	import welcome_fallback from '$lib/images/svelte-welcome.png';
+    import Card from "$lib/components/Card.svelte";
+
+    export let data
+
+    $: ({GetGarages} = data)
 </script>
 
-<svelte:head>
-	<title>Home</title>
-	<meta name="description" content="Svelte demo app" />
-</svelte:head>
-
-<section>
-	<h1>
-		<span class="welcome">
-			<picture>
-				<source srcset={welcome} type="image/webp" />
-				<img src={welcome_fallback} alt="Welcome" />
-			</picture>
-		</span>
-
-		to your new<br />SvelteKit app
-	</h1>
-
-	<h2>
-		try editing <strong>src/routes/+page.svelte</strong>
-	</h2>
-
-	<Counter />
-</section>
+<div class="container">
+    <div class="elements">
+        {#if $GetGarages.fetching}
+            <p>Loading...</p>
+        {:else if $GetGarages.error}
+            <p>Error: {$GetGarages.error.message}</p>
+        {:else}
+            {#each $GetGarages.data.garages.edges as garage}
+                <Card {garage}/>
+            {/each}
+        {/if}
+    </div>
+    <div class="button-container">
+        <button
+                disabled={!$GetGarages.pageInfo.hasNextPage}
+                on:click={async () => await GetGarages.loadNextPage()}
+        >
+            Load More
+        </button>
+    </div>
+</div>
 
 <style>
-	section {
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		align-items: center;
-		flex: 0.6;
-	}
+    .container {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-evenly;
+        height: 100%;
+        padding-top: 60px;
+        padding-bottom: 60px;
+    }
 
-	h1 {
-		width: 100%;
-	}
+    .elements {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-around;
+        margin: 0 15vw;
+    }
 
-	.welcome {
-		display: block;
-		position: relative;
-		width: 100%;
-		height: 0;
-		padding: 0 0 calc(100% * 495 / 2048) 0;
-	}
+    .button-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 20px;
+    }
 
-	.welcome img {
-		position: absolute;
-		width: 100%;
-		height: 100%;
-		top: 0;
-		display: block;
-	}
+    .button-container button {
+        background: #1e1e1e;
+        color: #f5f5f5;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.3s ease-in-out;
+    }
+
+    .button-container button:hover {
+        background: #f5f5f5;
+        color: #1e1e1e;
+    }
+
+    .button-container button:disabled {
+        background: #666;
+        cursor: not-allowed;
+    }
 </style>

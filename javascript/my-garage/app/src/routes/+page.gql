@@ -1,0 +1,26 @@
+﻿query GetGarages {
+    garages(first: 10) @paginate {
+        edges {
+            node {
+                id
+                designation
+                vehicles {
+                    id
+                    designation
+                    firstRegistration
+                    odometer
+                    priceAtPurchase
+                    fuelCapacity
+                }
+            }
+            cursor
+        }
+        pageInfo {
+            hasNextPage
+            hasPreviousPage
+            startCursor
+            endCursor
+        }
+        totalCount
+    }
+}
