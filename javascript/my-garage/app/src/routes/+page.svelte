@@ -1,5 +1,7 @@
 <script>
     import Card from "$lib/components/Card.svelte";
+    import Loading from "$lib/components/Loading.svelte";
+    import Error from "$lib/components/Error.svelte";
 
     export let data
 
@@ -9,9 +11,9 @@
 <div class="container">
     <div class="elements">
         {#if $GetGarages.fetching}
-            <p>Loading...</p>
+            <Loading/>
         {:else if $GetGarages.error}
-            <p>Error: {$GetGarages.error.message}</p>
+            <Error message={$GetGarages.error.message}/>
         {:else}
             {#each $GetGarages.data.garages.edges as garage}
                 <Card {garage}/>
