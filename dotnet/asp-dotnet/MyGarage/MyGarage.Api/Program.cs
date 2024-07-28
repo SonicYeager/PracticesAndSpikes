@@ -36,4 +36,4 @@ var app = builder.Build();
 app.UseCors(policyName);
 app.MapGraphQL();
 
-app.Run();
+await app.RunAsync();
