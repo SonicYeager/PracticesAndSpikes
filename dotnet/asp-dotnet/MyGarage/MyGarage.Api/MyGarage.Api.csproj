@@ -12,7 +12,7 @@
       <PackageReference Include="HotChocolate.AspNetCore" Version="14.0.0-preview.11.3" />
       <PackageReference Include="HotChocolate.Data.EntityFramework" Version="14.0.0-preview.11.3" />
       <PackageReference Include="HotChocolate.Types.Analyzers" Version="14.0.0-preview.11.3" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.7">
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.8">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>

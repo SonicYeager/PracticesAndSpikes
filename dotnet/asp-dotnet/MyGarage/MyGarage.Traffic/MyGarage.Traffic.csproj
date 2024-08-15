@@ -9,7 +9,7 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
-        <PackageReference Include="StrawberryShake.Server" Version="13.9.8" />
+        <PackageReference Include="StrawberryShake.Server" Version="13.9.11" />
         <PackageReference Include="System.Linq.Async.Queryable" Version="6.0.1" />
     </ItemGroup>
 </Project>
