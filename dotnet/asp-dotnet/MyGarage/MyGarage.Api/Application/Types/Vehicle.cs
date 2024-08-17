@@ -12,6 +12,6 @@ public sealed record Vehicle
     public decimal PriceAtPurchase { get; init; }
     public decimal FuelCapacity { get; init; }
 
-    // TODO Services (repairs, maintenance and similar -> done by a workshop)
+    // TODO Services (repairs, maintenance and similar -> done by a workshop) + HU/AU
     // TODO FuelStops (refuelings)
 }

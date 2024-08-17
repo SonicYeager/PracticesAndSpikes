@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyGarage.Api", "MyGarage.Ap
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyGarage.Traffic", "MyGarage.Traffic\MyGarage.Traffic.csproj", "{14319031-A1AB-4208-8EBC-716854ECBBC2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyGarage.Api.Tests", "MyGarage.Api.Tests\MyGarage.Api.Tests.csproj", "{0DACB23F-50F1-44E5-846D-EE8DD3AED099}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{14319031-A1AB-4208-8EBC-716854ECBBC2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{14319031-A1AB-4208-8EBC-716854ECBBC2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{14319031-A1AB-4208-8EBC-716854ECBBC2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0DACB23F-50F1-44E5-846D-EE8DD3AED099}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0DACB23F-50F1-44E5-846D-EE8DD3AED099}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0DACB23F-50F1-44E5-846D-EE8DD3AED099}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0DACB23F-50F1-44E5-846D-EE8DD3AED099}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using MyGarage.Api.Application.Services;
+using MyGarage.Api.Application.Services.CreateGarage;
 using MyGarage.Api.Persistence;
 
 const string policyName = "AllowAllOrigins";
@@ -6,6 +8,12 @@ const string policyName = "AllowAllOrigins";
 var builder = WebApplication.CreateSlimBuilder(args);
 
 builder.WebHost.UseKestrelHttpsConfiguration();
+
+builder.Services.AddScoped<CreateVehicleService>();
+builder.Services.AddScoped<CreateVehicleValidator>();
+builder.Services.AddScoped<CreateGarageService>();
+builder.Services.AddScoped<CreateGarageValidator>();
+
 builder.Services.AddGraphQLServer()
     .AddTypes()
     .AddFiltering()
@@ -13,7 +21,11 @@ builder.Services.AddGraphQLServer()
     .AddProjections()
     .AddMutationConventions()
     .AddDefaultTransactionScopeHandler()
-    .RegisterDbContext<MyGarageDbContext>(DbContextKind.Pooled);
+    .RegisterDbContext<MyGarageDbContext>(DbContextKind.Pooled)
+    .RegisterService<CreateVehicleService>()
+    .RegisterService<CreateVehicleValidator>()
+    .RegisterService<CreateGarageService>()
+    .RegisterService<CreateGarageValidator>();
 
 const string connectionString = "Server=localhost;Database=mygarage;user=root;password=my-secret;";
 builder.Services
