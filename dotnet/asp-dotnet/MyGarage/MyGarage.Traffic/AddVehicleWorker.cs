@@ -2,12 +2,12 @@ using MyGarage.Traffic.Application;
 
 namespace MyGarage.Traffic;
 
-public sealed class CreateVehicleWorker : BackgroundService
+public sealed class AddVehicleWorker : BackgroundService
 {
-    private readonly ILogger<CreateVehicleWorker> _logger;
+    private readonly ILogger<AddVehicleWorker> _logger;
     private readonly IMyGarageService _service;
 
-    public CreateVehicleWorker(ILogger<CreateVehicleWorker> logger, IMyGarageService service)
+    public AddVehicleWorker(ILogger<AddVehicleWorker> logger, IMyGarageService service)
     {
         _logger = logger;
         _service = service;
@@ -16,14 +16,14 @@ public sealed class CreateVehicleWorker : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         if (_logger.IsEnabled(LogLevel.Information))
-            _logger.LogInformation("{WorkerName} running at: {Time}", nameof(CreateVehicleWorker), DateTimeOffset.Now);
+            _logger.LogInformation("{WorkerName} running at: {Time}", nameof(AddVehicleWorker), DateTimeOffset.Now);
 
         var id = 1;
 
         while (!stoppingToken.IsCancellationRequested)
         {
             var firstGarage = await _service.GetGarages(stoppingToken).LastAsync(stoppingToken);
-            var result = await _service.CreateVehicle(
+            var result = await _service.AddVehicle(
                 $"Vehicle - {id}",
                 DateTimeOffset.Now,
                 null,

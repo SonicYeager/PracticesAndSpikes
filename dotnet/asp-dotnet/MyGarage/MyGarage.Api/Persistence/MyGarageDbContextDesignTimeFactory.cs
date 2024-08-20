@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Design;
 
 namespace MyGarage.Api.Persistence;
 
-public class MyGarageDbContextDesignTimeFactory : IDesignTimeDbContextFactory<MyGarageDbContext>
+public sealed class MyGarageDbContextDesignTimeFactory : IDesignTimeDbContextFactory<MyGarageDbContext>
 {
     /// <inheritdoc />
     public MyGarageDbContext CreateDbContext(string[] args)

@@ -1,6 +1,6 @@
-﻿namespace MyGarage.Api.Application.Types.Inputs.CreateVehicle;
+﻿namespace MyGarage.Api.Application.Types.Inputs.AddVehicle;
 
-public sealed record CreateVehicleInput(
+public sealed record AddVehicleInput(
     int GarageId,
     string Designation,
     string? LicensePlate,

@@ -17,10 +17,44 @@ namespace MyGarage.Api.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.5")
+                .HasAnnotation("ProductVersion", "8.0.8")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
+
+            modelBuilder.Entity("MyGarage.Api.Application.Types.FuelStop", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("AmountInLiters")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<DateTimeOffset>("Date")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(2048)
+                        .HasColumnType("varchar(2048)");
+
+                    b.Property<decimal>("OdometerInKilometers")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<decimal>("TotalPriceInEuro")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<int>("VehicleId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("VehicleId");
+
+                    b.ToTable("FuelStops", (string)null);
+                });
 
             modelBuilder.Entity("MyGarage.Api.Application.Types.Garage", b =>
                 {
@@ -77,6 +111,15 @@ namespace MyGarage.Api.Migrations
                     b.ToTable("Vehicles", (string)null);
                 });
 
+            modelBuilder.Entity("MyGarage.Api.Application.Types.FuelStop", b =>
+                {
+                    b.HasOne("MyGarage.Api.Application.Types.Vehicle", null)
+                        .WithMany("FuelStops")
+                        .HasForeignKey("VehicleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("MyGarage.Api.Application.Types.Vehicle", b =>
                 {
                     b.HasOne("MyGarage.Api.Application.Types.Garage", null)
@@ -87,6 +130,11 @@ namespace MyGarage.Api.Migrations
             modelBuilder.Entity("MyGarage.Api.Application.Types.Garage", b =>
                 {
                     b.Navigation("Vehicles");
+                });
+
+            modelBuilder.Entity("MyGarage.Api.Application.Types.Vehicle", b =>
+                {
+                    b.Navigation("FuelStops");
                 });
 #pragma warning restore 612, 618
         }

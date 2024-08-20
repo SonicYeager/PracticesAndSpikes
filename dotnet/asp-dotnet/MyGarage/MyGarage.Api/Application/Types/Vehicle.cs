@@ -12,6 +12,7 @@ public sealed record Vehicle
     public decimal PriceAtPurchase { get; init; }
     public decimal FuelCapacity { get; init; }
 
+    public ICollection<FuelStop> FuelStops { get; init; } = new HashSet<FuelStop>();
+
     // TODO Services (repairs, maintenance and similar -> done by a workshop) + HU/AU
-    // TODO FuelStops (refuelings)
 }

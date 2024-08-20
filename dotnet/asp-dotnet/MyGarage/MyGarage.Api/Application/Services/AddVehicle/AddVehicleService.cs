@@ -1,19 +1,19 @@
 ﻿using MyGarage.Api.Application.Types;
-using MyGarage.Api.Application.Types.Inputs.CreateVehicle;
+using MyGarage.Api.Application.Types.Inputs.AddVehicle;
 using MyGarage.Api.Persistence;
 
-namespace MyGarage.Api.Application.Services.CreateVehicle;
+namespace MyGarage.Api.Application.Services.AddVehicle;
 
-public sealed class CreateVehicleService
+public sealed class AddVehicleService
 {
     private readonly MyGarageDbContext _context;
 
-    public CreateVehicleService(MyGarageDbContext context)
+    public AddVehicleService(MyGarageDbContext context)
     {
         _context = context;
     }
 
-    public async Task<Vehicle> Create(CreateVehicleInput input)
+    public async Task<Vehicle> Add(AddVehicleInput input)
     {
         var vehicle = new Vehicle
         {

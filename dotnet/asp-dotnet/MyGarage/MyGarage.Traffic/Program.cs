@@ -4,7 +4,7 @@ using MyGarage.Traffic.Application;
 var builder = Host.CreateApplicationBuilder(args);
 builder.Services.AddHostedService<GetGaragesWorker>();
 builder.Services.AddHostedService<CreateGarageWorker>();
-builder.Services.AddHostedService<CreateVehicleWorker>();
+builder.Services.AddHostedService<AddVehicleWorker>();
 builder.Services.AddHostedService<GetVehiclesWorker>();
 
 builder.Services.AddMyGarageClient()

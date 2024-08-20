@@ -57,6 +57,37 @@ namespace MyGarage.Api.Migrations
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
+            migrationBuilder.CreateTable(
+                name: "FuelStops",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    VehicleId = table.Column<int>(type: "int", nullable: false),
+                    AmountInLiters = table.Column<decimal>(type: "decimal(65,30)", nullable: false),
+                    TotalPriceInEuro = table.Column<decimal>(type: "decimal(65,30)", nullable: false),
+                    OdometerInKilometers = table.Column<decimal>(type: "decimal(65,30)", nullable: false),
+                    Date = table.Column<DateTimeOffset>(type: "datetime(6)", nullable: false),
+                    Note = table.Column<string>(type: "varchar(2048)", maxLength: 2048, nullable: true)
+                        .Annotation("MySql:CharSet", "utf8mb4")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_FuelStops", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_FuelStops_Vehicles_VehicleId",
+                        column: x => x.VehicleId,
+                        principalTable: "Vehicles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_FuelStops_VehicleId",
+                table: "FuelStops",
+                column: "VehicleId");
+
             migrationBuilder.CreateIndex(
                 name: "IX_Vehicles_GarageId",
                 table: "Vehicles",
@@ -66,6 +97,9 @@ namespace MyGarage.Api.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "FuelStops");
+
             migrationBuilder.DropTable(
                 name: "Vehicles");
 

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using MyGarage.Api.Application.Services.AddFuelStop;
+using MyGarage.Api.Application.Services.AddVehicle;
 using MyGarage.Api.Application.Services.CreateGarage;
-using MyGarage.Api.Application.Services.CreateVehicle;
 using MyGarage.Api.Persistence;
 
 const string policyName = "AllowAllOrigins";
@@ -9,10 +10,17 @@ var builder = WebApplication.CreateSlimBuilder(args);
 
 builder.WebHost.UseKestrelHttpsConfiguration();
 
-builder.Services.AddScoped<CreateVehicleService>();
-builder.Services.AddScoped<CreateVehicleValidator>();
+const string connectionString = "Server=localhost;Database=mygarage;user=root;password=my-secret;";
+builder.Services
+    .AddPooledDbContextFactory<MyGarageDbContext>(
+        static c => c.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+
+builder.Services.AddScoped<AddVehicleService>();
+builder.Services.AddScoped<AddVehicleValidator>();
 builder.Services.AddScoped<CreateGarageService>();
 builder.Services.AddScoped<CreateGarageValidator>();
+builder.Services.AddScoped<AddFuelStopService>();
+builder.Services.AddScoped<AddFuelStopValidator>();
 
 builder.Services.AddGraphQLServer()
     .AddTypes()
@@ -22,15 +30,12 @@ builder.Services.AddGraphQLServer()
     .AddMutationConventions()
     .AddDefaultTransactionScopeHandler()
     .RegisterDbContext<MyGarageDbContext>(DbContextKind.Pooled)
-    .RegisterService<CreateVehicleService>()
-    .RegisterService<CreateVehicleValidator>()
+    .RegisterService<AddVehicleService>()
+    .RegisterService<AddVehicleValidator>()
     .RegisterService<CreateGarageService>()
-    .RegisterService<CreateGarageValidator>();
-
-const string connectionString = "Server=localhost;Database=mygarage;user=root;password=my-secret;";
-builder.Services
-    .AddPooledDbContextFactory<MyGarageDbContext>(
-        static c => c.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+    .RegisterService<CreateGarageValidator>()
+    .RegisterService<AddFuelStopService>()
+    .RegisterService<AddFuelStopValidator>();
 
 builder.Services.AddCors(static options =>
 {

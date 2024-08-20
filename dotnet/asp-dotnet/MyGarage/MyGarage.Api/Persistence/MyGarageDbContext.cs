@@ -4,7 +4,7 @@ using MyGarage.Api.Persistence.ModelConfigurations;
 
 namespace MyGarage.Api.Persistence;
 
-public class MyGarageDbContext : DbContext
+public sealed class MyGarageDbContext : DbContext
 {
     public MyGarageDbContext(DbContextOptions options) : base(options)
     {

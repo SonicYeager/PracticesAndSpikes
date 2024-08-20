@@ -1,23 +1,23 @@
 ﻿using MyGarage.Api.Application.Types;
-using MyGarage.Api.Application.Types.Inputs.CreateVehicle;
-using MyGarage.Api.Application.Types.Payloads.CreateVehicle;
+using MyGarage.Api.Application.Types.Inputs.AddVehicle;
+using MyGarage.Api.Application.Types.Payloads.AddVehicle;
 using MyGarage.Api.Application.Types.Payloads.Errors;
 using MyGarage.Api.Persistence;
 
-namespace MyGarage.Api.Application.Services.CreateVehicle;
+namespace MyGarage.Api.Application.Services.AddVehicle;
 
-public sealed class CreateVehicleValidator
+public sealed class AddVehicleValidator
 {
     private readonly MyGarageDbContext _context;
 
-    public CreateVehicleValidator(MyGarageDbContext context)
+    public AddVehicleValidator(MyGarageDbContext context)
     {
         _context = context;
     }
 
-    public async Task<IEnumerable<ICreateVehicleError>> Validate(CreateVehicleInput input)
+    public async Task<IEnumerable<IAddVehicleError>> Validate(AddVehicleInput input)
     {
-        var errors = new List<ICreateVehicleError>();
+        var errors = new List<IAddVehicleError>();
         if (_context.Set<Vehicle>().Any(g => g.Designation == input.Designation))
             errors.Add(new VehicleAlreadyExistsError("A vehicle with the same designation already exists."));
 
