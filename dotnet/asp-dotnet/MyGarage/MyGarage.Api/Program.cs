@@ -12,7 +12,7 @@ builder.WebHost.UseKestrelHttpsConfiguration();
 
 const string connectionString = "Server=localhost;Database=mygarage;user=root;password=my-secret;";
 builder.Services
-    .AddPooledDbContextFactory<MyGarageDbContext>(
+    .AddDbContextPool<MyGarageDbContext>(
         static c => c.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
 builder.Services.AddScoped<AddVehicleService>();
