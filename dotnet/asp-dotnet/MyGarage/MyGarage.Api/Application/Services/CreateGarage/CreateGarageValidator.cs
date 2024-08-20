@@ -15,13 +15,13 @@ public sealed class CreateGarageValidator
         _context = dbContext;
     }
 
-    public async Task<IEnumerable<ICreateGarageError>> Validate(CreateGarageInput input)
+    public Task<IEnumerable<ICreateGarageError>> Validate(CreateGarageInput input)
     {
         var errors = new List<ICreateGarageError>();
 
         if (_context.Set<Garage>().Any(g => g.Designation == input.Designation))
             errors.Add(new GarageAlreadyExistsError("A garage with the same designation already exists."));
 
-        return errors;
+        return Task.FromResult<IEnumerable<ICreateGarageError>>(errors);
     }
 }

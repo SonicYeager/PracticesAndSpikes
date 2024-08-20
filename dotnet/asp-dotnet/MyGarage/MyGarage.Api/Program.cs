@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using MyGarage.Api.Application.Services;
 using MyGarage.Api.Application.Services.CreateGarage;
+using MyGarage.Api.Application.Services.CreateVehicle;
 using MyGarage.Api.Persistence;
 
 const string policyName = "AllowAllOrigins";

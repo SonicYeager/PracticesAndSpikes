@@ -8,9 +8,21 @@ using MyGarage.Api.Persistence;
 namespace MyGarage.Api.Tests;
 
 [SetUpFixture]
-public class DatabaseFixture
+public partial class DatabaseFixture
 {
+    private string ConnectionString
+    {
+        get => $"Server=localhost;Database={DatabaseName};user=root;password=my-secret;";
+    }
+
+    protected virtual string DatabaseName
+    {
+        get => "mygarage";
+    }
+
     private IContainer _container;
+
+    protected IServiceProvider ServiceProvider { get; private set; }
 
     [OneTimeSetUp]
     public async Task OneTimeSetUp()
@@ -23,30 +35,40 @@ public class DatabaseFixture
                     "MARIADB_ROOT_PASSWORD", "my-secret"
                 },
             })
-            .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged(new Regex("mariadbd: ready for connections.")))
+            .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged(MariaDbReadyLogRegex()))
             .Build();
 
-        await _container.StartAsync()
-            .ConfigureAwait(false);
+        await _container.StartAsync();
 
         var collection = new ServiceCollection();
-        const string connectionString = "Server=localhost;Database=mygarage;user=root;password=my-secret;";
         collection
             .AddPooledDbContextFactory<MyGarageDbContext>(
-                static c => c.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+                c => c.UseMySql(ConnectionString, ServerVersion.AutoDetect(ConnectionString)));
 
-        await using var provider = collection.BuildServiceProvider();
-        var dbContextFactory = provider.GetRequiredService<IDbContextFactory<MyGarageDbContext>>();
-        await using var dbContext = await dbContextFactory.CreateDbContextAsync();
-        await dbContext.Database.MigrateAsync();
+        ServiceProvider = collection.BuildServiceProvider();
+
+        await using var dbContext = await GetMyGarageDbContext();
+        await dbContext.Database.EnsureDeletedAsync();
         await dbContext.Database.EnsureCreatedAsync();
+    }
+
+    protected async Task<MyGarageDbContext> GetMyGarageDbContext()
+    {
+        var dbContextFactory = ServiceProvider.GetRequiredService<IDbContextFactory<MyGarageDbContext>>();
+        return await dbContextFactory.CreateDbContextAsync();
     }
 
     [OneTimeTearDown]
     public async Task OneTimeTearDown()
     {
+        if (ServiceProvider is IAsyncDisposable asyncDisposable) await asyncDisposable.DisposeAsync();
+        else if (ServiceProvider is IDisposable disposable) disposable.Dispose();
+
         await _container.StopAsync()
             .ConfigureAwait(false);
         await _container.DisposeAsync();
     }
+
+    [GeneratedRegex("mariadbd: ready for connections.")]
+    private static partial Regex MariaDbReadyLogRegex();
 }

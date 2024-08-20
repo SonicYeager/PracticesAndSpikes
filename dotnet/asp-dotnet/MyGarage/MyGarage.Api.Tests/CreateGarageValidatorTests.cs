@@ -1,29 +1,32 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MyGarage.Api.Application.Services.CreateGarage;
-using MyGarage.Api.Application.Types.Inputs.CreateGarage;
+using MyGarage.Api.Application.Types;
+using MyGarage.Api.Application.Types.Payloads.Errors;
 using MyGarage.Api.Persistence;
+using MyGarage.Api.Tests.TestEntities;
 
 namespace MyGarage.Api.Tests;
 
-public sealed class CreateGarageValidatorTests
+[TestFixture]
+public sealed class CreateGarageValidatorTests : DatabaseFixture
 {
-    private IServiceProvider ServiceProvider { get; set; }
+    /// <inheritdoc />
+    protected override string DatabaseName
+    {
+        get => nameof(CreateGarageValidatorTests);
+    }
 
     [SetUp]
-    public void SetUp()
+    public async Task SetUp()
     {
-        var collection = new ServiceCollection();
-        const string connectionString = "Server=localhost;Database=mygarage;user=root;password=my-secret;";
-        collection
-            .AddPooledDbContextFactory<MyGarageDbContext>(
-                static c => c.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
-
-        ServiceProvider = collection.BuildServiceProvider();
+        await using var dbContext = await GetMyGarageDbContext();
+        await dbContext.Database.EnsureDeletedAsync();
+        await dbContext.Database.EnsureCreatedAsync();
     }
 
     [Test]
-    public async Task Validate_WhenCalledWithoutExistingGarage_ShouldReturnError()
+    public async Task Validate_WhenCalledWithoutExistingGarage_ShouldNotReturnError()
     {
         // Arrange
         var dbContextFactory = ServiceProvider.GetRequiredService<IDbContextFactory<MyGarageDbContext>>();
@@ -31,16 +34,29 @@ public sealed class CreateGarageValidatorTests
         var validator = new CreateGarageValidator(dbContext);
 
         // Act
-        var errors = await validator.Validate(new CreateGarageInput("My Garage"));
+        var errors = await validator.Validate(TestCreateGarageInputFactory.Create());
 
         // Assert
         Assert.That(errors, Is.Empty);
     }
 
-    [TearDown]
-    public void TearDown()
+    [Test]
+    public async Task Validate_WhenCalledWithExistingGarage_ShouldReturnError()
     {
-        if (ServiceProvider is IDisposable disposable)
-            disposable.Dispose();
+        // Arrange
+        var dbContextFactory = ServiceProvider.GetRequiredService<IDbContextFactory<MyGarageDbContext>>();
+        await using var dbContext = await dbContextFactory.CreateDbContextAsync();
+        dbContext.Set<Garage>().Add(TestGarageFactory.Create());
+        await dbContext.SaveChangesAsync();
+        var validator = new CreateGarageValidator(dbContext);
+
+        // Act
+        var errors = await validator.Validate(new("My Garage"));
+
+        // Assert
+        Assert.That(errors, Is.EquivalentTo(new List<GarageAlreadyExistsError>
+        {
+            new("A garage with the same designation already exists."),
+        }));
     }
 }

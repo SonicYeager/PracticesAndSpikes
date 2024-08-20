@@ -2,7 +2,7 @@
 using MyGarage.Api.Application.Types.Inputs.CreateVehicle;
 using MyGarage.Api.Persistence;
 
-namespace MyGarage.Api.Application.Services;
+namespace MyGarage.Api.Application.Services.CreateVehicle;
 
 public sealed class CreateVehicleService
 {

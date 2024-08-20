@@ -1,4 +1,4 @@
-﻿using MyGarage.Api.Application.Services;
+﻿using MyGarage.Api.Application.Services.CreateVehicle;
 using MyGarage.Api.Application.Types.Inputs.CreateVehicle;
 using MyGarage.Api.Application.Types.Payloads.CreateVehicle;
 

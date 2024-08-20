@@ -4,7 +4,7 @@ using MyGarage.Api.Application.Types.Payloads.CreateVehicle;
 using MyGarage.Api.Application.Types.Payloads.Errors;
 using MyGarage.Api.Persistence;
 
-namespace MyGarage.Api.Application.Services;
+namespace MyGarage.Api.Application.Services.CreateVehicle;
 
 public sealed class CreateVehicleValidator
 {
