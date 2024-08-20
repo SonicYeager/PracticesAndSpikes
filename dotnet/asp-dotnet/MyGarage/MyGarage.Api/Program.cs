@@ -14,6 +14,9 @@ const string connectionString = "Server=localhost;Database=mygarage;user=root;pa
 builder.Services
     .AddDbContextPool<MyGarageDbContext>(
         static c => c.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+builder.Services
+    .AddPooledDbContextFactory<MyGarageDbContext>(
+        static c => c.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
 builder.Services.AddScoped<AddVehicleService>();
 builder.Services.AddScoped<AddVehicleValidator>();

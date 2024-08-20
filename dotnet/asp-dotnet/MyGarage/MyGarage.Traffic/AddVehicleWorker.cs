@@ -20,6 +20,8 @@ public sealed class AddVehicleWorker : BackgroundService
 
         var id = 1;
 
+        await Task.Delay(5000, stoppingToken);
+
         while (!stoppingToken.IsCancellationRequested)
         {
             var firstGarage = await _service.GetGarages(stoppingToken).LastAsync(stoppingToken);

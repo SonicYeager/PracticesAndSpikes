@@ -45,11 +45,39 @@ type Query {
     where: GarageFilterInput
     order: [GarageSortInput!]
   ): GaragesConnection
+  fuelStops(
+    """
+    Returns the first _n_ elements from the list.
+    """
+    first: Int
+
+    """
+    Returns the elements in the list that come after the specified cursor.
+    """
+    after: String
+
+    """
+    Returns the last _n_ elements from the list.
+    """
+    last: Int
+
+    """
+    Returns the elements in the list that come before the specified cursor.
+    """
+    before: String
+    where: FuelStopFilterInput
+    order: [FuelStopSortInput!]
+  ): FuelStopsConnection
 }
 
 type Mutation {
-  createVehicle(input: CreateVehicleInput!): CreateVehiclePayload
   createGarage(input: CreateGarageInput!): CreateGaragePayload
+  addVehicle(input: AddVehicleInput!): AddVehiclePayload
+  addFuelStop(input: AddFuelStopInput!): AddFuelStopPayload
+}
+
+type VehicleNotFoundError implements DefaultError {
+  message: String!
 }
 
 type VehicleAlreadyExistsError implements DefaultError {
@@ -68,9 +96,11 @@ interface DefaultError {
   message: String!
 }
 
-union ICreateVehicleError = VehicleAlreadyExistsError | GarageNotFoundError
-
 union ICreateGarageError = GarageAlreadyExistsError
+
+union IAddVehicleError = VehicleAlreadyExistsError | GarageNotFoundError
+
+union IAddFuelStopError = VehicleNotFoundError
 
 input VehicleFilterInput {
   and: [VehicleFilterInput!]
@@ -82,6 +112,7 @@ input VehicleFilterInput {
   odometer: DecimalOperationFilterInput
   priceAtPurchase: DecimalOperationFilterInput
   fuelCapacity: DecimalOperationFilterInput
+  fuelStops: ListFilterInputTypeOfFuelStopFilterInput
 }
 
 input VehicleSortInput {
@@ -157,6 +188,53 @@ type GaragesConnection {
   totalCount: Int!
 }
 
+input FuelStopFilterInput {
+  and: [FuelStopFilterInput!]
+  or: [FuelStopFilterInput!]
+  id: IntOperationFilterInput
+  vehicleId: IntOperationFilterInput
+  amountInLiters: DecimalOperationFilterInput
+  totalPriceInEuro: DecimalOperationFilterInput
+  odometerInKilometers: DecimalOperationFilterInput
+  date: DateTimeOperationFilterInput
+  note: StringOperationFilterInput
+}
+
+input FuelStopSortInput {
+  id: SortEnumType
+  vehicleId: SortEnumType
+  amountInLiters: SortEnumType
+  totalPriceInEuro: SortEnumType
+  odometerInKilometers: SortEnumType
+  date: SortEnumType
+  note: SortEnumType
+}
+
+"""
+A connection to a list of items.
+"""
+type FuelStopsConnection {
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+
+  """
+  A list of edges.
+  """
+  edges: [FuelStopsEdge!]
+
+  """
+  A flattened list of the nodes.
+  """
+  nodes: [FuelStop!]
+
+  """
+  Identifies the total count of items in the connection.
+  """
+  totalCount: Int!
+}
+
 input IntOperationFilterInput {
   eq: Int
   neq: Int
@@ -217,6 +295,13 @@ input DecimalOperationFilterInput {
   nlte: Decimal
 }
 
+input ListFilterInputTypeOfFuelStopFilterInput {
+  all: FuelStopFilterInput
+  none: FuelStopFilterInput
+  some: FuelStopFilterInput
+  any: Boolean
+}
+
 enum SortEnumType {
   ASC
   DESC
@@ -255,6 +340,7 @@ type Vehicle {
   odometer: Decimal!
   priceAtPurchase: Decimal!
   fuelCapacity: Decimal!
+  fuelStops: [FuelStop!]!
 }
 
 """
@@ -300,6 +386,31 @@ type GaragesEdge {
   node: Garage!
 }
 
+type FuelStop {
+  id: Int!
+  vehicleId: Int!
+  amountInLiters: Decimal!
+  totalPriceInEuro: Decimal!
+  odometerInKilometers: Decimal!
+  date: DateTime!
+  note: String
+}
+
+"""
+An edge in a connection.
+"""
+type FuelStopsEdge {
+  """
+  A cursor for use in pagination.
+  """
+  cursor: String!
+
+  """
+  The item at the end of the edge.
+  """
+  node: FuelStop!
+}
+
 """
 The `DateTime` scalar represents an ISO-8601 compliant date time type.
 """
@@ -310,16 +421,21 @@ The built-in `Decimal` scalar type.
 """
 scalar Decimal
 
-input CreateGarageInput {
-  designation: String!
+input AddFuelStopInput {
+  vehicleId: Int!
+  amountInLiters: Decimal!
+  totalPriceInEuro: Decimal!
+  odometerInKilometers: Decimal!
+  date: DateTime!
+  note: String
 }
 
-type CreateGaragePayload {
-  garage: Garage
-  errors: [ICreateGarageError!]!
+type AddFuelStopPayload {
+  fuelStop: FuelStop
+  errors: [IAddFuelStopError!]!
 }
 
-input CreateVehicleInput {
+input AddVehicleInput {
   garageId: Int!
   designation: String!
   licensePlate: String
@@ -329,7 +445,16 @@ input CreateVehicleInput {
   fuelCapacity: Decimal!
 }
 
-type CreateVehiclePayload {
+type AddVehiclePayload {
   vehicle: Vehicle
-  errors: [ICreateVehicleError!]!
+  errors: [IAddVehicleError!]!
+}
+
+input CreateGarageInput {
+  designation: String!
+}
+
+type CreateGaragePayload {
+  garage: Garage
+  errors: [ICreateGarageError!]!
 }

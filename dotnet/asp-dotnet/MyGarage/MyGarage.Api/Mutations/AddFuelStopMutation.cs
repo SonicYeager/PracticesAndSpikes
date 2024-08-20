@@ -10,7 +10,10 @@ public static class AddFuelStopMutation
     public static async Task<AddFuelStopPayload?> AddFuelStop(AddFuelStopValidator validator, AddFuelStopService service,
         AddFuelStopInput input)
     {
-        var errors = await validator.Validate(input);
+        var errors = (await validator.Validate(input)).ToList();
+        if (errors.Count != 0)
+            return new(null, errors);
+
         var vehicle = await service.Add(input);
 
         return new(vehicle, errors);

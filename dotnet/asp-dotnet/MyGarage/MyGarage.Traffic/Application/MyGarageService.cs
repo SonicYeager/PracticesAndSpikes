@@ -108,7 +108,7 @@ public sealed class MyGarageService : IMyGarageService
     }
 
     /// <inheritdoc />
-    public async Task<ICreateVehicle_CreateVehicle_Vehicle?> CreateVehicle(
+    public async Task<IAddVehicle_AddVehicle_Vehicle?> AddVehicle(
         string designation,
         DateTimeOffset firstRegistration,
         string? licensePlate,
@@ -118,7 +118,7 @@ public sealed class MyGarageService : IMyGarageService
         decimal priceAtPurchase,
         CancellationToken stoppingToken)
     {
-        var result = await _myGarageClient.CreateVehicle.ExecuteAsync(
+        var result = await _myGarageClient.AddVehicle.ExecuteAsync(
             designation, firstRegistration, licensePlate,
             fuelCapacity, garageId, odometer, priceAtPurchase, stoppingToken);
 
@@ -131,21 +131,66 @@ public sealed class MyGarageService : IMyGarageService
         }
         else
         {
-            if (result.Data!.CreateVehicle!.Errors.Any())
-                foreach (var error in result.Data.CreateVehicle.Errors)
+            if (result.Data!.AddVehicle!.Errors.Any())
+                foreach (var error in result.Data.AddVehicle.Errors)
                 {
                     switch (error)
                     {
-                        case CreateVehicle_CreateVehicle_Errors_VehicleAlreadyExistsError alreadyExistsError:
+                        case AddVehicle_AddVehicle_Errors_VehicleAlreadyExistsError alreadyExistsError:
                             _logger.LogError("{Message}", alreadyExistsError.Message);
                             break;
-                        case CreateVehicle_CreateVehicle_Errors_GarageNotFoundError notFoundError:
+                        case AddVehicle_AddVehicle_Errors_GarageNotFoundError notFoundError:
                             _logger.LogError("{Message}", notFoundError.Message);
                             break;
                     }
                 }
             else
-                return result.Data!.CreateVehicle!.Vehicle!;
+                return result.Data!.AddVehicle!.Vehicle!;
+        }
+
+        return default;
+    }
+
+    /// <inheritdoc />
+    public async Task<IAddFuelStop_AddFuelStop_FuelStop?> AddFuelStop(
+        int vehicleId,
+        DateTimeOffset date,
+        decimal amountInLiters,
+        decimal odometerInKilometers,
+        decimal totalPriceInEuro,
+        string? note,
+        CancellationToken stoppingToken)
+    {
+        var result = await _myGarageClient.AddFuelStop.ExecuteAsync(
+            vehicleId,
+            date,
+            amountInLiters,
+            odometerInKilometers,
+            totalPriceInEuro,
+            note,
+            stoppingToken);
+
+        if (result.Errors.Any())
+        {
+            foreach (var error in result.Errors)
+            {
+                _logger.LogError("Error Creating FuelStop: {Message}", error.Message);
+            }
+        }
+        else
+        {
+            if (result.Data!.AddFuelStop!.Errors.Any())
+                foreach (var error in result.Data.AddFuelStop.Errors)
+                {
+                    switch (error)
+                    {
+                        case AddFuelStop_AddFuelStop_Errors_VehicleNotFoundError notFoundError:
+                            _logger.LogError("{Message}", notFoundError.Message);
+                            break;
+                    }
+                }
+            else
+                return result.Data!.AddFuelStop!.FuelStop!;
         }
 
         return default;

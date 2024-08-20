@@ -25,6 +25,10 @@
     }
 }
 
+#{
+#  "first": 0
+#}
+
 query GetVehicles($first: Int!, $after: String) {
     vehicles(first: $first, after: $after) {
         edges {
@@ -49,6 +53,38 @@ query GetVehicles($first: Int!, $after: String) {
     }
 }
 
+#{
+#  "first": 0
+#}
+
+query GetFuelStops($first: Int!, $after: String) {
+    fuelStops(first: $first, after: $after) {
+        edges {
+            node {
+                id
+                vehicleId
+                amountInLiters
+                totalPriceInEuro
+                odometerInKilometers
+                date
+                note
+            }
+            cursor
+        }
+        pageInfo {
+            hasNextPage
+            hasPreviousPage
+            startCursor
+            endCursor
+        }
+        totalCount
+    }
+}
+
+#{
+#  "first": 0
+#}
+
 mutation CreateGarage($designation: String!) {
     createGarage(input: { designation: $designation }) {
         garage {
@@ -63,14 +99,20 @@ mutation CreateGarage($designation: String!) {
     }
 }
 
-mutation CreateVehicle($designation: String!,
-    $firstRegistration: DateTime!,
-    $licensePlate: String,
-    $fuelCapacity: Decimal!,
-    $garageId: Int!,
-    $odometer: Decimal!,
-    $priceAtPurchase: Decimal!) {
-    createVehicle(
+#{
+#  "designation": "My Fist Garage"
+#}
+
+mutation AddVehicle(
+    $designation: String!
+    $firstRegistration: DateTime!
+    $licensePlate: String
+    $fuelCapacity: Decimal!
+    $garageId: Int!
+    $odometer: Decimal!
+    $priceAtPurchase: Decimal!
+) {
+    addVehicle(
         input: {
             designation: $designation
             licensePlate: $licensePlate
@@ -97,3 +139,56 @@ mutation CreateVehicle($designation: String!,
         }
     }
 }
+
+#{
+#  "designation": "My Fist Car",
+#  "firstRegistration": "2023-10-13 10:30:45",
+#  "licensePlate": "DD-TW 21",
+#  "fuelCapacity": 13,
+#  "garageId": 1,
+#  "odometer": 22000,
+#  "priceAtPurchase": 7888
+#}
+
+mutation AddFuelStop(
+    $vehicleId: Int!
+    $date: DateTime!
+    $amountInLiters: Decimal!
+    $odometerInKilometers: Decimal!
+    $totalPriceInEuro: Decimal!
+    $note: String
+) {
+    addFuelStop(
+        input: {
+            vehicleId: $vehicleId
+            date: $date
+            amountInLiters: $amountInLiters
+            odometerInKilometers: $odometerInKilometers
+            totalPriceInEuro: $totalPriceInEuro
+            note: $note
+        }
+    ) {
+        fuelStop {
+            id
+            vehicleId
+            amountInLiters
+            totalPriceInEuro
+            odometerInKilometers
+            date
+            note
+        }
+        errors {
+            ... on DefaultError {
+                message
+            }
+        }
+    }
+}
+
+#{
+#  "vehicleId": 1,
+#  "date": "2023-10-13 10:30:45",
+#  "amountInLiters": 12,
+#  "odometerInKilometers": 23000,
+#  "totalPriceInEuro": 21
+#}
