@@ -1,10 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using MyGarage.Api.Application.Services.AddFuelStop;
-using MyGarage.Api.Application.Services.AddVehicle;
 using MyGarage.Api.Application.Types;
 using MyGarage.Api.Application.Types.Payloads.AddFuelStop;
-using MyGarage.Api.Application.Types.Payloads.AddVehicle;
 using MyGarage.Api.Application.Types.Payloads.Errors;
 using MyGarage.Api.Persistence;
 using MyGarage.Api.Tests.TestEntities;
