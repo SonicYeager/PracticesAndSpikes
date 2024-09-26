@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.28)
 project(codewars_training)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 23)
 
 add_library(codewars_training STATIC
         digital_root/kata.cpp
