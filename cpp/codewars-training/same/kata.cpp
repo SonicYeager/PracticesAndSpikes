@@ -13,8 +13,8 @@ namespace same
             a_squares.push_back(i * i);
         }
 
-        std::sort(a_squares.begin(), a_squares.end());
-        std::sort(b.begin(), b.end());
+        std::ranges::sort(a_squares);
+        std::ranges::sort(b);
         return a_squares == b;
     }
 }
