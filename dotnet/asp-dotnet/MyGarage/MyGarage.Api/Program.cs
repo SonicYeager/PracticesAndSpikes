@@ -32,13 +32,7 @@ builder.Services.AddGraphQLServer()
     .AddProjections()
     .AddMutationConventions()
     .AddDefaultTransactionScopeHandler()
-    .RegisterDbContext<MyGarageDbContext>(DbContextKind.Pooled)
-    .RegisterService<AddVehicleService>()
-    .RegisterService<AddVehicleValidator>()
-    .RegisterService<CreateGarageService>()
-    .RegisterService<CreateGarageValidator>()
-    .RegisterService<AddFuelStopService>()
-    .RegisterService<AddFuelStopValidator>();
+    .RegisterDbContextFactory<MyGarageDbContext>();
 
 builder.Services.AddCors(static options =>
 {
