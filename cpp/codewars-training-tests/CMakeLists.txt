@@ -15,6 +15,7 @@ add_executable(codewars_training_tests
         tests/string_ends_with_tests.cpp
         tests/descending_order_tests.cpp
         tests/same_tests.cpp
+        tests/roman_numerals_encoder.cpp
 )
 
 # Add the include directory of the static library

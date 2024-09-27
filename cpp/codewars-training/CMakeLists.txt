@@ -14,6 +14,8 @@ add_library(codewars_training STATIC
         descending_order/kata.cpp
         same/kata.cpp
         include/same/kata.hpp
+        include/roman_numerals_encoder/kata.hpp
+        roman_numerals_encoder/kata.cpp
 )
 
 # Add the include directory of the static library
