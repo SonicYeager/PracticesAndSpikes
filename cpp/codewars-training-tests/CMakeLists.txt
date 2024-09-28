@@ -17,6 +17,7 @@ add_executable(codewars_training_tests
         tests/same_tests.cpp
         tests/roman_numerals_encoder.cpp
         tests/create_phone_number_tests.cpp
+        tests/trailing_zeros_of_factorial_tests.cpp
 )
 
 # Add the include directory of the static library

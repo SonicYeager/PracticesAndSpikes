@@ -18,6 +18,8 @@ add_library(codewars_training STATIC
         roman_numerals_encoder/kata.cpp
         include/create_phone_number/kata.hpp
         create_phone_number/kata.cpp
+        include/trailing_zeros_of_factorial/kata.hpp
+        trailing_zeros_of_factorial/kata.cpp
 )
 
 # Add the include directory of the static library
