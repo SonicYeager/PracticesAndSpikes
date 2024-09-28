@@ -16,6 +16,8 @@ add_library(codewars_training STATIC
         include/same/kata.hpp
         include/roman_numerals_encoder/kata.hpp
         roman_numerals_encoder/kata.cpp
+        include/create_phone_number/kata.hpp
+        create_phone_number/kata.cpp
 )
 
 # Add the include directory of the static library
