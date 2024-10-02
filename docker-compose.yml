@@ -77,3 +77,8 @@ services:
 
 volumes:
   smtp4dev-data:
+
+networks:
+  default:
+    external:
+      name: shared_network
