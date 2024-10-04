@@ -21,6 +21,9 @@ add_executable(codewars_training_tests
         ../codewars-training/include/rot13/kata.hpp
         ../codewars-training/rot13/kata.cpp
         tests/rot13_tests.cpp
+        ../codewars-training/include/counting_duplicates/kata.hpp
+        ../codewars-training/counting_duplicates/kata.cpp
+        tests/counting_duplicates_tests.cpp
 )
 
 # Add the include directory of the static library
