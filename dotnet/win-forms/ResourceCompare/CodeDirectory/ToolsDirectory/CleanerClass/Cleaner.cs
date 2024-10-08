@@ -1,18 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
-namespace ResourceCompare
+namespace ResourceCompare.CodeDirectory.ToolsDirectory.CleanerClass;
+
+public static partial class Cleaner
 {
-    public static partial class Cleaner
-    {
 
-        public static void DoCleanerSpecialisedForFormatSpecifier(List<string> rcA, List<string> rcB)
-        {
-            rcA.RemoveAll(cline => !(cline.Contains("%")));
-            rcB.RemoveAll(cline => !(cline.Contains("%")));
-        }
+    public static void DoCleanerSpecialisedForFormatSpecifier(List<string> rcA, List<string> rcB)
+    {
+        rcA.RemoveAll(static cline => !cline.Contains('%'));
+        rcB.RemoveAll(static cline => !cline.Contains('%'));
     }
 }

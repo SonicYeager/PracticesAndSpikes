@@ -1,6 +1,6 @@
 ﻿namespace ResourceCompare
 {
-    partial class FrmRC
+    sealed partial class FrmRC
     {
         
         /// <summary>

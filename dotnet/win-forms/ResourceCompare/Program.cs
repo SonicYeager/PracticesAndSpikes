@@ -1,25 +1,27 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace ResourceCompare
+namespace ResourceCompare;
+
+file static class Program
 {
-    static class Program
+    [STAThread]
+    private static void Main()
     {
-        [STAThread]
-        static void Main()
+        var fileNames = Environment.GetCommandLineArgs();
+        Application.EnableVisualStyles();
+        Application.SetCompatibleTextRenderingDefault(false);
+        switch (fileNames.Length)
         {
-            string[] fileNames = Environment.GetCommandLineArgs();
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            if (fileNames.Length == 2)
+            case 2:
                 Application.Run(new FrmRC(fileNames[1], ""));
-            else if (fileNames.Length == 3)
+                break;
+            case 3:
                 Application.Run(new FrmRC(fileNames[1], fileNames[2]));
-            else
+                break;
+            default:
                 Application.Run(new FrmRC());
+                break;
         }
     }
 }

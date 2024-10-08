@@ -1,66 +1,65 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using ResourceCompare.CodeDirectory.ToolsDirectory.ChopperClass;
+using ResourceCompare.CodeDirectory.ToolsDirectory.ExtractorClass;
+using ResourceCompare.CodeDirectory.ToolsDirectory.SorterClass;
 
-namespace ResourceCompare
+namespace ResourceCompare.CodeDirectory.SectionClass;
+
+internal static class SectionParserDialog
 {
-    class SectionParserDialog
+    public static Tuple<List<string>, List<string>> ApplyToolsStandard(List<string> rcA, List<string> rcB)
     {
-        public static Tuple<List<string>, List<string>> ApplyToolsStandart(List<string> rcA, List<string> rcB)
-        {
-            Cleaner.StandartCleaning.CleaningDialog(rcA);
-            Cleaner.StandartCleaning.CleaningDialog(rcB);
-            Extractor.DoExtractorStandart.ExtractingDialog(rcA, rcB);
-            Composer.DoComposerStandart(rcA, rcB);
-            List<string> comparedStringsA = Comparator.DoComparatorStandart(rcA, rcB);
-            List<string> comparedStringsB = Comparator.DoComparatorStandart(rcB, rcA);
-            rcA = comparedStringsA;
-            rcB = comparedStringsB;
+        ToolsDirectory.CleanerClass.Cleaner.StandardCleaning.CleaningDialog(rcA);
+        ToolsDirectory.CleanerClass.Cleaner.StandardCleaning.CleaningDialog(rcB);
+        Extractor.DoExtractorStandart.ExtractingDialog(rcA, rcB);
+        ToolsDirectory.ComposerClass.Composer.DoComposerStandard(rcA, rcB);
+        var comparedStringsA = ToolsDirectory.ComparatorClass.Comparator.DoComparatorStandard(rcA, rcB);
+        var comparedStringsB = ToolsDirectory.ComparatorClass.Comparator.DoComparatorStandard(rcB, rcA);
+        rcA = comparedStringsA;
+        rcB = comparedStringsB;
 
-            return Tuple.Create(rcA, rcB);
-        }
-        public static Tuple<List<string>, List<string>> ApllyToolsForFormatSpecifier(List<string> rcA, List<string> rcB)
-        {
-            Cleaner.FormatSpecifierCleaning.CleaningDialog(rcA);
-            Cleaner.FormatSpecifierCleaning.CleaningDialog(rcB);
-            List<string> fSRCA = Extractor.DoExtractorFormatSpecifier(rcA);
-            List<string> fSRCB = Extractor.DoExtractorFormatSpecifier(rcB);
-            Extractor.DoExtractorStandart.ExtractingDialog(rcA, rcB);
-            Composer.DoClippContentTogether(rcA, rcB, fSRCA, fSRCB);
-            Cleaner.DoCleanerSpecialisedForFormatSpecifier(rcA, rcB);
-            List<string> comparedStringsA = Comparator.DoComparatorStandart(rcA, rcB);
-            List<string> comparedStringsB = Comparator.DoComparatorStandart(rcB, rcA);
-            rcA = comparedStringsA;
-            rcB = comparedStringsB;
+        return Tuple.Create(rcA, rcB);
+    }
+    public static Tuple<List<string>, List<string>> ApplyToolsForFormatSpecifier(List<string> rcA, List<string> rcB)
+    {
+        ToolsDirectory.CleanerClass.Cleaner.FormatSpecifierCleaning.CleaningDialog(rcA);
+        ToolsDirectory.CleanerClass.Cleaner.FormatSpecifierCleaning.CleaningDialog(rcB);
+        var fSRCA = Extractor.DoExtractorFormatSpecifier(rcA);
+        var fSRCB = Extractor.DoExtractorFormatSpecifier(rcB);
+        Extractor.DoExtractorStandart.ExtractingDialog(rcA, rcB);
+        ToolsDirectory.ComposerClass.Composer.DoClippContentTogether(rcA, rcB, fSRCA, fSRCB);
+        ToolsDirectory.CleanerClass.Cleaner.DoCleanerSpecialisedForFormatSpecifier(rcA, rcB);
+        var comparedStringsA = ToolsDirectory.ComparatorClass.Comparator.DoComparatorStandard(rcA, rcB);
+        var comparedStringsB = ToolsDirectory.ComparatorClass.Comparator.DoComparatorStandard(rcB, rcA);
+        rcA = comparedStringsA;
+        rcB = comparedStringsB;
 
-            return Tuple.Create(rcA, rcB);
-        }
-        public static Tuple<List<string>, List<string>> ApplyToolsForUntranslatedStrings(List<string> rcA, List<string> rcB)
-        {
-            Cleaner.StringCleaning.CleaningDialog(rcA);
-            Cleaner.StringCleaning.CleaningDialog(rcB);
-            List<string> extractedStringsA = Extractor.DoExtractingStrings(rcA);
-            List<string> extractedStringsB = Extractor.DoExtractingStrings(rcB);
-            Extractor.DoExtractorStandart.ExtractingDialog(rcA, rcB);
-            Composer.DoClippContentTogether(rcA, rcB, extractedStringsA, extractedStringsB);
-            List<string> comparedStringsA = Comparator.DoCompareInverted(rcA, rcB);
-            List<string> comparedStringsB = Comparator.DoCompareInverted(rcB, rcA);
-            rcA = comparedStringsA;
-            rcB = comparedStringsB;
+        return Tuple.Create(rcA, rcB);
+    }
+    public static Tuple<List<string>, List<string>> ApplyToolsForUntranslatedStrings(List<string> rcA, List<string> rcB)
+    {
+        ToolsDirectory.CleanerClass.Cleaner.StringCleaning.CleaningDialog(rcA);
+        ToolsDirectory.CleanerClass.Cleaner.StringCleaning.CleaningDialog(rcB);
+        var extractedStringsA = Extractor.DoExtractingStrings(rcA);
+        var extractedStringsB = Extractor.DoExtractingStrings(rcB);
+        Extractor.DoExtractorStandart.ExtractingDialog(rcA, rcB);
+        ToolsDirectory.ComposerClass.Composer.DoClippContentTogether(rcA, rcB, extractedStringsA, extractedStringsB);
+        var comparedStringsA = ToolsDirectory.ComparatorClass.Comparator.DoCompareInverted(rcA, rcB);
+        var comparedStringsB = ToolsDirectory.ComparatorClass.Comparator.DoCompareInverted(rcB, rcA);
+        rcA = comparedStringsA;
+        rcB = comparedStringsB;
 
-            return Tuple.Create(rcA, rcB);
-        }
+        return Tuple.Create(rcA, rcB);
+    }
 
-        public static List<string> ApplyToolsForSortedRC(List<string> rcA, List<string> rcB)
-        {
-            List<List<string>> ChoppedSectionA = Chopper.DialogChopper(rcA); 
-            List<List<string>> ChoppedSectionB = Chopper.DialogChopper(rcB);
-            List<List<string>> sortedSection = Sorter.SortSection(ChoppedSectionA, ChoppedSectionB);
-            rcB = Composer.MergeDialogsToSection(sortedSection, rcB); 
+    public static List<string> ApplyToolsForSortedRC(List<string> rcA, List<string> rcB)
+    {
+        var choppedSectionA = Chopper.DialogChopper(rcA);
+        var choppedSectionB = Chopper.DialogChopper(rcB);
+        var sortedSection = Sorter.SortSection(choppedSectionA, choppedSectionB);
+        rcB = ToolsDirectory.ComposerClass.Composer.MergeDialogsToSection(sortedSection, rcB);
 
-            return rcB;
-        }
+        return rcB;
     }
 }

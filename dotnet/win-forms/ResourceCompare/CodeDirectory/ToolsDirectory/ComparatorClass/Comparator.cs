@@ -1,24 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace ResourceCompare
+namespace ResourceCompare.CodeDirectory.ToolsDirectory.ComparatorClass;
+
+public static class Comparator
 {
-    public static partial class Comparator
+    public static List<string> DoComparatorStandard(List<string> rcA, List<string> rcB)
     {
-        public static List<string> DoComparatorStandart(List<string> rcA, List<string> rcB)
-        {
-            List<string> rc = rcA.Except(rcB).ToList();
-            return rc;
-        }
+        var rc = rcA.Except(rcB).ToList();
+        return rc;
+    }
 
-        public static List<string> DoCompareInverted(List<string> rcA, List<string> rcB)
-        {
-            List<string> rc = rcA.Intersect(rcB).ToList();
+    public static List<string> DoCompareInverted(List<string> rcA, List<string> rcB)
+    {
+        var rc = rcA.Intersect(rcB).ToList();
 
-            return rc;
-        }
+        return rc;
     }
 }
