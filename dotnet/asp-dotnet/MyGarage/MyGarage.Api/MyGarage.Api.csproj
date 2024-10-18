@@ -10,15 +10,15 @@
     <ItemGroup>
       <PackageReference Include="AutoMapper" Version="13.0.1" />
       <PackageReference Include="HotChocolate.Analyzers" Version="14.0.0-preview.11.3" />
-      <PackageReference Include="HotChocolate.AspNetCore" Version="14.0.0-rc.2" />
-      <PackageReference Include="HotChocolate.Data.EntityFramework" Version="14.0.0-rc.2" />
-      <PackageReference Include="HotChocolate.Types.Analyzers" Version="14.0.0-rc.2" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.8" />
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.8">
+      <PackageReference Include="HotChocolate.AspNetCore" Version="14.0.0" />
+      <PackageReference Include="HotChocolate.Data.EntityFramework" Version="14.0.0" />
+      <PackageReference Include="HotChocolate.Types.Analyzers" Version="14.0.0" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.10" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.10">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
-      <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.8" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.10" />
       <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="8.0.2" />
     </ItemGroup>
 
