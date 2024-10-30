@@ -3,7 +3,7 @@ using ReactiveUI;
 
 namespace Cbam.ViewModels;
 
-public class TreeViewItemViewModel : ViewModelBase
+public class QReportViewModel : ViewModelBase
 {
     private string _header;
     public string Header
@@ -12,8 +12,8 @@ public class TreeViewItemViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _header, value);
     }
 
-    private ObservableCollection<TreeViewItemViewModel> _children = [];
-    public ObservableCollection<TreeViewItemViewModel> Children
+    private ObservableCollection<QReportViewModel> _children = [];
+    public ObservableCollection<QReportViewModel> Children
     {
         get => _children;
         set => this.RaiseAndSetIfChanged(ref _children, value);

@@ -15,9 +15,9 @@
 
     <Grid ColumnDefinitions="200,*">
 
-        <TreeView ItemsSource="{Binding ReportTree}" Grid.Column="0" Background="White">
+        <TreeView ItemsSource="{Binding ReportTree}" Grid.Column="0">
             <TreeView.ItemTemplate>
-                <TreeDataTemplate DataType="{x:Type vm:TreeViewItemViewModel}"
+                <TreeDataTemplate DataType="{x:Type vm:QReportViewModel}"
                                   ItemsSource="{Binding Children}">
                     <TextBlock Text="{Binding Header}" />
                 </TreeDataTemplate>
@@ -35,15 +35,8 @@
                 Height="100"
                 Background="Transparent"
                 Command="{Binding AddFileCommand}"
-                IsVisible="{Binding Report, Converter={x:Static ObjectConverters.IsNull}}"
+                IsVisible="{Binding !Loaded}"
                 Grid.Column="1" />
-
-        <TextBlock Text="{Binding Report}"
-                   HorizontalAlignment="Center"
-                   VerticalAlignment="Center"
-                   FontSize="24"
-                   IsVisible="{Binding Report, Converter={x:Static ObjectConverters.IsNotNull}}"
-                   Grid.Column="1" />
     </Grid>
 
 </Window>

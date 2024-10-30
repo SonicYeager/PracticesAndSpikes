@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
+using Cbam.Models;
 using ReactiveUI;
 
 namespace Cbam.ViewModels;
@@ -13,52 +14,35 @@ public sealed class MainWindowViewModel : ViewModelBase
 
     public Interaction<Unit, Uri?> ShowOpenFileDialog { get; } = new();
 
-    private string? _report;
-    public string? Report
-    {
-        get => _report;
-        set => this.RaiseAndSetIfChanged(ref _report, value);
-    }
-
-    private ObservableCollection<TreeViewItemViewModel> _reportTree = new();
-    public ObservableCollection<TreeViewItemViewModel> ReportTree
+    private ObservableCollection<QReportViewModel> _reportTree = new();
+    public ObservableCollection<QReportViewModel> ReportTree
     {
         get => _reportTree;
         set => this.RaiseAndSetIfChanged(ref _reportTree, value);
     }
 
+    private bool _loaded;
+    public bool Loaded
+    {
+        get => _loaded;
+        set => this.RaiseAndSetIfChanged(ref _loaded, value);
+    }
+
     public async Task AddFile()
     {
         var result = await ShowOpenFileDialog.Handle(Unit.Default);
-        if (!string.IsNullOrEmpty(result?.AbsolutePath))
+        if (!string.IsNullOrEmpty(result?.ToString()))
         {
-            //TODO actual handling of report
-            Report = $"Report loaded from: {result.AbsolutePath}";
-            // TODO: Populate the tree structure
-            ReportTree = LoadReportTree(result.AbsolutePath);
+            Loaded = true;
+            ReportTree = LoadReportTree(result.ToString());
         }
     }
 
-    private ObservableCollection<TreeViewItemViewModel> LoadReportTree(string filePath)
+    private static ObservableCollection<QReportViewModel> LoadReportTree(string filePath)
     {
-        // TODO: Implement logic to load the tree structure from the report file
-        var tree = new ObservableCollection<TreeViewItemViewModel>
+        var tree = new ObservableCollection<QReportViewModel>
         {
-            new()
-            {
-                Header = "Root",
-                Children = new()
-                {
-                    new()
-                    {
-                        Header = "Child 1",
-                    },
-                    new()
-                    {
-                        Header = "Child 2",
-                    },
-                },
-            },
+            QReportReader.Read(filePath),
         };
         return tree;
     }
