@@ -15,7 +15,14 @@
 
     <Grid ColumnDefinitions="200,*">
 
-        <TreeView ItemsSource="{Binding ReportTree}" Grid.Column="0">
+        <TreeView ItemsSource="{Binding ReportTree}"
+                  SelectedItem="{Binding SelectedItem}"
+                  Grid.Column="0">
+            <TreeView.Styles>
+                <Style Selector="TreeViewItem" x:DataType="vm:QReportViewModel">
+                    <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+                </Style>
+            </TreeView.Styles>
             <TreeView.ItemTemplate>
                 <TreeDataTemplate DataType="{x:Type vm:QReportViewModel}"
                                   ItemsSource="{Binding Children}">
@@ -23,6 +30,21 @@
                 </TreeDataTemplate>
             </TreeView.ItemTemplate>
         </TreeView>
+
+        <ContentControl Grid.Column="1" Content="{Binding SelectedItem.Details}">
+            <ContentControl.DataTemplates>
+                <DataTemplate DataType="{x:Type vm:QReportDetailsViewModel}">
+                    <StackPanel>
+                        <TextBlock>QReport</TextBlock>
+                        <TextBlock Text="{Binding ReportId}" />
+                        <TextBlock Text="{Binding SubmissionDate}" />
+                        <TextBlock Text="{Binding ReportingPeriod}" />
+                        <TextBlock Text="{Binding Year}" />
+                    </StackPanel>
+                </DataTemplate>
+                <!-- Add more DataTemplates for other detail view models here -->
+            </ContentControl.DataTemplates>
+        </ContentControl>
 
         <Button Name="AddFileButton"
                 Content="+"

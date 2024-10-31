@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Globalization;
+using System.Linq;
 using System.Xml.Linq;
 using Cbam.ViewModels;
 
@@ -16,26 +18,25 @@ public static class QReportReader
             throw new InvalidOperationException("The XML file is empty or invalid.");
         }
 
-        var rootViewModel = new QReportViewModel
-        {
-            Header = rootElement.Name.LocalName,
-            Children = new(),
-        };
-
-        foreach (var element in rootElement.Elements())
-        {
-            rootViewModel.Children.Add(ParseElement(element));
-        }
+        var rootViewModel = ParseElement(rootElement);
 
         return rootViewModel;
     }
 
     private static QReportViewModel ParseElement(XElement element)
     {
+        return element switch
+        {
+            _ when element.Name.LocalName == "QReport" => HandleQReportElement(element),
+            _ => ParseDefaultElement(element),
+        };
+    }
+
+    private static QReportViewModel ParseDefaultElement(XElement element)
+    {
         var viewModel = new QReportViewModel
         {
-            Header = element.Name.LocalName,
-            Children = new(),
+            Header = element.Name.LocalName, Children = new(), Details = null,
         };
 
         foreach (var childElement in element.Elements())
@@ -44,5 +45,33 @@ public static class QReportReader
         }
 
         return viewModel;
+    }
+
+    private static QReportViewModel HandleQReportElement(XElement element)
+    {
+        var details = new QReportDetailsViewModel
+        {
+            SubmissionDate = DateTime.Parse(GetValue(element, "SubmissionDate"), CultureInfo.InvariantCulture),
+            ReportId = GetValue(element, "ReportId"),
+            ReportingPeriod = GetValue(element, "ReportingPeriod"),
+            Year = int.Parse(GetValue(element, "Year"), CultureInfo.InvariantCulture),
+        };
+
+        var viewModel = new QReportViewModel
+        {
+            Header = element.Name.LocalName, Children = new(), Details = details,
+        };
+
+        foreach (var childElement in element.Elements().Where(static e => e.HasElements))
+        {
+            viewModel.Children.Add(ParseElement(childElement));
+        }
+
+        return viewModel;
+    }
+
+    private static string GetValue(XElement element, string name)
+    {
+        return element.Elements().Single(e => e.Name.LocalName == name).Value;
     }
 }

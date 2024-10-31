@@ -28,6 +28,13 @@ public sealed class MainWindowViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _loaded, value);
     }
 
+    private QReportViewModel? _selectedItem;
+    public QReportViewModel? SelectedItem
+    {
+        get => _selectedItem;
+        set => this.RaiseAndSetIfChanged(ref _selectedItem, value);
+    }
+
     public async Task AddFile()
     {
         var result = await ShowOpenFileDialog.Handle(Unit.Default);
