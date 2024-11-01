@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Cbam.ViewModels;
+namespace Cbam.ViewModels.QReportDetails;
 
 public sealed class QReportDetailsViewModel : ViewModelBase
 {

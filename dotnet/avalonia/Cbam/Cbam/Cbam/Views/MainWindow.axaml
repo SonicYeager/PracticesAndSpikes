@@ -3,6 +3,7 @@
         xmlns:vm="using:Cbam.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:qReportDetails="clr-namespace:Cbam.ViewModels.QReportDetails"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="Cbam.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
@@ -13,7 +14,7 @@
         <vm:MainWindowViewModel />
     </Design.DataContext>
 
-    <Grid ColumnDefinitions="200,*">
+    <Grid ColumnDefinitions="Auto,*">
 
         <TreeView ItemsSource="{Binding ReportTree}"
                   SelectedItem="{Binding SelectedItem}"
@@ -31,15 +32,26 @@
             </TreeView.ItemTemplate>
         </TreeView>
 
-        <ContentControl Grid.Column="1" Content="{Binding SelectedItem.Details}">
+        <ContentControl Grid.Column="1"
+                        Content="{Binding SelectedItem.Details}"
+                        HorizontalContentAlignment="Center"
+                        VerticalContentAlignment="Center">
             <ContentControl.DataTemplates>
-                <DataTemplate DataType="{x:Type vm:QReportDetailsViewModel}">
+                <DataTemplate DataType="{x:Type qReportDetails:QReportDetailsViewModel}">
                     <StackPanel>
-                        <TextBlock>QReport</TextBlock>
+                        <TextBlock FontSize="18" FontWeight="Bold">QReport</TextBlock>
                         <TextBlock Text="{Binding ReportId}" />
                         <TextBlock Text="{Binding SubmissionDate}" />
                         <TextBlock Text="{Binding ReportingPeriod}" />
                         <TextBlock Text="{Binding Year}" />
+                    </StackPanel>
+                </DataTemplate>
+                <DataTemplate DataType="{x:Type qReportDetails:DeclarantDetailsViewModel}">
+                    <StackPanel>
+                        <TextBlock FontSize="18" FontWeight="Bold">Declarant</TextBlock>
+                        <TextBlock Text="{Binding IdentificationNumber}" />
+                        <TextBlock Text="{Binding Name}" />
+                        <TextBlock Text="{Binding Role}" />
                     </StackPanel>
                 </DataTemplate>
                 <!-- Add more DataTemplates for other detail view models here -->

@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Linq;
 using System.Xml.Linq;
 using Cbam.ViewModels;
+using Cbam.ViewModels.QReportDetails;
 
 namespace Cbam.Models;
 
@@ -27,7 +28,8 @@ public static class QReportReader
     {
         return element switch
         {
-            _ when element.Name.LocalName == "QReport" => HandleQReportElement(element),
+            _ when element.Name.LocalName == "QReport" => Handle(HandleQReportElement, element),
+            _ when element.Name.LocalName == "Declarant" => Handle(HandleDeclarantElement, element),
             _ => ParseDefaultElement(element),
         };
     }
@@ -47,15 +49,31 @@ public static class QReportReader
         return viewModel;
     }
 
-    private static QReportViewModel HandleQReportElement(XElement element)
+    private static QReportDetailsViewModel HandleQReportElement(XElement element)
     {
-        var details = new QReportDetailsViewModel
+        return new()
         {
             SubmissionDate = DateTime.Parse(GetValue(element, "SubmissionDate"), CultureInfo.InvariantCulture),
             ReportId = GetValue(element, "ReportId"),
             ReportingPeriod = GetValue(element, "ReportingPeriod"),
             Year = int.Parse(GetValue(element, "Year"), CultureInfo.InvariantCulture),
         };
+    }
+
+    private static DeclarantDetailsViewModel HandleDeclarantElement(XElement element)
+    {
+        return new()
+        {
+            IdentificationNumber = GetValue(element, "IdentificationNumber"),
+            Name = GetValue(element, "Name"),
+            Role = GetValue(element, "Role"),
+        };
+    }
+
+    private static QReportViewModel Handle<TElement>(Func<XElement, TElement> handleElement, XElement element)
+        where TElement : ViewModelBase
+    {
+        var details = handleElement(element);
 
         var viewModel = new QReportViewModel
         {
