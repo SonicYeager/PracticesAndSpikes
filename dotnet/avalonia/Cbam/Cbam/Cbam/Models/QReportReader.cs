@@ -14,10 +14,7 @@ public static class QReportReader
         var document = XDocument.Load(filePath);
         var rootElement = document.Root;
 
-        if (rootElement == null)
-        {
-            throw new InvalidOperationException("The XML file is empty or invalid.");
-        }
+        if (rootElement == null) throw new InvalidOperationException("The XML file is empty or invalid.");
 
         var rootViewModel = ParseElement(rootElement);
 
