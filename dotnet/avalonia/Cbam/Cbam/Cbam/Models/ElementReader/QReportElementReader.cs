@@ -7,7 +7,7 @@ namespace Cbam.Models.ElementReader;
 
 public static class QReportElementReader
 {
-    public static QReportDetailsViewModel HandleQReportElement(XElement element)
+    public static QReportDetailsViewModel Handle(XElement element)
     {
         return new()
         {

@@ -24,8 +24,9 @@ public static class QReportReader
     {
         return element switch
         {
-            _ when element.Name.LocalName == "QReport" => Handle(QReportElementReader.HandleQReportElement, element),
-            _ when element.Name.LocalName == "Declarant" => Handle(DeclarantElementReader.HandleDeclarantElement, element),
+            _ when element.Name.LocalName == "QReport" => Handle(QReportElementReader.Handle, element),
+            _ when element.Name.LocalName == "Declarant" => Handle(DeclarantElementReader.Handle, element),
+            _ when element.Name.LocalName == "ActorAddress" => Handle(ActorAddressElementReader.Handle, element),
             _ => Handle<ViewModelBase>(static _ => null, element),
         };
     }

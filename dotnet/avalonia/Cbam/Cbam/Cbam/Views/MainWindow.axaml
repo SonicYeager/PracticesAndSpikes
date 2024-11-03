@@ -40,18 +40,46 @@
                 <DataTemplate DataType="{x:Type qReportDetails:QReportDetailsViewModel}">
                     <StackPanel>
                         <TextBlock FontSize="18" FontWeight="Bold">QReport</TextBlock>
+                        <TextBlock Text="ReportId: " />
                         <TextBlock Text="{Binding ReportId}" />
+                        <TextBlock Text="SubmissionDate: " />
                         <TextBlock Text="{Binding SubmissionDate}" />
+                        <TextBlock Text="ReportingPeriod: " />
                         <TextBlock Text="{Binding ReportingPeriod}" />
+                        <TextBlock Text="Year: " />
                         <TextBlock Text="{Binding Year}" />
                     </StackPanel>
                 </DataTemplate>
                 <DataTemplate DataType="{x:Type qReportDetails:DeclarantDetailsViewModel}">
                     <StackPanel>
                         <TextBlock FontSize="18" FontWeight="Bold">Declarant</TextBlock>
+                        <TextBlock Text="IdentificationNumber: " />
                         <TextBlock Text="{Binding IdentificationNumber}" />
+                        <TextBlock Text="Name: " />
                         <TextBlock Text="{Binding Name}" />
+                        <TextBlock Text="Role: " />
                         <TextBlock Text="{Binding Role}" />
+                    </StackPanel>
+                </DataTemplate>
+                <DataTemplate DataType="{x:Type qReportDetails:ActorAddressDetailsViewModel}">
+                    <StackPanel>
+                        <TextBlock FontSize="18" FontWeight="Bold">Actor Address</TextBlock>
+                        <TextBlock Text="Country: " />
+                        <TextBlock Text="{Binding Country}" />
+                        <TextBlock Text="SubDivision: " />
+                        <TextBlock Text="{Binding SubDivision}" />
+                        <TextBlock Text="City: " />
+                        <TextBlock Text="{Binding City}" />
+                        <TextBlock Text="Street: " />
+                        <TextBlock Text="{Binding Street}" />
+                        <TextBlock Text="StreetAdditionalLine: " />
+                        <TextBlock Text="{Binding StreetAdditionalLine}" />
+                        <TextBlock Text="Number: " />
+                        <TextBlock Text="{Binding Number}" />
+                        <TextBlock Text="Postcode: " />
+                        <TextBlock Text="{Binding Postcode}" />
+                        <TextBlock Text="POBox: " />
+                        <TextBlock Text="{Binding POBox}" />
                     </StackPanel>
                 </DataTemplate>
                 <!-- Add more DataTemplates for other detail view models here -->

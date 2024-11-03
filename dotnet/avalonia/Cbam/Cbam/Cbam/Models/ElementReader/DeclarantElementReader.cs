@@ -5,7 +5,7 @@ namespace Cbam.Models.ElementReader;
 
 public static class DeclarantElementReader
 {
-    public static DeclarantDetailsViewModel HandleDeclarantElement(XElement element)
+    public static DeclarantDetailsViewModel Handle(XElement element)
     {
         return new()
         {
