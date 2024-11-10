@@ -10,6 +10,8 @@ namespace Cbam.ViewModels;
 
 public sealed class MainWindowViewModel : ViewModelBase
 {
+    private readonly QReportReader _reportReader;
+
     public ReactiveCommand<Unit, Unit> AddFileCommand { get; }
 
     public Interaction<Unit, Uri?> ShowOpenFileDialog { get; } = new();
@@ -45,17 +47,18 @@ public sealed class MainWindowViewModel : ViewModelBase
         }
     }
 
-    private static ObservableCollection<QReportViewModel> LoadReportTree(string filePath)
+    private ObservableCollection<QReportViewModel> LoadReportTree(string filePath)
     {
         var tree = new ObservableCollection<QReportViewModel>
         {
-            QReportReader.Read(filePath),
+            _reportReader.Read(filePath),
         };
         return tree;
     }
 
-    public MainWindowViewModel()
+    public MainWindowViewModel(QReportReader reportReader)
     {
+        _reportReader = reportReader;
         AddFileCommand = ReactiveCommand.CreateFromTask(AddFile);
     }
 }

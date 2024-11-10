@@ -3,9 +3,9 @@ using Cbam.ViewModels.QReportDetails;
 
 namespace Cbam.Models.ElementReader;
 
-public static class DeclarantElementReader
+public sealed class DeclarantElementReader : IElementReader<DeclarantDetailsViewModel>
 {
-    public static DeclarantDetailsViewModel Handle(XElement element)
+    public DeclarantDetailsViewModel Handle(XElement element)
     {
         return new()
         {

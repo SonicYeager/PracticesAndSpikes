@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 using Cbam.Models.ElementReader;
@@ -6,9 +7,16 @@ using Cbam.ViewModels;
 
 namespace Cbam.Models;
 
-public static class QReportReader
+public sealed class QReportReader
 {
-    public static QReportViewModel Read(string filePath)
+    private readonly Dictionary<string, IElementReader<ViewModelBase>> _elementReaders;
+
+    public QReportReader(Dictionary<string, IElementReader<ViewModelBase>> elementReaders)
+    {
+        _elementReaders = elementReaders;
+    }
+
+    public QReportViewModel Read(string filePath)
     {
         var document = XDocument.Load(filePath);
         var rootElement = document.Root;
@@ -20,18 +28,18 @@ public static class QReportReader
         return rootViewModel;
     }
 
-    private static QReportViewModel ParseElement(XElement element)
+    private QReportViewModel ParseElement(XElement element)
     {
         return element switch
         {
-            _ when element.Name.LocalName == "QReport" => Handle(QReportElementReader.Handle, element),
-            _ when element.Name.LocalName == "Declarant" => Handle(DeclarantElementReader.Handle, element),
-            _ when element.Name.LocalName == "ActorAddress" => Handle(ActorAddressElementReader.Handle, element),
+            _ when element.Name.LocalName == "QReport" => Handle(_elementReaders["QReport"].Handle, element),
+            _ when element.Name.LocalName == "Declarant" => Handle(_elementReaders["Declarant"].Handle, element),
+            _ when element.Name.LocalName == "ActorAddress" => Handle(_elementReaders["ActorAddress"].Handle, element),
             _ => Handle<ViewModelBase>(static _ => null, element),
         };
     }
 
-    private static QReportViewModel Handle<TElement>(Func<XElement, TElement?> handleElement, XElement element)
+    private QReportViewModel Handle<TElement>(Func<XElement, TElement?> handleElement, XElement element)
         where TElement : ViewModelBase
     {
         var details = handleElement(element);

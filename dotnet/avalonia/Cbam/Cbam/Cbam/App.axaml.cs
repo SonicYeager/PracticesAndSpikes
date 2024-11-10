@@ -2,8 +2,9 @@ using System;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Cbam.Models;
+using Cbam.Models.ElementReader;
 using Cbam.ViewModels;
-using Cbam.ViewModels.QReportDetails;
 using Cbam.Views;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -21,11 +22,17 @@ public sealed class App : Application
             DataContext = d.GetRequiredService<MainWindowViewModel>(),
         });
 
+        ServiceCollection.AddSingleton<QReportElementReader>();
+        ServiceCollection.AddSingleton<DeclarantElementReader>();
+        ServiceCollection.AddSingleton<ActorAddressElementReader>();
+        ServiceCollection.AddSingleton<QReportReader>(static d =>
+            new(new()
+            {
+                ["QReport"] = d.GetRequiredService<QReportElementReader>(),
+                ["Declarant"] = d.GetRequiredService<DeclarantElementReader>(),
+                ["ActorAddress"] = d.GetRequiredService<ActorAddressElementReader>(),
+            }));
         ServiceCollection.AddSingleton<MainWindowViewModel>();
-        ServiceCollection.AddSingleton<QReportViewModel>();
-        ServiceCollection.AddSingleton<QReportDetailsViewModel>();
-        ServiceCollection.AddSingleton<DeclarantDetailsViewModel>();
-        ServiceCollection.AddSingleton<ActorAddressDetailsViewModel>();
 
         ServiceProvider = ServiceCollection.BuildServiceProvider();
 

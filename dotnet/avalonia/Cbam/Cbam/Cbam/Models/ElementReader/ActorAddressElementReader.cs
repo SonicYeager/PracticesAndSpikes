@@ -3,9 +3,9 @@ using Cbam.ViewModels.QReportDetails;
 
 namespace Cbam.Models.ElementReader;
 
-public static class ActorAddressElementReader
+public sealed class ActorAddressElementReader : IElementReader<ActorAddressDetailsViewModel>
 {
-    public static ActorAddressDetailsViewModel Handle(XElement element)
+    public ActorAddressDetailsViewModel Handle(XElement element)
     {
         return new()
         {
