@@ -8,9 +8,14 @@ public sealed class MyGarageDbContextDesignTimeFactory : IDesignTimeDbContextFac
     /// <inheritdoc />
     public MyGarageDbContext CreateDbContext(string[] args)
     {
-        const string connectionString = "Server=localhost;Database=mygarage;user=root;password=my-secret;";
+        //const string connectionStringMariaDb = "Server=localhost;Database=mygarage;user=root;password=my-secret;";
+        //var options = new DbContextOptionsBuilder<MyGarageDbContext>()
+        //    .UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
+        //    .Options;
+
+        const string connectionStringPostgreSql = "server=localhost;database=mygarage;username=root;password=my-secret;port=5432;";
         var options = new DbContextOptionsBuilder<MyGarageDbContext>()
-            .UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
+            .UseNpgsql(connectionStringPostgreSql)
             .Options;
         return new(options);
     }
