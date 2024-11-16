@@ -10,7 +10,7 @@ var builder = WebApplication.CreateSlimBuilder(args);
 
 builder.WebHost.UseKestrelHttpsConfiguration();
 
-const string connectionStringMariaDb = "Server=localhost;Database=mygarage;user=root;password=my-secret;";
+//const string connectionStringMariaDb = "Server=localhost;Database=mygarage;user=root;password=my-secret;";
 //builder.Services
 //    .AddDbContextPool<MyGarageDbContext>(
 //        static c => c.UseMySql(connectionStringMariaDb, ServerVersion.AutoDetect(connectionStringMariaDb)));
