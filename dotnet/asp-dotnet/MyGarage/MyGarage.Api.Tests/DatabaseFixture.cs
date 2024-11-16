@@ -12,7 +12,7 @@ public partial class DatabaseFixture
 {
     private string ConnectionString
     {
-        get => $"Server=localhost;Database={DatabaseName};user=root;password=my-secret;";
+        get => $"server=localhost;database={DatabaseName};username=root;password=my-secret;port=5432;";
     }
 
     protected virtual string DatabaseName
@@ -28,14 +28,17 @@ public partial class DatabaseFixture
     public async Task OneTimeSetUp()
     {
         _container = new ContainerBuilder()
-            .WithImage("mariadb:latest")
+            .WithImage("postgres:latest")
             .WithEnvironment(new Dictionary<string, string>
             {
                 {
-                    "MARIADB_ROOT_PASSWORD", "my-secret"
+                    "POSTGRES_PASSWORD", "my-secret"
+                },
+                {
+                    "POSTGRES_USER", "root"
                 },
             })
-            .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged(MariaDbReadyLogRegex()))
+            .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged(ReadyLogRegex()))
             .Build();
 
         await _container.StartAsync();
@@ -43,7 +46,7 @@ public partial class DatabaseFixture
         var collection = new ServiceCollection();
         collection
             .AddPooledDbContextFactory<MyGarageDbContext>(
-                c => c.UseMySql(ConnectionString, ServerVersion.AutoDetect(ConnectionString)));
+                c => c.UseNpgsql(ConnectionString));
 
         ServiceProvider = collection.BuildServiceProvider();
 
@@ -69,6 +72,6 @@ public partial class DatabaseFixture
         await _container.DisposeAsync();
     }
 
-    [GeneratedRegex("mariadbd: ready for connections.")]
-    private static partial Regex MariaDbReadyLogRegex();
+    [GeneratedRegex("PostgreSQL init process complete; ready for start up.")]
+    private static partial Regex ReadyLogRegex();
 }
