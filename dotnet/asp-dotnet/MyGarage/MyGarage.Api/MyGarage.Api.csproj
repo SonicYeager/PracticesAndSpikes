@@ -9,7 +9,6 @@
 
     <ItemGroup>
         <PackageReference Include="AutoMapper" Version="13.0.1"/>
-        <PackageReference Include="HotChocolate.Analyzers" Version="14.0.0-preview.11.3"/>
         <PackageReference Include="HotChocolate.AspNetCore" Version="14.1.0"/>
         <PackageReference Include="HotChocolate.Data.EntityFramework" Version="14.1.0"/>
         <PackageReference Include="HotChocolate.Types.Analyzers" Version="14.1.0" />
