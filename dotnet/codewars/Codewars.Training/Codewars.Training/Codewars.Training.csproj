@@ -41,6 +41,7 @@
       <ProjectReference Include="..\Codewars.Training.RomanNums\Codewars.Training.RomanNums.csproj" />
       <ProjectReference Include="..\Codewars.Training.SquaresIntoSquares\Codewars.Training.SquaresIntoSquares.csproj" />
       <ProjectReference Include="..\Codewars.Training.SumOfDigits\Codewars.Training.SumOfDigits.csproj" />
+      <ProjectReference Include="..\Codewars.Training.TcpFsm\Codewars.Training.TcpFsm.csproj" />
       <ProjectReference Include="..\Codewars.Training.TenMinuteWalk\Codewars.Training.TenMinuteWalk.csproj" />
       <ProjectReference Include="..\Codewars.Training.WhichAreIn\Codewars.Training.WhichAreIn.csproj" />
     </ItemGroup>

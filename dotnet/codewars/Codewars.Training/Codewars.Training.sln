@@ -32,6 +32,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Codewars.Training.MergedStr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Codewars.Training.SquaresIntoSquares", "Codewars.Training.SquaresIntoSquares\Codewars.Training.SquaresIntoSquares.csproj", "{C7565472-4A60-4C2C-9D41-0CBB25D17293}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Codewars.Training.TcpFsm", "Codewars.Training.TcpFsm\Codewars.Training.TcpFsm.csproj", "{91064576-FE4A-456A-9E7A-4A3C18BC6CA2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -102,5 +104,9 @@ Global
 		{C7565472-4A60-4C2C-9D41-0CBB25D17293}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C7565472-4A60-4C2C-9D41-0CBB25D17293}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C7565472-4A60-4C2C-9D41-0CBB25D17293}.Release|Any CPU.Build.0 = Release|Any CPU
+		{91064576-FE4A-456A-9E7A-4A3C18BC6CA2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{91064576-FE4A-456A-9E7A-4A3C18BC6CA2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{91064576-FE4A-456A-9E7A-4A3C18BC6CA2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{91064576-FE4A-456A-9E7A-4A3C18BC6CA2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -5,10 +5,10 @@ namespace Codewars.Training;
 [TestFixture]
 public class MoveZerosToEndTest
 {
-    private static readonly int[] Expected = new[]
-    {
+    private static readonly int[] Expected =
+    [
         1, 2, 1, 1, 3, 1, 0, 0, 0, 0,
-    };
+    ];
 
     [Test]
     public void Test()
