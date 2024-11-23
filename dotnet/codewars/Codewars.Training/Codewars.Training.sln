@@ -36,6 +36,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Codewars.Training.TcpFsm", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Codewars.Training.ConveysGameOfLife", "Codewars.Training.ConveysGameOfLife\Codewars.Training.ConveysGameOfLife.csproj", "{D5694B01-2992-4E84-89E0-B1F4C69EE415}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Codewars.Training.TheObservedPin", "Codewars.Training.TheObservedPin\Codewars.Training.TheObservedPin.csproj", "{EE9DFDA1-4FB1-42C5-B455-E6589321716D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -114,5 +116,9 @@ Global
 		{D5694B01-2992-4E84-89E0-B1F4C69EE415}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D5694B01-2992-4E84-89E0-B1F4C69EE415}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D5694B01-2992-4E84-89E0-B1F4C69EE415}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EE9DFDA1-4FB1-42C5-B455-E6589321716D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EE9DFDA1-4FB1-42C5-B455-E6589321716D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EE9DFDA1-4FB1-42C5-B455-E6589321716D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EE9DFDA1-4FB1-42C5-B455-E6589321716D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
