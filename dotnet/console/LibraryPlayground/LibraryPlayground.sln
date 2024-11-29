@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibraryPlayground.Pdf", "LibraryPlayground.Pdf\LibraryPlayground.Pdf.csproj", "{F28B4367-EE20-41D1-A05B-82C7AF4D2229}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F28B4367-EE20-41D1-A05B-82C7AF4D2229}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F28B4367-EE20-41D1-A05B-82C7AF4D2229}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F28B4367-EE20-41D1-A05B-82C7AF4D2229}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F28B4367-EE20-41D1-A05B-82C7AF4D2229}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
