@@ -13,6 +13,10 @@ public static class GaragesQuery
     [UseSorting]
     public static IQueryable<Garage> Garages(MyGarageDbContext dbContext)
     {
-        return dbContext.Set<Garage>().AsNoTracking();
+        return dbContext
+            .Set<Garage>()
+            .AsNoTracking()
+            .AsSplitQuery()
+            .OrderBy(static g => g.Id);
     }
 }

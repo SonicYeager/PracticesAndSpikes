@@ -13,6 +13,10 @@ public static class FuelStopsQuery
     [UseSorting]
     public static IQueryable<FuelStop> FuelStops(MyGarageDbContext dbContext)
     {
-        return dbContext.Set<FuelStop>().AsNoTracking();
+        return dbContext
+            .Set<FuelStop>()
+            .AsNoTracking()
+            .AsSplitQuery()
+            .OrderBy(static f => f.Id);
     }
 }

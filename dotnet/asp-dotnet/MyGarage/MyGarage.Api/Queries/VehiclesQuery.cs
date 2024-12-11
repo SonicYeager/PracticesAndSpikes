@@ -13,6 +13,10 @@ public static class VehiclesQuery
     [UseSorting]
     public static IQueryable<Vehicle> Vehicles(MyGarageDbContext dbContext)
     {
-        return dbContext.Set<Vehicle>().AsNoTracking();
+        return dbContext
+            .Set<Vehicle>()
+            .AsNoTracking()
+            .AsSplitQuery()
+            .OrderBy(static f => f.Id);
     }
 }

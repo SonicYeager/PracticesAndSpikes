@@ -40,7 +40,7 @@ public sealed class AddVehicleWorker : BackgroundService
                     result.Id,
                     result.Designation);
 
-            await Task.Delay(1000, stoppingToken);
+            await Task.Delay(100, stoppingToken);
             id++;
         }
     }

@@ -18,7 +18,7 @@ public sealed class AddFuelStopWorker : BackgroundService
         if (_logger.IsEnabled(LogLevel.Information))
             _logger.LogInformation("{WorkerName} running at: {Time}", nameof(AddFuelStopWorker), DateTimeOffset.Now);
 
-        await Task.Delay(5000, stoppingToken);
+        await Task.Delay(10000, stoppingToken);
 
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -35,7 +35,7 @@ public sealed class AddFuelStopWorker : BackgroundService
             if (result is not null)
                 _logger.LogInformation("Successfully Created Vehicle: {Id}", result.Id);
 
-            await Task.Delay(1000, stoppingToken);
+            await Task.Delay(100, stoppingToken);
         }
     }
 }
