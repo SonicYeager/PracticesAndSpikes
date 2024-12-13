@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Vue Basics</title>
+    <link
+            href="https://fonts.googleapis.com/css2?family=Jost:wght@400;700&display=swap"
+            rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css"/>
+    <script src="https://unpkg.com/vue@3.4.9/dist/vue.global.js" defer></script>
+    <script src="app.js" defer></script>
+</head>
+<body id="assignment">
+<section>
+    <h2>{{ name }}</h2>
+    <p>{{ age }}</p>
+    <p>{{ age + 5 }}</p>
+    <p>Favorite Number: {{ randomNum() }}</p>
+    <div>
+        <img v-bind:src="imageUrl"/>
+    </div>
+    <input v-bind:value="name" type="text"/>
+</section>
+</body>
+</html>
