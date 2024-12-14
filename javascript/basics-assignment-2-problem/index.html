@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vue Basics</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Jost:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://unpkg.com/vue@3.4.9/dist/vue.global.js" defer></script>
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <header>
+      <h1>Events</h1>
+    </header>
+    <section id="assignment">
+      <h2>Event Practice</h2>
+      <button v-on:click="showAlert">Show Alert</button>
+      <hr />
+      <input v-on:keydown="addContinuous" type="text" />
+      <p>{{ continuousOutput }}</p>
+      <hr />
+      <!-- 3) Repeat 2) but only output the entered value if the ENTER key was pressed -->
+      <input v-on:keydown.enter="addConfirmed" type="text" />
+      <p>{{ confirmedOutput }}</p>
+    </section>
+  </body>
+</html>
