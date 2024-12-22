@@ -1,8 +1,8 @@
 <template>
   <li>
-    <h2>{{ friend.name }} {{ friendIsFavorite ? '(Favorite)' : '' }}</h2>
+    <h2>{{ friend.name }} {{ this.friend.isFavorite ? '(Favorite)' : '' }}</h2>
     <button @click="toggleDetails">{{ detailsAreVisible ? 'Hide' : 'Show' }} Details</button>
-    <button @click="toggleFavorite">{{ friendIsFavorite ? 'Unmark' : 'Mark' }} Favorite</button>
+    <button @click="toggleFavorite">{{ this.friend.isFavorite ? 'Unmark' : 'Mark' }} Favorite</button>
     <ul v-if="detailsAreVisible">
       <li>
         <strong>Phone:</strong>
@@ -13,6 +13,7 @@
         {{ friend.email }}
       </li>
     </ul>
+    <button @click="deleteMe">Delete</button>
   </li>
 </template>
 
@@ -37,15 +38,25 @@ export default {
   data() {
     return {
       detailsAreVisible: false,
-      friendIsFavorite: this.friend.isFavorite,
     };
+  },
+  emits: {
+    'toggle-favorite': function(friendId) {
+      return typeof friendId === 'string';
+    },
+    'delete-friend': function(friendId) {
+      return typeof friendId === 'string';
+    },
   },
   methods: {
     toggleDetails() {
       this.detailsAreVisible = !this.detailsAreVisible;
     },
     toggleFavorite() {
-      this.friendIsFavorite = !this.friendIsFavorite;
+      this.$emit('toggle-favorite', this.friend.id);
+    },
+    deleteMe() {
+      this.$emit('delete-friend', this.friend.id);
     },
   }
 };
