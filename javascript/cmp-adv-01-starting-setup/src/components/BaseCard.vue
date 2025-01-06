@@ -8,6 +8,12 @@
 </template>
 
 <style scoped>
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 section {
   margin: 2rem auto;
   max-width: 30rem;
