@@ -4,8 +4,8 @@ import LearningResourceComponent from '@/components/learning-resource/LearningRe
 
 export default {
   components: { LearningResource: LearningResourceComponent },
-  props: {
-    storedResources: {
+  inject: {
+    resources: {
       type: Array,
       required: true,
       validator(value) {
@@ -18,7 +18,7 @@ export default {
 
 <template>
   <ul>
-    <learning-resource v-for="item in storedResources" :key="item.id" :learning-resource="item"></learning-resource>
+    <learning-resource v-for="item in resources" :key="item.id" :learning-resource="item"></learning-resource>
   </ul>
 </template>
 
