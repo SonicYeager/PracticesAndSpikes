@@ -9,7 +9,8 @@ export default {
       type: LearningResource,
       required: true
     }
-  }
+  },
+  inject: ['deleteResource'],
 };
 </script>
 
@@ -18,7 +19,7 @@ export default {
     <base-card>
       <header>
         <h3>{{ learningResource.title }}</h3>
-        <base-button mode="flat">Delete</base-button>
+        <base-button mode="flat" @click="deleteResource(learningResource.id)">Delete</base-button>
       </header>
     <p>{{ learningResource.description }}</p>
     <nav>
