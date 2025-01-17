@@ -11,6 +11,7 @@ export default {
 </script>
 
 <template>
+  <teleport to="body">
   <div @click="$emit('close')"></div>
   <dialog open>
     <header>
@@ -27,6 +28,7 @@ export default {
       </slot>
     </menu>
   </dialog>
+  </teleport>
 </template>
 
 <style scoped>
