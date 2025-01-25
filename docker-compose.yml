@@ -10,3 +10,13 @@ services:
     ports:
       - "5432:5432"
     restart: always
+
+  mariadb:
+    container_name: local_db
+    image: mariadb:latest
+    environment:
+      - MYSQL_ROOT_PASSWORD=my-secret
+      - MYSQL_USER=root
+    ports:
+      - "3306:3306"
+    restart: always
