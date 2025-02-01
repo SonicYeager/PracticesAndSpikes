@@ -1,0 +1,18 @@
+﻿node_modules/     # Don't track installed packages
+.DS_Store         # macOS specific: Desktop Services Store
+.idea/             # JetBrains IDEs (IntelliJ, WebStorm, etc.)
+.vscode/           # VS Code specific
+*.swp             # Swap files (Vim, etc.)
+*~                # Backup files
+.env              # Environment variables (never commit secrets!)
+.history           # Shell history files
+npm-debug.log*    # npm debug logs
+yarn-error.log*   # Yarn error logs
+dist/             # Distribution or build directories
+build/            # Build directories
+*.log             # Generic log files
+tmp/              # Temporary files
+temp/             # Temporary files
+__pycache__/       # Python bytecode cache (if you mix languages)
+.pytest_cache/     # pytest cache (if you mix languages)
+.cache            # Generic cache folder

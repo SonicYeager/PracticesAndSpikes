@@ -1,0 +1,20 @@
+{
+  "name": "codewars",
+  "version": "1.0.0",
+  "private": true,
+  "description": " codewars kata collection",
+  "keywords": [
+    "codewars",
+    "javascript"
+  ],
+  "license": "MIT",
+  "author": "SonicYeager",
+  "type": "module",
+  "scripts": {
+    "test": "mocha --recursive ./*/test.js"
+  },
+  "devDependencies": {
+    "chai": "^5.1.2",
+    "mocha": "^11.1.0"
+  }
+}
