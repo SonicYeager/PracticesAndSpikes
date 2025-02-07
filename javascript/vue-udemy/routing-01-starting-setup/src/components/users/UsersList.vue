@@ -9,9 +9,9 @@ import UserItem from './UserItem.vue';
 
 export default {
   components: {
-    UserItem,
+    UserItem
   },
-  inject: ['users'],
+  inject: ['users']
 };
 </script>
 
