@@ -11,9 +11,14 @@ export default {
   props: ['id', 'name', 'memberCount'],
   computet: {
     teamLink() {
-      return '/teams/' + this.id;
+      // return '/teams/' + this.id;
+      return {
+        name: 'team-mambers',
+        params: { teamId: this.id },
+        query: { sort: 'asc' },
+      };
     },
-  }
+  },
 };
 </script>
 
