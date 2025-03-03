@@ -4,7 +4,17 @@
     <button @click="animateBlock">Animate</button>
   </div>
   <div class="container">
-    <transition name="para">
+    <transition
+      name="para"
+      @before-enter="beforeEnter"
+      @enter="enter"
+      @after-enter="afterEnter"
+      @before-leave="beforeLeave"
+      @leave="leave"
+      @after-leave="afterLeave"
+      @enter-cancelled="enterCancelled"
+      @leave-cancelled="leaveCancelled"
+    >
       <p v-if="animatedParagraph">Hide And Seek??</p>
     </transition>
     <button @click="animateParagraph">Toggle Paragraph</button>
@@ -32,6 +42,8 @@ export default {
       animatedBlock: false,
       animatedParagraph: false,
       showUsers: false,
+      enterInterval: null,
+      leaveInterval: null,
     };
   },
   methods: {
@@ -42,16 +54,56 @@ export default {
       this.dialogIsVisible = false;
     },
     animateBlock() {
-      this.animatedBlock = !this.animatedBlock
+      this.animatedBlock = !this.animatedBlock;
     },
     animateParagraph() {
-      this.animatedParagraph = !this.animatedParagraph
+      this.animatedParagraph = !this.animatedParagraph;
     },
     showUser() {
       this.showUsers = true;
     },
     hideUser() {
       this.showUsers = false;
+    },
+    beforeEnter(el) {
+      el.style.opacity = 0;
+    },
+    enter(el, done) {
+      let round = 1;
+      this.enterInterval = setInterval(() => {
+        el.style.opacity = round * 0.1;
+        round++;
+        if (round > 10) {
+          clearInterval(this.enterInterval);
+          done();
+        }
+      }, 20);
+    },
+    afterEnter(el) {
+      el.style.opacity = 1;
+    },
+    beforeLeave(el) {
+      el.style.opacity = 1;
+    },
+    leave(el, done) {
+      let round = 10;
+      this.leaveInterval = setInterval(() => {
+        el.style.opacity = round * 0.1;
+        round--;
+        if (round < 0) {
+          clearInterval(this.leaveInterval);
+          done();
+        }
+      }, 20);
+    },
+    afterLeave(el) {
+      el.style.opacity = 0;
+    },
+    enterCancelled() {
+      clearInterval(this.enterInterval);
+    },
+    leaveCancelled() {
+      clearInterval(this.leaveInterval);
     },
   },
 };
@@ -133,16 +185,16 @@ button:active {
 }
 */
 
-.para-enter-active {
-  /*transition: all 0.3s ease-out;*/
+/* .para-enter-active {
+  transition: all 0.3s ease-out;
   animation: slide-scale 0.5s ease-out;
 }
 
 .para-leave-active {
-  /*transition: all 0.3s ease-in;*/
+  transition: all 0.3s ease-in;
   animation: slide-scale 0.5s ease-in;
-}
-
+} 
+*/
 
 .fade-buton-enter-from,
 .fade-buton-leave-to {
