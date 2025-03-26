@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Prototypes", "Prototypes\Prototypes.csproj", "{A3DE5918-7F0A-4539-A734-A1A25E37EB57}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Prototypes.ImageTransformation", "Prototypes.ImageTransformation\Prototypes.ImageTransformation.csproj", "{3B92A8E7-8025-4BB7-BBC5-04C54AF653E1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A3DE5918-7F0A-4539-A734-A1A25E37EB57}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A3DE5918-7F0A-4539-A734-A1A25E37EB57}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A3DE5918-7F0A-4539-A734-A1A25E37EB57}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A3DE5918-7F0A-4539-A734-A1A25E37EB57}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3B92A8E7-8025-4BB7-BBC5-04C54AF653E1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3B92A8E7-8025-4BB7-BBC5-04C54AF653E1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3B92A8E7-8025-4BB7-BBC5-04C54AF653E1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3B92A8E7-8025-4BB7-BBC5-04C54AF653E1}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
