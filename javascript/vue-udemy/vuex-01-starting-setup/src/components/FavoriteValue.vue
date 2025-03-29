@@ -2,7 +2,7 @@
 export default {
   computed: {
     count() {
-      return this.$store.getters.count;
+      return this.$store.getters.doubleCount;
     },
   },
 };
@@ -10,6 +10,7 @@ export default {
 
 <template>
   <h3>{{count}}</h3>
+  <p>More is happening here</p>
 </template>
 
 <style scoped>
