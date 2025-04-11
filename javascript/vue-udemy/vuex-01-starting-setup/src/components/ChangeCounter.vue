@@ -1,4 +1,6 @@
 ﻿<script>
+import { mapActions } from 'vuex';
+
 export default {
   data: function() {
     return {
@@ -6,8 +8,9 @@ export default {
     };
   },
   methods: {
+    ...mapActions(['increase']),
     addCounter() {
-      this.$store.dispatch('increase', this.increment);
+      this.increase(this.increment);
     }
   }
 };

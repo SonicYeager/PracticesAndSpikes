@@ -1,9 +1,9 @@
 ﻿<script>
+import { mapGetters } from 'vuex';
+
 export default {
   computed: {
-    count() {
-      return this.$store.getters.count;
-    },
+    ...mapGetters(['count'])
   },
 };
 </script>
