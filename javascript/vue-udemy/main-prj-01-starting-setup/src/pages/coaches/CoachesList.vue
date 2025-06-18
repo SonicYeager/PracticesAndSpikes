@@ -29,6 +29,9 @@ export default {
     hasCoaches() {
       return this.$store.getters['coaches/hasCoaches'];
     },
+    isCoach() {
+      return this.$store.getters['coaches/isCoach'];
+    },
   },
   methods: {
     setFilters(filters) {
@@ -46,7 +49,9 @@ export default {
     <base-card>
       <div class="controls">
         <base-button mode="outline">Refresh</base-button>
-        <base-button link to="/register">Register As Coach</base-button>
+        <base-button v-if="!isCoach" link to="/register"
+          >Register As Coach</base-button
+        >
       </div>
       <ul v-if="hasCoaches">
         <coach-item

@@ -5,4 +5,8 @@
   hasCoaches(state) {
     return state.coaches && state.coaches.length > 0;
   },
+  isCoach(state, getters, rootState, rootGetters) {
+    const coaches = getters.coaches;
+    return coaches.some((c) => c.id === rootGetters.userId);
+  },
 };

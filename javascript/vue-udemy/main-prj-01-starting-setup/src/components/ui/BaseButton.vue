@@ -24,7 +24,7 @@ export default {
   <button v-if="!link" :class="mode">
     <slot></slot>
   </button>
-  <router-link v-else- :class="mode" :to="to">
+  <router-link v-else :class="mode" :to="to">
     <slot></slot>
   </router-link>
 </template>
