@@ -1,20 +1,15 @@
-﻿import { createStore } from 'vuex';
-import coaches from '@/store/modules/coaches';
+﻿import mutations from '@/store/modules/requests/mutations';
+import actions from '@/store/modules/requests/actions';
+import getters from '@/store/modules/requests/getters';
 
-const store = createStore({
-  modules: {
-    coaches: coaches,
-  },
+export default {
+  namespaced: true,
   state() {
     return {
-      userId: new Date().toISOString(),
+      requests: [],
     };
   },
-  getters: {
-    userId(state) {
-      return state.userId;
-    },
-  },
-});
-
-export default store;
+  mutations,
+  actions,
+  getters,
+};

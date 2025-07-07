@@ -1,6 +1,12 @@
 ﻿<script setup>
 import BaseButton from '@/components/ui/BaseButton.vue';
 import { ref } from 'vue';
+import { useStore } from 'vuex';
+import { useRoute, useRouter } from 'vue-router';
+
+const store = useStore();
+const router = useRouter();
+const route = useRoute();
 
 const email = ref('');
 const message = ref('');
@@ -11,11 +17,19 @@ function submitForm() {
 
   if (
     email.value === '' ||
-    email.value.includes('@') ||
-    message.value.trim().length < 5
+    !email.value.includes('@') ||
+    message.value.length < 5
   ) {
     formIsValid.value = false;
   }
+
+  store.dispatch('requests/contactCoach', {
+    coachId: route.id,
+    email: email.value,
+    message: message.value,
+  });
+
+  router.replace('/coaches');
 }
 </script>
 
@@ -33,7 +47,7 @@ function submitForm() {
       <p v-if="!formIsValid" class="errors">
         Please enter a valid email and a message with at least 5 characters.
       </p>
-      <base-button type="submit">Send Message</base-button>
+      <base-button type="submit" @click="submitForm">Send Message</base-button>
     </div>
   </form>
 </template>
