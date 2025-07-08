@@ -4,6 +4,7 @@ import CoachDetails from '@/pages/coaches/CoachDetails.vue';
 import CoachRegistration from '@/pages/coaches/CoachRegistration.vue';
 import ContactCoach from '@/pages/requests/ContactCoach.vue';
 import NotFound from '@/pages/NotFound.vue';
+import RequestsReveived from '@/pages/requests/RequestsReveived.vue';
 
 const router = createRouter({
   history: createWebHistory(),
@@ -17,7 +18,7 @@ const router = createRouter({
       children: [{ path: 'contact', component: ContactCoach }],
     },
     { path: '/register', component: CoachRegistration },
-    { path: '/requests', component: CoachRegistration },
+    { path: '/requests', component: RequestsReveived },
     { path: '/:notFound(.*)', component: NotFound },
   ],
 });
