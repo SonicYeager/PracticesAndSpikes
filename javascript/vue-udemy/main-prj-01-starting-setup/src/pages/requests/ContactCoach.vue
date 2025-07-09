@@ -24,7 +24,7 @@ function submitForm() {
   }
 
   store.dispatch('requests/contactCoach', {
-    coachId: route.id,
+    coachId: route.params.id,
     email: email.value,
     message: message.value,
   });
