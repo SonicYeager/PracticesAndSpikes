@@ -9,7 +9,7 @@ const store = createStore({
   },
   state() {
     return {
-      userId: new Date().toISOString(),
+      userId: 'c3',
     };
   },
   getters: {
