@@ -33,9 +33,15 @@ export default {
       return this.$store.getters['coaches/isCoach'];
     },
   },
+  created() {
+    this.fetchCoaches();
+  },
   methods: {
     setFilters(filters) {
       this.filters = filters;
+    },
+    fetchCoaches() {
+      this.$store.dispatch('coaches/fetchCoaches');
     },
   },
 };
@@ -48,10 +54,10 @@ export default {
   <section>
     <base-card>
       <div class="controls">
-        <base-button mode="outline">Refresh</base-button>
+        <base-button mode="outline" @click="fetchCoaches">Refresh</base-button>
         <base-button v-if="!isCoach" link to="/register"
-          >Register As Coach</base-button
-        >
+          >Register As Coach
+        </base-button>
       </div>
       <ul v-if="hasCoaches">
         <coach-item
