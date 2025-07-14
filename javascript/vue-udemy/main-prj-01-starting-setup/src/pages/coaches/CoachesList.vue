@@ -3,9 +3,10 @@ import CoachItem from '@/components/coaches/CoachItem.vue';
 import BaseCard from '@/components/ui/BaseCard.vue';
 import BaseButton from '@/components/ui/BaseButton.vue';
 import CoachFilter from '@/components/coaches/CoachFilter.vue';
+import BaseSpinner from '@/components/ui/BaseSpinner.vue';
 
 export default {
-  components: { CoachFilter, BaseButton, BaseCard, CoachItem },
+  components: { BaseSpinner, CoachFilter, BaseButton, BaseCard, CoachItem },
   data() {
     return {
       filters: {
@@ -13,6 +14,7 @@ export default {
         backend: true,
         career: true,
       },
+      isLoading: false,
     };
   },
   computed: {
@@ -27,7 +29,7 @@ export default {
       });
     },
     hasCoaches() {
-      return this.$store.getters['coaches/hasCoaches'];
+      return !this.isLoading && this.$store.getters['coaches/hasCoaches'];
     },
     isCoach() {
       return this.$store.getters['coaches/isCoach'];
@@ -40,8 +42,10 @@ export default {
     setFilters(filters) {
       this.filters = filters;
     },
-    fetchCoaches() {
-      this.$store.dispatch('coaches/fetchCoaches');
+    async fetchCoaches() {
+      this.isLoading = true;
+      await this.$store.dispatch('coaches/fetchCoaches');
+      this.isLoading = false;
     },
   },
 };
@@ -59,7 +63,10 @@ export default {
           >Register As Coach
         </base-button>
       </div>
-      <ul v-if="hasCoaches">
+      <div v-if="isLoading">
+        <base-spinner></base-spinner>
+      </div>
+      <ul v-else-if="hasCoaches">
         <coach-item
           v-for="coach in filteredCoaches"
           :key="coach.id"
