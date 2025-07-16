@@ -4,9 +4,17 @@ import BaseCard from '@/components/ui/BaseCard.vue';
 import BaseButton from '@/components/ui/BaseButton.vue';
 import CoachFilter from '@/components/coaches/CoachFilter.vue';
 import BaseSpinner from '@/components/ui/BaseSpinner.vue';
+import BaseDialog from '@/components/ui/BaseDialog.vue';
 
 export default {
-  components: { BaseSpinner, CoachFilter, BaseButton, BaseCard, CoachItem },
+  components: {
+    BaseDialog,
+    BaseSpinner,
+    CoachFilter,
+    BaseButton,
+    BaseCard,
+    CoachItem,
+  },
   data() {
     return {
       filters: {
@@ -15,6 +23,7 @@ export default {
         career: true,
       },
       isLoading: false,
+      error: null,
     };
   },
   computed: {
@@ -35,8 +44,8 @@ export default {
       return this.$store.getters['coaches/isCoach'];
     },
   },
-  created() {
-    this.fetchCoaches();
+  async created() {
+    await this.fetchCoaches();
   },
   methods: {
     setFilters(filters) {
@@ -44,7 +53,11 @@ export default {
     },
     async fetchCoaches() {
       this.isLoading = true;
-      await this.$store.dispatch('coaches/fetchCoaches');
+      try {
+        await this.$store.dispatch('coaches/fetchCoaches');
+      } catch (error) {
+        this.error = error.message || 'Failed to fetch coaches.';
+      }
       this.isLoading = false;
     },
   },
@@ -52,6 +65,9 @@ export default {
 </script>
 
 <template>
+  <base-dialog :show="!!error" title="Error" @close="error = null">
+    <p>{{ error }}</p>
+  </base-dialog>
   <section>
     <coach-filter @change-filter="setFilters"></coach-filter>
   </section>
