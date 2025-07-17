@@ -51,10 +51,12 @@ export default {
     setFilters(filters) {
       this.filters = filters;
     },
-    async fetchCoaches() {
+    async fetchCoaches(refresh = false) {
       this.isLoading = true;
       try {
-        await this.$store.dispatch('coaches/fetchCoaches');
+        await this.$store.dispatch('coaches/fetchCoaches', {
+          forceRefresh: refresh,
+        });
       } catch (error) {
         this.error = error.message || 'Failed to fetch coaches.';
       }
@@ -74,7 +76,9 @@ export default {
   <section>
     <base-card>
       <div class="controls">
-        <base-button mode="outline" @click="fetchCoaches">Refresh</base-button>
+        <base-button mode="outline" @click="fetchCoaches(true)"
+          >Refresh</base-button
+        >
         <base-button v-if="!isCoach" link to="/register"
           >Register As Coach
         </base-button>

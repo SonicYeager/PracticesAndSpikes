@@ -9,4 +9,11 @@
     const coaches = getters.coaches;
     return coaches.some((c) => c.id === rootGetters.userId);
   },
+  shouldUpdate(state) {
+    if (!state.lastFetch) {
+      return true;
+    }
+    const currentTime = new Date().getTime();
+    return (currentTime - state.lastFetch) / 1000 > 60;
+  },
 };

@@ -29,7 +29,11 @@
       id: userId,
     });
   },
-  async fetchCoaches(context) {
+  async fetchCoaches(context, payload) {
+    if (!payload.forceRefresh && !context.getters.shouldUpdate) {
+      return;
+    }
+
     const response = await fetch(
       'https://vue-http-demo-sy-default-rtdb.europe-west1.firebasedatabase.app/coaches.json'
     );
@@ -55,5 +59,6 @@
     }
 
     context.commit('setCoaches', coaches);
+    context.commit('setFetchTimestamp');
   },
 };
