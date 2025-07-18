@@ -32,26 +32,28 @@ onMounted(() => {
 </script>
 
 <template>
-  <base-dialog :show="!!error" title="Error" @close="error = null">
-    <p>{{ error }}</p>
-  </base-dialog>
-  <section>
-    <base-card>
-      <header>
-        <h2>Requests Reveived</h2>
-      </header>
-      <base-spinner v-if="isLoading"></base-spinner>
-      <ul v-else-if="hasRequests && !isLoading">
-        <request-item
-          v-for="item in receivedRequests"
-          :key="item.id"
-          :email="item.userEmail"
-          :message="item.message"
-        ></request-item>
-      </ul>
-      <h3 v-else>No Requests Available</h3>
-    </base-card>
-  </section>
+  <div>
+    <base-dialog :show="!!error" title="Error" @close="error = null">
+      <p>{{ error }}</p>
+    </base-dialog>
+    <section>
+      <base-card>
+        <header>
+          <h2>Requests Reveived</h2>
+        </header>
+        <base-spinner v-if="isLoading"></base-spinner>
+        <ul v-else-if="hasRequests && !isLoading">
+          <request-item
+            v-for="item in receivedRequests"
+            :key="item.id"
+            :email="item.userEmail"
+            :message="item.message"
+          ></request-item>
+        </ul>
+        <h3 v-else>No Requests Available</h3>
+      </base-card>
+    </section>
+  </div>
 </template>
 
 <style scoped>

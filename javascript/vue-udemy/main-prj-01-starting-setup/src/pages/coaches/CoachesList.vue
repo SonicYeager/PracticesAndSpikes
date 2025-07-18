@@ -67,35 +67,37 @@ export default {
 </script>
 
 <template>
-  <base-dialog :show="!!error" title="Error" @close="error = null">
-    <p>{{ error }}</p>
-  </base-dialog>
-  <section>
-    <coach-filter @change-filter="setFilters"></coach-filter>
-  </section>
-  <section>
-    <base-card>
-      <div class="controls">
-        <base-button mode="outline" @click="fetchCoaches(true)"
-          >Refresh</base-button
-        >
-        <base-button v-if="!isCoach" link to="/register"
-          >Register As Coach
-        </base-button>
-      </div>
-      <div v-if="isLoading">
-        <base-spinner></base-spinner>
-      </div>
-      <ul v-else-if="hasCoaches">
-        <coach-item
-          v-for="coach in filteredCoaches"
-          :key="coach.id"
-          :coach="coach"
-        ></coach-item>
-      </ul>
-      <h3 v-else>No Coaches Available</h3>
-    </base-card>
-  </section>
+  <div>
+    <base-dialog :show="!!error" title="Error" @close="error = null">
+      <p>{{ error }}</p>
+    </base-dialog>
+    <section>
+      <coach-filter @change-filter="setFilters"></coach-filter>
+    </section>
+    <section>
+      <base-card>
+        <div class="controls">
+          <base-button mode="outline" @click="fetchCoaches(true)"
+            >Refresh
+          </base-button>
+          <base-button v-if="!isCoach" link to="/register"
+            >Register As Coach
+          </base-button>
+        </div>
+        <div v-if="isLoading">
+          <base-spinner></base-spinner>
+        </div>
+        <ul v-else-if="hasCoaches">
+          <coach-item
+            v-for="coach in filteredCoaches"
+            :key="coach.id"
+            :coach="coach"
+          ></coach-item>
+        </ul>
+        <h3 v-else>No Coaches Available</h3>
+      </base-card>
+    </section>
+  </div>
 </template>
 
 <style scoped>
