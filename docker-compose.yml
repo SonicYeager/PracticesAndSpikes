@@ -20,3 +20,22 @@ services:
     ports:
       - "3306:3306"
     restart: always
+
+  pulsar:
+    container_name: local_pulsar
+    image: apachepulsar/pulsar:4.0.6
+    ports:
+      - "8080:8080"
+      - "6650:6650"
+    volumes:
+      - ./pulsardata:/pulsar/data
+      # - ./pulsarconf:/pulsar/conf
+    environment:
+      # Optional: Uncomment if you want to use ZooKeeper as metadata store
+      - PULSAR_STANDALONE_USE_ZOOKEEPER=1
+      # Example for custom configurations, replace xxx with actual config name and yyy with value
+      # - PULSAR_PREFIX_xxx=yyy
+      # - PULSAR_PREFIX_acknowledgmentAtBatchIndexLevelEnabled=true # Example from a common config
+    command: >
+      bin/pulsar standalone
+    restart: always
