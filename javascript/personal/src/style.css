@@ -1,0 +1,14 @@
+﻿@import "tailwindcss";
+
+@plugin "daisyui" {
+    themes: lemonade --default;
+}
+
+@plugin "@iconify/tailwind4";
+
+.glass-c {
+    backdrop-filter: blur(var(--glass-blur, 40px)) !important;
+    background-color: #7c7c7c10 !important;
+    box-shadow: 0 0 0 1px oklch(100% 0 0 / var(--glass-border-opacity, 20%)) inset, 0 0 0 2px oklch(0% 0 0 / 5%) !important;
+    text-shadow: 0 1px oklch(0% 0 0 / var(--glass-text-shadow-opacity, 5%)) /* #000000 */!important;
+}
