@@ -28,7 +28,7 @@ services:
       - "8080:8080"
       - "6650:6650"
     volumes:
-      - ./pulsardata:/pulsar/data
+      # - ./pulsardata:/pulsar/data
       # - ./pulsarconf:/pulsar/conf
     environment:
       # Optional: Uncomment if you want to use ZooKeeper as metadata store
