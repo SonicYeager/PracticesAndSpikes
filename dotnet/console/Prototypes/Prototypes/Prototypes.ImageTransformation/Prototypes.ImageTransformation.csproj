@@ -7,9 +7,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Magick.NET-Q16-AnyCPU" Version="14.5.0" />
-      <PackageReference Include="SkiaSharp" Version="3.116.1" />
-      <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.116.1" />
+      <PackageReference Include="Magick.NET-Q16-AnyCPU" Version="14.7.0" />
+      <PackageReference Include="SkiaSharp" Version="3.119.0" />
+      <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.0" />
     </ItemGroup>
 
 </Project>

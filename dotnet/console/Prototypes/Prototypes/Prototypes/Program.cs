@@ -5,13 +5,7 @@ using Prototypes.ImageTransformation;
 var sourceFilePaths = new List<string>
 {
     "battleship-gc6fb87054_1280.jpg",
-    "boats-gb2dac7499_1920.jpg",
-    "coffee-gfd73d0f4d_1920.jpg",
-    "edward-chou-TXV1rp7ikIo-unsplash.jpg",
-    "port-gbc06f731e_1920.jpg",
-    "sailing-ship-gba5f7d17c_1920.jpg",
-    "wall-gc0452b8bd_1280.jpg",
-    "yellow-g32be8ba80_1920.jpg",
+    "frog-1415516.png",
 };
 
 const string resourceDirectory = "Resources";

@@ -38,6 +38,6 @@ public sealed class SkiaSharpImageTransformation
             "SKIASHARP:" +
             $" Image transformation took '{stopwatch.ElapsedMilliseconds}' ms for file size '{inputStream.Length / 1024}' kilobytes");
 
-        resized.Encode(outputStream, SKEncodedImageFormat.Jpeg, 100);
+        resized.Encode(outputStream, SKEncodedImageFormat.Png, 100);
     }
 }
