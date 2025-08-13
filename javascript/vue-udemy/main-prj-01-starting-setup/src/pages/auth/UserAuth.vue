@@ -17,7 +17,15 @@ const submitForm = () => {
   ) {
     formIsValid.value = false;
   }
-  //TODO send
+
+  if (mode.value === 'login') {
+    //...
+  } else {
+    this.$store.dispatch('signup', {
+      email: email.value,
+      password: password.value,
+    });
+  }
 };
 const switchAuthMode = () => {
   if (mode.value === 'login') {
