@@ -27,6 +27,9 @@ export default {
     };
   },
   computed: {
+    isLoggedIn() {
+      return this.$store.getters['isAuthenticated'];
+    },
     filteredCoaches() {
       const coaches = this.$store.getters['coaches/coaches'];
       return coaches.filter((c) => {
@@ -80,7 +83,10 @@ export default {
           <base-button mode="outline" @click="fetchCoaches(true)"
             >Refresh
           </base-button>
-          <base-button v-if="!isCoach" link to="/register"
+          <base-button v-if="!isLoggedIn" link to="/auth?redirect=register"
+            >Login to Register</base-button
+          >
+          <base-button v-if="isLoggedIn && !isCoach" link to="/register"
             >Register As Coach
           </base-button>
         </div>

@@ -2,29 +2,59 @@
 import BaseButton from '@/components/ui/BaseButton.vue';
 import BaseCard from '@/components/ui/BaseCard.vue';
 import { computed, ref } from 'vue';
+import BaseDialog from '@/components/ui/BaseDialog.vue';
+import BaseSpinner from '@/components/ui/BaseSpinner.vue';
+import { useStore } from 'vuex';
+import { useRoute, useRouter } from 'vue-router';
 
 const email = ref('');
 const password = ref('');
 const formIsValid = ref(true);
 const mode = ref('login');
+const isLoading = ref(false);
+const error = ref(null);
 
-const submitForm = () => {
+const store = useStore();
+const router = useRouter();
+const route = useRoute();
+
+const submitForm = async () => {
   formIsValid.value = true;
   if (
     email.value === '' ||
-    email.value.includes('@') ||
+    !email.value.includes('@') ||
     password.value.length < 6
   ) {
     formIsValid.value = false;
   }
 
-  if (mode.value === 'login') {
-    //...
-  } else {
-    this.$store.dispatch('signup', {
-      email: email.value,
-      password: password.value,
-    });
+  isLoading.value = true;
+
+  try {
+    if (mode.value === 'login') {
+      await store.dispatch('login', {
+        email: email.value,
+        password: password.value,
+      });
+    } else {
+      await store.dispatch('signup', {
+        email: email.value,
+        password: password.value,
+      });
+    }
+
+    const redirectUrl = route.query.redirect;
+    if (redirectUrl) {
+      await router.replace('/' + redirectUrl);
+    }
+
+    await router.replace('/coaches');
+
+    isLoading.value = false;
+  } catch (err) {
+    error.value = err.message || 'Failed to Register.';
+    isLoading.value = false;
+    console.log(err);
   }
 };
 const switchAuthMode = () => {
@@ -44,23 +74,29 @@ const switchModeButtonCaption = computed(() => {
 </script>
 
 <template>
-  <base-card>
-    <form @submit.prevent="submitForm">
-      <div class="form-control">
-        <label for="email">Your E-Mail</label>
-        <input id="email" v-model.trim="email" type="email" />
-      </div>
-      <div class="form-control">
-        <label for="password">Your Password</label>
-        <input id="password" v-model.trim="password" type="password" />
-      </div>
-      <p v-if="!formIsValid">Fix your input, kek</p>
-      <base-button>{{ submitButtonCaption }}</base-button>
-      <base-button mode="flat" type="button" @click="switchAuthMode"
-        >{{ switchModeButtonCaption }}
-      </base-button>
-    </form>
-  </base-card>
+  <div>
+    <base-dialog :show="!!error" title="Error" @close="error = null" />
+    <base-dialog :show="isLoading" fixed title="Loading...">
+      <base-spinner></base-spinner>
+    </base-dialog>
+    <base-card>
+      <form @submit.prevent="submitForm">
+        <div class="form-control">
+          <label for="email">Your E-Mail</label>
+          <input id="email" v-model.trim="email" type="email" />
+        </div>
+        <div class="form-control">
+          <label for="password">Your Password</label>
+          <input id="password" v-model.trim="password" type="password" />
+        </div>
+        <p v-if="!formIsValid">Fix your input, kek</p>
+        <base-button>{{ submitButtonCaption }}</base-button>
+        <base-button mode="flat" type="button" @click="switchAuthMode"
+          >{{ switchModeButtonCaption }}
+        </base-button>
+      </form>
+    </base-card>
+  </div>
 </template>
 
 <style scoped>

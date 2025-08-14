@@ -10,7 +10,7 @@
     };
 
     const response = await fetch(
-      `https://vue-http-demo-sy-default-rtdb.europe-west1.firebasedatabase.app/coaches/${userId}.json`,
+      `https://vue-http-demo-sy-default-rtdb.europe-west1.firebasedatabase.app/coaches/${userId}.json?auth=${context.rootGetters.token}`,
       {
         method: 'PUT',
         body: JSON.stringify(mapped),

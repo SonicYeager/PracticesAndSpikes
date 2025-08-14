@@ -30,7 +30,7 @@
     const coachId = context.rootGetters.userId;
 
     const response = await fetch(
-      `https://vue-http-demo-sy-default-rtdb.europe-west1.firebasedatabase.app/requests/${coachId}.json`
+      `https://vue-http-demo-sy-default-rtdb.europe-west1.firebasedatabase.app/requests/${coachId}.json?auth=${context.rootGetters.token}`
     );
 
     if (!response.ok) {

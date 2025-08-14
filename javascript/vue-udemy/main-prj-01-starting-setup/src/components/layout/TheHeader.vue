@@ -1,4 +1,21 @@
-﻿<script lang="ts" setup></script>
+﻿<script setup>
+import { computed } from 'vue';
+import { useStore } from 'vuex';
+import BaseButton from '@/components/ui/BaseButton.vue';
+import { useRouter } from 'vue-router';
+
+const store = useStore();
+const router = useRouter();
+
+const isLoggedIn = computed(() => {
+  return store.getters['isAuthenticated'];
+});
+
+function logout() {
+  store.dispatch('logout');
+  router.replace('/coaches');
+}
+</script>
 
 <template>
   <header>
@@ -10,8 +27,14 @@
         <li>
           <router-link to="/coaches">All Coaches</router-link>
         </li>
-        <li>
+        <li v-if="isLoggedIn">
           <router-link to="/requests">Requests</router-link>
+        </li>
+        <li v-else>
+          <router-link to="/auth">Login</router-link>
+        </li>
+        <li v-if="isLoggedIn">
+          <base-button @click="logout">Logout</base-button>
         </li>
       </ul>
     </nav>
