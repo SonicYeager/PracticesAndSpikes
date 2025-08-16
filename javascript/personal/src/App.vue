@@ -10,10 +10,11 @@ import {RouterLink, RouterView} from 'vue-router'
           <h1 class="font-bold md:text-3xl lg:text-4xl">Pulsar Admin App</h1>
         </div>
         <div class="navbar-center">
-          <div class="menu menu-horizontal px-1">
+          <ul class="menu menu-horizontal px-1">
             <li><RouterLink to="/">Dashboard</RouterLink></li>
+            <li><RouterLink to="/topics">Topics</RouterLink></li>
             <li><RouterLink to="/preferences">Preferences</RouterLink></li>
-          </div>
+          </ul>
         </div>
       </div>
     </header>
