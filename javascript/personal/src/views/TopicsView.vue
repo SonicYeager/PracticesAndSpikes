@@ -1,10 +1,10 @@
 ﻿<script setup>
 import {computed, onMounted, reactive, ref} from 'vue'
 import {usePulsarAdminStore} from '@/stores/pulsar-admin.js'
-import {useMessageMonitorStore} from '@/stores/message-monitor.js'
+import TopicMonitorPanel from '@/components/TopicMonitorPanel.vue'
+import TopicPublisherPanel from '@/components/TopicPublisherPanel.vue'
 
 const store = usePulsarAdminStore()
-const monitorStore = useMessageMonitorStore()
 
 const isTenantsLoading = computed(() => store.loadingStates.get('tenants'))
 const isNamespacesLoading = computed(() => store.loadingStates.get('namespaces'))
@@ -146,38 +146,6 @@ const createTopic = async () => {
   addTopicOpen.value = false
 }
 
-// Monitoring state and helpers
-const subInputs = reactive(new Map()) // fqdn -> { sub: string }
-
-const defaultSubName = () => `admin-ui-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,6)}`
-const ensureSubInput = (t) => {
-  if (!subInputs.get(t.fqdn)) {
-    subInputs.set(t.fqdn, { sub: defaultSubName() })
-  }
-}
-
-const monitorsForTopic = (t) => {
-  const arr = monitorStore.active
-  return arr.filter(m => m.tenant === t.tenant && m.namespace === t.namespace && m.topic === t.topic && (t.type ? m.type === t.type : true))
-}
-
-const startMonitorFor = async (t) => {
-  ensureSubInput(t)
-  const { sub } = subInputs.get(t.fqdn)
-  await monitorStore.startMonitor({ type: t.type || 'persistent', tenant: t.tenant, namespace: t.namespace, topic: t.topic, subscriptionName: sub })
-}
-
-const stopMonitorFor = (t, sub) => {
-  monitorStore.stopMonitor({ type: t.type || 'persistent', tenant: t.tenant, namespace: t.namespace, topic: t.topic, subscriptionName: sub })
-}
-
-const clearMessagesFor = (t, sub) => {
-  monitorStore.clearMessages({ type: t.type || 'persistent', tenant: t.tenant, namespace: t.namespace, topic: t.topic, subscriptionName: sub })
-}
-
-const removeSubscriptionFor = async (t, sub) => {
-  await monitorStore.removeSubscription({ type: t.type || 'persistent', tenant: t.tenant, namespace: t.namespace, topic: t.topic, subscriptionName: sub, force: true })
-}
 </script>
 
 <template>
@@ -308,40 +276,11 @@ const removeSubscriptionFor = async (t, sub) => {
                   </div>
                 </div>
 
-                <div class="divider">Monitor</div>
-                <div class="space-y-2">
-                  <div class="flex flex-wrap gap-2 items-end">
-                    <input type="text" class="input input-bordered input-sm w-64" placeholder="Subscription name"
-                           v-model="(subInputs.get(t.fqdn) ?? (ensureSubInput(t), subInputs.get(t.fqdn))).sub" />
-                    <button class="btn btn-sm btn-primary" @click="startMonitorFor(t)">Start</button>
-                  </div>
+                <div class="divider">Test Publisher</div>
+                <TopicPublisherPanel :tenant="t.tenant" :namespace="t.namespace" :topic="t.topic" :type="t.type || 'persistent'" />
 
-                  <div v-for="m in monitorsForTopic(t)" :key="m.key" class="border rounded p-2 bg-base-100">
-                    <div class="flex items-start justify-between">
-                      <div class="flex flex-wrap gap-2 items-center">
-                        <span class="badge badge-outline">Sub: {{ m.subscriptionName }}</span>
-                        <span class="badge"
-                              :class="{ 'badge-success': m.status==='open', 'badge-warning': m.status==='connecting', 'badge-error': m.status==='error' }">
-                          {{ m.status }}
-                        </span>
-                      </div>
-                      <div class="flex gap-2">
-                        <button class="btn btn-xs" :disabled="m.status!=='open'" @click="stopMonitorFor(t, m.subscriptionName)">Stop</button>
-                        <button class="btn btn-xs" :disabled="!m.messages.length" @click="clearMessagesFor(t, m.subscriptionName)">Clear</button>
-                        <button class="btn btn-xs btn-error" @click="removeSubscriptionFor(t, m.subscriptionName)">Delete Subscription</button>
-                      </div>
-                    </div>
-                    <div class="mt-2 max-h-48 overflow-auto text-xs bg-base-200 p-2 rounded">
-                      <div v-if="m.messages.length === 0" class="opacity-70">No messages received</div>
-                      <div v-for="(msg, i) in m.messages.slice().reverse()" :key="i" class="mb-2">
-                        <div class="opacity-70">{{ new Date(msg.publishTime || msg.receivedAt).toLocaleString() }}</div>
-                        <pre class="whitespace-pre-wrap break-all">{{ msg.payload }}</pre>
-                        <div v-if="msg.key">Key: {{ msg.key }}</div>
-                        <div v-if="Object.keys(msg.properties||{}).length">Props: {{ JSON.stringify(msg.properties) }}</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <div class="divider">Monitor</div>
+                <TopicMonitorPanel :tenant="t.tenant" :namespace="t.namespace" :topic="t.topic" :type="t.type || 'persistent'" />
               </div>
             </div>
           </div>
