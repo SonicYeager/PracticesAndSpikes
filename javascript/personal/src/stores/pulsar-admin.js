@@ -20,26 +20,15 @@ export const usePulsarAdminStore = defineStore('pulsar-admin', () => {
         const selectedNamespace = ref('All')
         const topics = ref([]) // [{ fqdn, tenant, namespace, topic, details?: { schema, stats }, loading?: boolean }]
 
-        // Helper to try v3 first and fallback to v2
         const fetchAdmin = async (endpoint, options = {}) => {
             // Ensure no leading slash in endpoint
             const ep = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint
-            let res
             try {
-                res = await fetch(`/admin/v3/${ep}`, options)
-            } catch (e) {
-                // network error; try v2
+                return await fetch(`/admin/v2/${ep}`, options)
+            } catch (e2) {
+                // propagate last error-like response
+                return new Response(null, {status: 500, statusText: 'Network error'})
             }
-            if (!res || !res.ok) {
-                // try v2 only if not ok or undefined
-                try {
-                    return await fetch(`/admin/v2/${ep}`, options)
-                } catch (e2) {
-                    // propagate last error-like response
-                    return res || new Response(null, { status: 500, statusText: 'Network error' })
-                }
-            }
-            return res
         }
 
         // Health check
@@ -118,7 +107,7 @@ export const usePulsarAdminStore = defineStore('pulsar-admin', () => {
             // fqdn like: persistent://tenant/namespace/topic or non-persistent
             const m = fqdn.match(/^(persistent|non-persistent):\/\/([^/]+)\/([^/]+)\/([^\s]+)$/)
             if (!m) return null
-            return { type: m[1], tenant: m[2], namespace: m[3], topic: m[4], fqdn }
+            return {type: m[1], tenant: m[2], namespace: m[3], topic: m[4], fqdn}
         }
 
         const getTopicsForNamespace = async (tenant, ns) => {
@@ -169,35 +158,35 @@ export const usePulsarAdminStore = defineStore('pulsar-admin', () => {
                 ])
                 const schema = schemaRes.ok ? await schemaRes.json() : null
                 const stats = statsRes.ok ? await statsRes.json() : null
-                topicDetailsMap.set(`persistent://${tenant}/${ns}/${topic}`, { schema, stats })
+                topicDetailsMap.set(`persistent://${tenant}/${ns}/${topic}`, {schema, stats})
                 // also reflect into topics array for convenience
                 const idx = topics.value.findIndex(t => t.tenant === tenant && t.namespace === ns && t.topic === topic)
                 if (idx >= 0) {
-                    topics.value[idx] = { ...topics.value[idx], details: { schema, stats } }
+                    topics.value[idx] = {...topics.value[idx], details: {schema, stats}}
                 }
-                return { schema, stats }
+                return {schema, stats}
             } finally {
                 loadingStates.set(key, false)
             }
         }
 
         // Create topic (non-partitioned)
-        const createTopic = async ({ tenant, namespace, topic, retention, permissions }) => {
+        const createTopic = async ({tenant, namespace, topic, retention, permissions}) => {
             loadingStates.set('createTopic', true)
             try {
-                const createRes = await fetchAdmin(`persistent/${encodeURIComponent(tenant)}/${encodeURIComponent(namespace)}/${encodeURIComponent(topic)}`, { method: 'PUT' })
+                const createRes = await fetchAdmin(`persistent/${encodeURIComponent(tenant)}/${encodeURIComponent(namespace)}/${encodeURIComponent(topic)}`, {method: 'PUT'})
                 if (!createRes.ok) {
                     throw new Error(`Failed to create topic: ${createRes.status}`)
                 }
                 // Apply optional retention
                 if (retention && (retention.retentionSizeInMB != null || retention.retentionTimeInMinutes != null)) {
-                    await updateRetention({ tenant, namespace, topic, retention })
+                    await updateRetention({tenant, namespace, topic, retention})
                 }
                 // Apply optional permissions
                 if (permissions && Array.isArray(permissions)) {
                     for (const p of permissions) {
                         if (p && p.role && Array.isArray(p.actions)) {
-                            await grantPermissions({ tenant, namespace, topic, role: p.role, actions: p.actions })
+                            await grantPermissions({tenant, namespace, topic, role: p.role, actions: p.actions})
                         }
                     }
                 }
@@ -210,12 +199,12 @@ export const usePulsarAdminStore = defineStore('pulsar-admin', () => {
         }
 
         // Delete topic
-        const deleteTopic = async ({ tenant, namespace, topic, force = true }) => {
+        const deleteTopic = async ({tenant, namespace, topic, force = true}) => {
             const key = `delete:${tenant}/${namespace}/${topic}`
             loadingStates.set(key, true)
             try {
                 const url = `persistent/${encodeURIComponent(tenant)}/${encodeURIComponent(namespace)}/${encodeURIComponent(topic)}${force ? '?force=true' : ''}`
-                const res = await fetchAdmin(url, { method: 'DELETE' })
+                const res = await fetchAdmin(url, {method: 'DELETE'})
                 if (!res.ok) throw new Error('Failed to delete topic')
                 // remove from local list
                 topics.value = topics.value.filter(t => !(t.tenant === tenant && t.namespace === namespace && t.topic === topic))
@@ -227,7 +216,7 @@ export const usePulsarAdminStore = defineStore('pulsar-admin', () => {
         }
 
         // Retention policy (topic-level)
-        const updateRetention = async ({ tenant, namespace, topic, retention }) => {
+        const updateRetention = async ({tenant, namespace, topic, retention}) => {
             const key = `retention:${tenant}/${namespace}/${topic}`
             loadingStates.set(key, true)
             try {
@@ -237,7 +226,7 @@ export const usePulsarAdminStore = defineStore('pulsar-admin', () => {
                 })
                 const res = await fetchAdmin(`persistent/${encodeURIComponent(tenant)}/${encodeURIComponent(namespace)}/${encodeURIComponent(topic)}/retention`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {'Content-Type': 'application/json'},
                     body,
                 })
                 if (!res.ok) throw new Error('Failed to update retention')
@@ -248,18 +237,18 @@ export const usePulsarAdminStore = defineStore('pulsar-admin', () => {
         }
 
         // Permissions
-        const getPermissions = async ({ tenant, namespace, topic }) => {
+        const getPermissions = async ({tenant, namespace, topic}) => {
             const res = await fetchAdmin(`persistent/${encodeURIComponent(tenant)}/${encodeURIComponent(namespace)}/${encodeURIComponent(topic)}/permissions`)
             return res.ok ? await res.json() : {}
         }
 
-        const grantPermissions = async ({ tenant, namespace, topic, role, actions }) => {
+        const grantPermissions = async ({tenant, namespace, topic, role, actions}) => {
             const key = `perm:${tenant}/${namespace}/${topic}:${role}`
             loadingStates.set(key, true)
             try {
                 const res = await fetchAdmin(`persistent/${encodeURIComponent(tenant)}/${encodeURIComponent(namespace)}/${encodeURIComponent(topic)}/permissions/${encodeURIComponent(role)}`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify(actions || []),
                 })
                 if (!res.ok) throw new Error('Failed to grant permissions')
@@ -269,7 +258,7 @@ export const usePulsarAdminStore = defineStore('pulsar-admin', () => {
             }
         }
 
-        const revokePermissions = async ({ tenant, namespace, topic, role }) => {
+        const revokePermissions = async ({tenant, namespace, topic, role}) => {
             const key = `perm-del:${tenant}/${namespace}/${topic}:${role}`
             loadingStates.set(key, true)
             try {
