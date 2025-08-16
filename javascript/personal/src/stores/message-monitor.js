@@ -66,7 +66,7 @@ export const useMessageMonitorStore = defineStore('message-monitor', () => {
     })
     const wsUrl = `${origin}/ws/v2/consumer/${encodeURIComponent(type)}/${encodeURIComponent(tenant)}/${encodeURIComponent(namespace)}/${encodeURIComponent(topic)}/${encodeURIComponent(sub)}?${params.toString()}`
 
-    const monitor = existing || {
+    const monitor = existing || reactive({
       key,
       type,
       tenant,
@@ -78,7 +78,7 @@ export const useMessageMonitorStore = defineStore('message-monitor', () => {
       error: null,
       messages: [],
       maxBuffer,
-    }
+    })
     monitor.status = 'connecting'
     monitor.error = null
     monitors.set(key, monitor)
@@ -87,7 +87,20 @@ export const useMessageMonitorStore = defineStore('message-monitor', () => {
       const ws = new WebSocket(wsUrl)
       monitor.ws = ws
 
+      // connection timeout to avoid indefinite connecting
+      const timeoutMs = 10000
+      const onTimeout = () => {
+        if (monitor.status === 'connecting') {
+          monitor.status = 'error'
+          monitor.error = 'Connection timeout'
+          try { ws.close() } catch (_) { /* ignore */ }
+        }
+      }
+      const timerId = setTimeout(onTimeout, timeoutMs)
+      const clearTimer = () => { try { clearTimeout(timerId) } catch (_) { /* ignore */ } }
+
       ws.addEventListener('open', () => {
+        clearTimer()
         monitor.status = 'open'
       })
 
@@ -119,11 +132,13 @@ export const useMessageMonitorStore = defineStore('message-monitor', () => {
       })
 
       ws.addEventListener('error', (e) => {
+        clearTimer()
         monitor.status = 'error'
         monitor.error = 'WebSocket error'
       })
 
       ws.addEventListener('close', () => {
+        clearTimer()
         monitor.status = 'closed'
       })
     } catch (e) {

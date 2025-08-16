@@ -51,7 +51,7 @@ export const useTestPublisherStore = defineStore('test-publisher', () => {
     if (producerName) params.set('producerName', producerName)
     const wsUrl = `${origin}/ws/v2/producer/${encodeURIComponent(type)}/${encodeURIComponent(tenant)}/${encodeURIComponent(namespace)}/${encodeURIComponent(topic)}${params.toString() ? `?${params.toString()}` : ''}`
 
-    const prod = existing || {
+    const prod = existing || reactive({
       key,
       type,
       tenant,
@@ -62,7 +62,7 @@ export const useTestPublisherStore = defineStore('test-publisher', () => {
       error: null,
       sent: 0,
       acks: 0,
-    }
+    })
     prod.status = 'connecting'
     prod.error = null
     producers.set(key, prod)
@@ -70,7 +70,21 @@ export const useTestPublisherStore = defineStore('test-publisher', () => {
     try {
       const ws = new WebSocket(wsUrl)
       prod.ws = ws
+
+      // connection timeout to avoid indefinite connecting
+      const timeoutMs = 10000
+      const onTimeout = () => {
+        if (prod.status === 'connecting') {
+          prod.status = 'error'
+          prod.error = 'Connection timeout'
+          try { ws.close() } catch (_) { /* ignore */ }
+        }
+      }
+      const timerId = setTimeout(onTimeout, timeoutMs)
+      const clearTimer = () => { try { clearTimeout(timerId) } catch (_) { /* ignore */ } }
+
       ws.addEventListener('open', () => {
+        clearTimer()
         prod.status = 'open'
       })
       ws.addEventListener('message', (evt) => {
@@ -83,10 +97,12 @@ export const useTestPublisherStore = defineStore('test-publisher', () => {
         } catch (_) { /* ignore */ }
       })
       ws.addEventListener('error', () => {
+        clearTimer()
         prod.status = 'error'
         prod.error = 'WebSocket error'
       })
       ws.addEventListener('close', () => {
+        clearTimer()
         prod.status = 'closed'
       })
     } catch (e) {
