@@ -1,7 +1,15 @@
 ﻿import auth from '@/store/modules/auth/index';
 
+let timer;
+
 export default {
   async logout(context) {
+    localStorage.removeItem('token');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('tokenExpiration');
+
+    clearTimeout(timer);
+
     context.commit('setUser', {
       token: null,
       userId: null,
@@ -27,6 +35,16 @@ export default {
     const token = localStorage.getItem('token');
     const userId = localStorage.getItem('userId');
     const expirationDate = localStorage.getItem('tokenExpiration');
+
+    const expiresIn = +expirationDate - new Date().getTime();
+
+    if (expiresIn < 0) {
+      return;
+    }
+
+    timer = setTimeout(function () {
+      context.dispatch('autoLogout');
+    }, expiresIn);
 
     if (token && userId && expirationDate) {
       context.commit('setUser', {
@@ -70,10 +88,20 @@ export default {
     const expirationDate = new Date().getTime() + +data.expiresIn * 1000;
     localStorage.setItem('tokenExpiration', expirationDate);
 
+    timer = setTimeout(function () {
+      context.dispatch('autoLogout');
+    }, +data.expiresIn * 1000);
+
     context.commit('setUser', {
       token: data.idToken,
       userId: data.localId,
       tokenExpiration: data.expiresIn,
     });
+  },
+
+  autoLogout(context) {
+    context.dispatch('logout');
+
+    context.commit('didLogout');
   },
 };
