@@ -39,3 +39,20 @@ services:
     command: >
       bin/pulsar standalone
     restart: always
+
+  minio:
+    container_name: local_minio
+    image: minio/minio
+    ports:
+      - "9000:9000" # MinIO API
+      - "9001:9001" # MinIO Console
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+
+volumes:
+  minio_data:
