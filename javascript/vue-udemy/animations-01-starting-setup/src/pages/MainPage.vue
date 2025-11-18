@@ -55,27 +55,54 @@ export default {
     };
   },
   methods: {
+    /**
+     * Shows the dialog.
+     */
     showDialog() {
       this.dialogIsVisible = true;
     },
+    /**
+     * Hides the dialog.
+     */
     hideDialog() {
       this.dialogIsVisible = false;
     },
+    /**
+     * Toggles the animation of the block.
+     */
     animateBlock() {
       this.animatedBlock = !this.animatedBlock;
     },
+    /**
+     * Toggles the visibility of the paragraph.
+     */
     animateParagraph() {
       this.animatedParagraph = !this.animatedParagraph;
     },
+    /**
+     * Shows the users.
+     */
     showUser() {
       this.showUsers = true;
     },
+    /**
+     * Hides the users.
+     */
     hideUser() {
       this.showUsers = false;
     },
+    /**
+     * Sets the initial state for the enter transition.
+     * @param {HTMLElement} el - The element being transitioned.
+     */
     beforeEnter(el) {
       el.style.opacity = 0;
     },
+    /**
+     * Fades the element in.
+     * @param {HTMLElement} el - The element being transitioned.
+     * @param {Function} done - The callback to call when the transition is complete.
+     */
     enter(el, done) {
       let round = 1;
       this.enterInterval = setInterval(() => {
@@ -87,12 +114,25 @@ export default {
         }
       }, 20);
     },
+    /**
+     * Sets the final state for the enter transition.
+     * @param {HTMLElement} el - The element being transitioned.
+     */
     afterEnter(el) {
       el.style.opacity = 1;
     },
+    /**
+     * Sets the initial state for the leave transition.
+     * @param {HTMLElement} el - The element being transitioned.
+     */
     beforeLeave(el) {
       el.style.opacity = 1;
     },
+    /**
+     * Fades the element out.
+     * @param {HTMLElement} el - The element being transitioned.
+     * @param {Function} done - The callback to call when the transition is complete.
+     */
     leave(el, done) {
       let round = 10;
       this.leaveInterval = setInterval(() => {
@@ -104,12 +144,22 @@ export default {
         }
       }, 20);
     },
+    /**
+     * Sets the final state for the leave transition.
+     * @param {HTMLElement} el - The element being transitioned.
+     */
     afterLeave(el) {
       el.style.opacity = 0;
     },
+    /**
+     * Clears the enter interval if the transition is cancelled.
+     */
     enterCancelled() {
       clearInterval(this.enterInterval);
     },
+    /**
+     * Clears the leave interval if the transition is cancelled.
+     */
     leaveCancelled() {
       clearInterval(this.leaveInterval);
     },

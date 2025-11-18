@@ -6,15 +6,48 @@ import TopicPublisherPanel from '@/components/TopicPublisherPanel.vue'
 
 const store = usePulsarAdminStore()
 
+/**
+ * A computed property that indicates whether the list of tenants is currently being loaded.
+ * @returns {boolean}
+ */
 const isTenantsLoading = computed(() => store.loadingStates.get('tenants'))
+
+/**
+ * A computed property that indicates whether the list of namespaces is currently being loaded.
+ * @returns {boolean}
+ */
 const isNamespacesLoading = computed(() => store.loadingStates.get('namespaces'))
+
+/**
+ * A computed property that indicates whether the list of topics is currently being loaded.
+ * @returns {boolean}
+ */
 const isTopicsLoading = computed(() => store.loadingStates.get('topics'))
 
-// Local UI state
+/**
+ * A map to track the expanded state of each topic's details view.
+ * The key is the topic FQDN, and the value is a boolean.
+ * @type {Map<string, boolean>}
+ */
 const expanded = reactive(new Map()) // key: fqdn -> boolean
+
+/**
+ * A cache for the permissions of each topic.
+ * The key is the topic FQDN, and the value is the permissions object.
+ * @type {Map<string, object>}
+ */
 const permCache = reactive(new Map()) // key: fqdn -> permissions object
 
+/**
+ * A ref to control the visibility of the "Add Topic" modal.
+ * @type {import('vue').Ref<boolean>}
+ */
 const addTopicOpen = ref(false)
+
+/**
+ * A ref to hold the form data for creating a new topic.
+ * @type {import('vue').Ref<object>}
+ */
 const addForm = ref({
   tenant: '',
   namespace: '',
@@ -39,6 +72,10 @@ onMounted(async () => {
   }
 })
 
+/**
+ * Handles the selection of a tenant from the dropdown menu.
+ * @param {string} tenant - The name of the selected tenant.
+ */
 const handleTenantSelect = async (tenant) => {
   await store.selectTenant(tenant)
   await store.getNamespaces(tenant)
@@ -46,10 +83,19 @@ const handleTenantSelect = async (tenant) => {
   addForm.value.tenant = tenant
 }
 
+/**
+ * Handles the selection of a namespace from the dropdown menu.
+ * @param {string} ns - The name of the selected namespace.
+ */
 const handleNamespaceSelect = async (ns) => {
   store.selectNamespace(ns)
 }
 
+/**
+ * Toggles the expanded view of a topic's details.
+ * If the details are not already loaded, it fetches them from the store.
+ * @param {object} t - The topic object.
+ */
 const toggleExpand = async (t) => {
   const key = t.fqdn
   const now = !expanded.get(key)
@@ -62,11 +108,21 @@ const toggleExpand = async (t) => {
   }
 }
 
+/**
+ * Returns the list of publishers for a given topic.
+ * @param {object} t - The topic object.
+ * @returns {Array<object>} The list of publishers.
+ */
 const publishersFor = (t) => {
   const stats = t.details?.stats
   return Array.isArray(stats?.publishers) ? stats.publishers : []
 }
 
+/**
+ * Returns the list of consumers for a given topic.
+ * @param {object} t - The topic object.
+ * @returns {Array<object>} The list of consumers.
+ */
 const consumersFor = (t) => {
   const stats = t.details?.stats
   if (!stats || !stats.subscriptions) return []
@@ -79,13 +135,26 @@ const consumersFor = (t) => {
   return list
 }
 
+/**
+ * Deletes a topic.
+ * @param {object} t - The topic object to delete.
+ */
 const doDelete = async (t) => {
   await store.deleteTopic({ tenant: t.tenant, namespace: t.namespace, topic: t.topic, force: true })
 }
 
 
+/**
+ * A map to store the input values for updating a topic's retention policy.
+ * The key is the topic FQDN.
+ * @type {Map<string, object>}
+ */
 const retentionInputs = reactive(new Map()) // fqdn -> {time, size}
 
+/**
+ * Ensures that there are input fields for the retention policy of a topic.
+ * @param {object} t - The topic object.
+ */
 const ensureRetentionInputs = (t) => {
   const r = retentionInputs.get(t.fqdn)
   if (!r) {
@@ -93,6 +162,10 @@ const ensureRetentionInputs = (t) => {
   }
 }
 
+/**
+ * Saves the retention policy for a topic.
+ * @param {object} t - The topic object.
+ */
 const saveRetention = async (t) => {
   ensureRetentionInputs(t)
   const r = retentionInputs.get(t.fqdn)
@@ -103,6 +176,12 @@ const saveRetention = async (t) => {
   await store.updateRetention({ tenant: t.tenant, namespace: t.namespace, topic: t.topic, retention })
 }
 
+/**
+ * Grants permissions to a role on a topic.
+ * @param {object} t - The topic object.
+ * @param {string} role - The role to grant permissions to.
+ * @param {string} actionsCsv - A comma-separated string of actions to grant.
+ */
 const grantPerm = async (t, role, actionsCsv) => {
   const actions = actionsCsv.split(',').map(a => a.trim()).filter(Boolean)
   await store.grantPermissions({ tenant: t.tenant, namespace: t.namespace, topic: t.topic, role, actions })
@@ -110,12 +189,20 @@ const grantPerm = async (t, role, actionsCsv) => {
   permCache.set(t.fqdn, perms)
 }
 
+/**
+ * Revokes all permissions from a role on a topic.
+ * @param {object} t - The topic object.
+ * @param {string} role - The role to revoke permissions from.
+ */
 const revokePerm = async (t, role) => {
   await store.revokePermissions({ tenant: t.tenant, namespace: t.namespace, topic: t.topic, role })
   const perms = await store.getPermissions({ tenant: t.tenant, namespace: t.namespace, topic: t.topic })
   permCache.set(t.fqdn, perms)
 }
 
+/**
+ * Opens the "Add Topic" modal and initializes the form.
+ */
 const openAdd = () => {
   addForm.value = {
     tenant: store.selectedTenant || '',
@@ -129,6 +216,9 @@ const openAdd = () => {
   addTopicOpen.value = true
 }
 
+/**
+ * Creates a new topic based on the data in the "Add Topic" form.
+ */
 const createTopic = async () => {
   const payload = {
     tenant: addForm.value.tenant,

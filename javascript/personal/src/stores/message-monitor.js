@@ -3,7 +3,12 @@ import {computed, reactive} from 'vue'
 import {usePreferencesStore} from '@/stores/preferences.js'
 import {usePulsarAdminStore} from '@/stores/pulsar-admin.js'
 
-// Helper: decode base64 to UTF-8 string
+/**
+ * Decodes a base64 encoded string to a UTF-8 string.
+ * Falls back to a direct base64 decode if UTF-8 decoding fails.
+ * @param {string} b64 - The base64 encoded string.
+ * @returns {string} The decoded string.
+ */
 const decodeBase64Utf8 = (b64) => {
   try {
     const binary = atob(b64)
@@ -20,18 +25,51 @@ const decodeBase64Utf8 = (b64) => {
   }
 }
 
+/**
+ * Pinia store for managing real-time message monitoring from Pulsar topics.
+ */
 export const useMessageMonitorStore = defineStore('message-monitor', () => {
   const prefs = usePreferencesStore()
   const admin = usePulsarAdminStore()
 
-  // key: `${type}://${tenant}/${namespace}/${topic}@${subscriptionName}`
+  /**
+   * @type {Map<string, object>}
+   * A map of active monitors.
+   * The key is a string in the format: `${type}://${tenant}/${namespace}/${topic}@${subscriptionName}`.
+   * The value is a reactive monitor object with the following shape:
+   * {
+   *   key: string,
+   *   type: 'persistent' | 'non-persistent',
+   *   tenant: string,
+   *   namespace: string,
+   *   topic: string,
+   *   subscriptionName: string,
+   *   ws: WebSocket | null,
+   *   status: 'idle' | 'connecting' | 'open' | 'closed' | 'error',
+   *   error: string | null,
+   *   messages: Array<{
+   *     messageId: string,
+   *     publishTime: string,
+   *     key: string,
+   *     properties: object,
+   *     payload: string,
+   *     receivedAt: number
+   *   }>,
+   *   maxBuffer: number
+   * }
+   */
   const monitors = reactive(new Map())
-  // monitor object shape:
-  // { key, type:'persistent', tenant, namespace, topic, subscriptionName, ws, status:'idle'|'connecting'|'open'|'closed'|'error', error:null,
-  //   messages: [{ messageId, publishTime, key, properties, payload, receivedAt }], maxBuffer: 200 }
 
+  /**
+   * A computed property that returns an array of all active monitor objects.
+   * @returns {Array<object>}
+   */
   const active = computed(() => Array.from(monitors.values()))
 
+  /**
+   * Builds the WebSocket origin URL from the configured Pulsar URL or the current window location.
+   * @returns {string} The WebSocket origin URL (e.g., 'wss://pulsar.example.com').
+   */
   const buildWsOrigin = () => {
     const url = prefs.pulsarUrl
     if (url) {
@@ -48,8 +86,34 @@ export const useMessageMonitorStore = defineStore('message-monitor', () => {
     return `${proto}//${loc.host}`
   }
 
+  /**
+   * Creates a unique key for a monitor based on its properties.
+   * @param {object} params - The monitor parameters.
+   * @param {string} [params.type='persistent'] - The type of the topic.
+   * @param {string} params.tenant - The tenant of the topic.
+   * @param {string} params.namespace - The namespace of the topic.
+   * @param {string} params.topic - The name of the topic.
+   * @param {string} params.subscriptionName - The name of the subscription.
+   * @returns {string} The unique monitor key.
+   */
   const makeKey = ({ type = 'persistent', tenant, namespace, topic, subscriptionName }) => `${type}://${tenant}/${namespace}/${topic}@${subscriptionName}`
 
+  /**
+   * Starts a new message monitor by opening a WebSocket connection to a Pulsar topic.
+   * If a monitor for the same subscription already exists and is open, it returns the existing one.
+   * @param {object} params - The parameters for the monitor.
+   * @param {string} [params.type='persistent'] - The type of the topic.
+   * @param {string} params.tenant - The tenant of the topic.
+   * @param {string} params.namespace - The namespace of the topic.
+   * @param {string} params.topic - The name of the topic.
+   * @param {string} [params.subscriptionName] - The name of the subscription. A new one is generated if not provided.
+   * @param {string} [params.subscriptionType='Exclusive'] - The subscription type.
+   * @param {string} [params.initialPosition='Latest'] - The initial position to start consuming from.
+   * @param {number} [params.receiverQueueSize=1000] - The receiver queue size.
+   * @param {number} [params.maxBuffer=200] - The maximum number of messages to buffer in the UI.
+   * @param {string} [params.consumerName] - The consumer name. Defaults to the subscription name if not provided.
+   * @returns {Promise<object>} The reactive monitor object.
+   */
   const startMonitor = async ({ type = 'persistent', tenant, namespace, topic, subscriptionName, subscriptionType = 'Exclusive', initialPosition = 'Latest', receiverQueueSize = 1000, maxBuffer = 200, consumerName }) => {
     const sub = subscriptionName || `admin-ui-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`
     const key = makeKey({ type, tenant, namespace, topic, subscriptionName: sub })
@@ -149,6 +213,15 @@ export const useMessageMonitorStore = defineStore('message-monitor', () => {
     return monitor
   }
 
+  /**
+   * Stops an active message monitor by closing its WebSocket connection.
+   * @param {object} params - The monitor identification parameters.
+   * @param {string} [params.type='persistent'] - The type of the topic.
+   * @param {string} params.tenant - The tenant of the topic.
+   * @param {string} params.namespace - The namespace of the topic.
+   * @param {string} params.topic - The name of the topic.
+   * @param {string} params.subscriptionName - The name of the subscription.
+   */
   const stopMonitor = ({ type = 'persistent', tenant, namespace, topic, subscriptionName }) => {
     const key = makeKey({ type, tenant, namespace, topic, subscriptionName })
     const monitor = monitors.get(key)
@@ -159,12 +232,33 @@ export const useMessageMonitorStore = defineStore('message-monitor', () => {
     }
   }
 
+  /**
+   * Clears all buffered messages from a monitor's display.
+   * @param {object} params - The monitor identification parameters.
+   * @param {string} [params.type='persistent'] - The type of the topic.
+   * @param {string} params.tenant - The tenant of the topic.
+   * @param {string} params.namespace - The namespace of the topic.
+   * @param {string} params.topic - The name of the topic.
+   * @param {string} params.subscriptionName - The name of the subscription.
+   */
   const clearMessages = ({ type = 'persistent', tenant, namespace, topic, subscriptionName }) => {
     const key = makeKey({ type, tenant, namespace, topic, subscriptionName })
     const monitor = monitors.get(key)
     if (monitor) monitor.messages.splice(0)
   }
 
+  /**
+   * Removes a subscription from a topic after stopping its monitor.
+   * @param {object} params - The subscription identification parameters.
+   * @param {string} [params.type='persistent'] - The type of the topic.
+   * @param {string} params.tenant - The tenant of the topic.
+   * @param {string} params.namespace - The namespace of the topic.
+   * @param {string} params.topic - The name of the topic.
+   * @param {string} params.subscriptionName - The name of the subscription to remove.
+   * @param {boolean} [params.force=true] - Whether to force the deletion of the subscription.
+   * @returns {Promise<boolean>} A promise that resolves to true if the subscription was removed successfully.
+   * @throws {Error} If the REST API call to remove the subscription fails.
+   */
   const removeSubscription = async ({ type = 'persistent', tenant, namespace, topic, subscriptionName, force = true }) => {
     // Stop monitor if running
     stopMonitor({ type, tenant, namespace, topic, subscriptionName })
