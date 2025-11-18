@@ -9,7 +9,15 @@
 
 <script>
 export default {
+  /**
+   * The events emitted by this component.
+   * @property {null} close - Emitted when the modal is closed.
+   */
   emits: ['close'],
+  /**
+   * The props accepted by this component.
+   * @property {boolean} open - Whether the modal is open or not.
+   */
   props: {
     open: {
       type: Boolean,

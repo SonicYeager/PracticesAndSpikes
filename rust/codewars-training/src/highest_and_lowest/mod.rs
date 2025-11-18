@@ -1,4 +1,13 @@
-﻿pub fn high_and_low(numbers: &str) -> String {
+/// Finds the highest and lowest numbers in a string of space-separated numbers.
+///
+/// # Arguments
+///
+/// * `numbers` - A string of space-separated numbers.
+///
+/// # Returns
+///
+/// A string containing the highest and lowest numbers, separated by a space.
+pub fn high_and_low(numbers: &str) -> String {
     let mut nums: Vec<i32> = numbers
         .split_whitespace()
         .filter_map(|s| s.parse().ok())

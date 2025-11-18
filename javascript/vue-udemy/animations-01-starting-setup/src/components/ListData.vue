@@ -6,10 +6,17 @@ export default {
     };
   },
   methods: {
+    /**
+     * Adds a new user to the list.
+     */
     addUser() {
       const input = this.$refs.userInput.value;
       this.users.unshift(input);
     },
+    /**
+     * Removes a user from the list.
+     * @param {string} user - The user to remove.
+     */
     removeUser(user) {
       this.users = this.users.filter((u) => u !== user);
     },

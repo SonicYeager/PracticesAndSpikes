@@ -6,13 +6,25 @@ import {usePreferencesStore} from "@/stores/preferences.js";
 const pulsarAdminStore = usePulsarAdminStore()
 const preferencesStore = usePreferencesStore()
 
+/**
+ * A computed property that returns a CSS class for the health badge based on the cluster's health status.
+ * @returns {string} 'badge-success' if healthy, 'badge-error' otherwise.
+ */
 const healthBadge = computed(() =>
     pulsarAdminStore.isHealthy ? 'badge-success' : 'badge-error'
 )
+/**
+ * A computed property that returns a CSS class to show a skeleton loader while health is being checked.
+ * @returns {string} 'skeleton' if loading, '' otherwise.
+ */
 const isHealthLoadingClass = computed(() =>
     pulsarAdminStore.loadingStates.get('health') ? 'skeleton ' : ''
 )
 
+/**
+ * A computed property that indicates whether the list of clusters is currently being loaded.
+ * @returns {boolean}
+ */
 const isClustersLoading = computed(() =>
     pulsarAdminStore.loadingStates.get('clusters')
 )
@@ -23,6 +35,10 @@ onMounted(async () => {
   await pulsarAdminStore.getClusters()
 })
 
+/**
+ * Handles the selection of a cluster from the dropdown menu.
+ * @param {string} cluster - The name of the selected cluster.
+ */
 const handleClusterSelect = (cluster) => {
   pulsarAdminStore.selectCluster(cluster)
 }

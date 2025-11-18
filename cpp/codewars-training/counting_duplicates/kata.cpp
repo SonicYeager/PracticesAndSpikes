@@ -5,6 +5,13 @@
 
 namespace counting_duplicates
 {
+    /**
+     * @brief      Counts the number of duplicate characters in a string.
+     *
+     * @param[in]  in    The input string.
+     *
+     * @return     The number of duplicate characters.
+     */
     auto duplicateCount(const std::string& in) -> std::size_t
     {
         std::unordered_map<char, int> charCount;
