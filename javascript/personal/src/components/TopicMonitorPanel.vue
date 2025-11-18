@@ -2,6 +2,13 @@
 import {computed, reactive} from 'vue'
 import {useMessageMonitorStore} from '@/stores/message-monitor.js'
 
+/**
+ * Component props.
+ * @property {string} tenant - The tenant of the topic.
+ * @property {string} namespace - The namespace of the topic.
+ * @property {string} topic - The name of the topic.
+ * @property {string} [type='persistent'] - The type of the topic (e.g., 'persistent', 'non-persistent').
+ */
 const props = defineProps({
   tenant: { type: String, required: true },
   namespace: { type: String, required: true },
@@ -12,20 +19,48 @@ const props = defineProps({
 const monitorStore = useMessageMonitorStore()
 const subInputs = reactive({ sub: '' })
 
+/**
+ * Generates a default subscription name.
+ * @returns {string} A unique subscription name.
+ */
 const defaultSubName = () => `admin-ui-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,6)}`
 if (!subInputs.sub) subInputs.sub = defaultSubName()
 
+/**
+ * A computed property that filters active monitors for the current topic.
+ * @returns {Array} An array of active monitors for the current topic.
+ */
 const monitors = computed(() => monitorStore.active.filter(m => m.tenant === props.tenant && m.namespace === props.namespace && m.topic === props.topic && (props.type ? m.type === props.type : true)))
 
+/**
+ * Starts a new message monitor for the topic.
+ * @returns {Promise<void>}
+ */
 const start = async () => {
   await monitorStore.startMonitor({ type: props.type, tenant: props.tenant, namespace: props.namespace, topic: props.topic, subscriptionName: subInputs.sub })
 }
+
+/**
+ * Stops an active message monitor.
+ * @param {string} subscriptionName - The name of the subscription to stop.
+ */
 const stop = (subscriptionName) => {
   monitorStore.stopMonitor({ type: props.type, tenant: props.tenant, namespace: props.namespace, topic: props.topic, subscriptionName })
 }
+
+/**
+ * Clears all messages from a monitor's display.
+ * @param {string} subscriptionName - The name of the subscription to clear messages from.
+ */
 const clear = (subscriptionName) => {
   monitorStore.clearMessages({ type: props.type, tenant: props.tenant, namespace: props.namespace, topic: props.topic, subscriptionName })
 }
+
+/**
+ * Removes a subscription from the topic.
+ * @param {string} subscriptionName - The name of the subscription to remove.
+ * @returns {Promise<void>}
+ */
 const remove = async (subscriptionName) => {
   await monitorStore.removeSubscription({ type: props.type, tenant: props.tenant, namespace: props.namespace, topic: props.topic, subscriptionName, force: true })
 }

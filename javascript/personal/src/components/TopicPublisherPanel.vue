@@ -2,6 +2,13 @@
 import {computed, reactive} from 'vue'
 import {useTestPublisherStore} from '@/stores/test-publisher.js'
 
+/**
+ * Component props.
+ * @property {string} tenant - The tenant of the topic.
+ * @property {string} namespace - The namespace of the topic.
+ * @property {string} topic - The name of the topic.
+ * @property {string} [type='persistent'] - The type of the topic (e.g., 'persistent', 'non-persistent').
+ */
 const props = defineProps({
   tenant: { type: String, required: true },
   namespace: { type: String, required: true },
@@ -19,13 +26,46 @@ const state = reactive({
   jsonMode: false,
 })
 
+/**
+ * A key representing the topic.
+ * @returns {string} The topic key.
+ */
 const k = computed(() => `${props.type}://${props.tenant}/${props.namespace}/${props.topic}`)
+
+/**
+ * The producer for the current topic.
+ * @returns {object|undefined} The producer object, or undefined if it doesn't exist.
+ */
 const producer = computed(() => pub.producers.get(k.value))
+
+/**
+ * The status of the producer.
+ * @returns {string} The producer status (e.g., 'idle', 'connecting', 'open', 'error').
+ */
 const status = computed(() => producer.value?.status || 'idle')
+
+/**
+ * The number of messages sent by the producer.
+ * @returns {number} The number of sent messages.
+ */
 const sent = computed(() => producer.value?.sent || 0)
+
+/**
+ * The number of acknowledgments received by the producer.
+ * @returns {number} The number of acks.
+ */
 const acks = computed(() => producer.value?.acks || 0)
+
+/**
+ * The last error message from the producer.
+ * @returns {string} The error message.
+ */
 const error = computed(() => producer.value?.error || '')
 
+/**
+ * Parses the properties text into a JSON object.
+ * @returns {object|undefined} The parsed JSON object, or undefined if parsing fails.
+ */
 const parseProps = () => {
   if (!state.propertiesText) return undefined
   try {
@@ -35,14 +75,25 @@ const parseProps = () => {
   return undefined
 }
 
+/**
+ * Connects the producer to the topic.
+ * @returns {Promise<void>}
+ */
 const connect = async () => {
   await pub.startProducer({ type: props.type, tenant: props.tenant, namespace: props.namespace, topic: props.topic, producerName: state.producerName || undefined })
 }
 
+/**
+ * Disconnects the producer from the topic.
+ */
 const disconnect = () => {
   pub.closeProducer({ type: props.type, tenant: props.tenant, namespace: props.namespace, topic: props.topic })
 }
 
+/**
+ * Sends a message to the topic.
+ * @returns {Promise<void>}
+ */
 const send = async () => {
   const common = {
     type: props.type,

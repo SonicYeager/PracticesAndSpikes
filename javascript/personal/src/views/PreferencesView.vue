@@ -8,6 +8,9 @@ const formData = ref({
 
 const preferencesStore = usePreferencesStore()
 
+/**
+ * Saves the current form data to the preferences store.
+ */
 const savePreferences = () => {
   preferencesStore.savePreferences(formData)
   formData.value.pulsarUrl = preferencesStore.preferences.pulsarUrl
