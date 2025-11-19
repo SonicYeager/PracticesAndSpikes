@@ -1,14 +1,11 @@
 using MigraDoc.DocumentObjectModel;
-using MigraDoc.DocumentObjectModel.Shapes;
-using MigraDoc.DocumentObjectModel.Tables;
 using MigraDoc.Rendering;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.IO;
 using SkiaSharp;
 using Document = MigraDoc.DocumentObjectModel.Document;
-using Image = MigraDoc.DocumentObjectModel.Shapes.Image;
 
-namespace PdfToolKit;
+namespace PdfToolKit.Library;
 
 /// <summary>
 /// 100% MIT-lizenziertes Hybrid-Toolkit
@@ -19,7 +16,7 @@ public sealed class PdfToolkit
 {
     // === PDF MERGING (MigraDoc) ===
 
-    public void MergePdfs(string[] inputFiles, string outputPath)
+    public static void MergePdfs(string[] inputFiles, string outputPath)
     {
         using var outputDocument = new PdfDocument();
 
@@ -37,7 +34,7 @@ public sealed class PdfToolkit
 
     // === DOKUMENT-ERSTELLUNG (MigraDoc) ===
 
-    public void CreateDocument(string outputPath,
+    public static void CreateDocument(string outputPath,
         Action<Document> setupDocument)
     {
         var document = new Document();
@@ -45,7 +42,7 @@ public sealed class PdfToolkit
 
         var pdfRenderer = new PdfDocumentRenderer
         {
-            Document = document
+            Document = document,
         };
 
         pdfRenderer.RenderDocument();
@@ -54,7 +51,7 @@ public sealed class PdfToolkit
 
     // === TEXT & STRUKTUR (MigraDoc) ===
 
-    public Document CreateBasicDocument(string title)
+    public static Document CreateBasicDocument(string title)
     {
         var document = new Document();
 
@@ -76,7 +73,7 @@ public sealed class PdfToolkit
         return document;
     }
 
-    public void AddTable(Section section, string[][] data)
+    public static void AddTable(Section section, string[][] data)
     {
         var table = section.AddTable();
         table.Borders.Width = 0.5;
@@ -110,7 +107,7 @@ public sealed class PdfToolkit
 
     // === FORMULAR-FELDER SIMULIEREN (MigraDoc) ===
 
-    public void AddFormFields(Section section,
+    public static void AddFormFields(Section section,
         Dictionary<string, string> fields)
     {
         var table = section.AddTable();
@@ -136,7 +133,7 @@ public sealed class PdfToolkit
 
     // === BILDER (MigraDoc) ===
 
-    public void AddImage(Section section, string imagePath,
+    public static void AddImage(Section section, string imagePath,
         double widthCm = 10)
     {
         var image = section.AddImage(imagePath);
@@ -177,11 +174,11 @@ public sealed class PdfToolkit
 
     // === ECHTE PDF-FORMULAR-FELDER (PDFSharp Low-Level) ===
 
-    public void CreateInteractivePdfForm(string outputPath,
+    public static void CreateInteractivePdfForm(string outputPath,
         Dictionary<string, string> fields)
     {
         using var document = new PdfDocument();
-        var page = document.AddPage();
+        document.AddPage();
 
         // Hinweis: Echte AcroForm-Felder erfordern low-level PDFSharp
         // Dies ist eine vereinfachte Version
@@ -205,7 +202,7 @@ public class Examples
     public static void CreateDummyPdf(string outputPath, string title)
     {
         var toolkit = new PdfToolkit();
-        toolkit.CreateDocument(outputPath, doc =>
+        PdfToolkit.CreateDocument(outputPath, doc =>
         {
             var section = doc.AddSection();
             var paragraph = section.AddParagraph(title);
@@ -219,45 +216,40 @@ public class Examples
         var toolkit = new PdfToolkit();
 
         // 1. PDFs mergen
-        toolkit.MergePdfs(
-            new[]
-            {
+        PdfToolkit.MergePdfs(
+            [
                 "doc1.pdf", "doc2.pdf",
-            },
+            ],
             "merged.pdf"
         );
 
         // 2. Dokument mit Text und Tabelle
-        toolkit.CreateDocument("report.pdf", doc =>
+        PdfToolkit.CreateDocument("report.pdf", static doc =>
         {
             var section = doc.AddSection();
             section.AddParagraph("Verkaufsbericht Q4 2024");
 
             var data = new string[][]
             {
-                new[]
-                {
+                [
                     "Produkt", "Verkäufe", "Umsatz",
-                },
-                new[]
-                {
+                ],
+                [
                     "Widget A", "150", "1.500€",
-                },
-                new[]
-                {
+                ],
+                [
                     "Widget B", "200", "4.000€",
-                },
-                new[]
-                {
+                ],
+                [
                     "Widget C", "100", "1.500€",
-                }
+                ],
             };
 
-            toolkit.AddTable(section, data);
+            PdfToolkit.AddTable(section, data);
         });
 
         // 3. Formular-ähnliches Dokument
-        toolkit.CreateDocument("form.pdf", doc =>
+        PdfToolkit.CreateDocument("form.pdf", static doc =>
         {
             var section = doc.AddSection();
             section.AddParagraph("Antrag").Format.Font.Size = 20;
@@ -267,20 +259,20 @@ public class Examples
                 ["Name"] = "Max Mustermann",
                 ["Geburtsdatum"] = "01.01.1990",
                 ["Adresse"] = "Musterstraße 123, 12345 Musterstadt",
-                ["E-Mail"] = "max@example.com"
+                ["E-Mail"] = "max@example.com",
             };
 
-            toolkit.AddFormFields(section, fields);
+            PdfToolkit.AddFormFields(section, fields);
         });
 
         // 4. Dokument mit SkiaSharp-Grafik
-        toolkit.CreateDocument("with-chart.pdf", doc =>
+        PdfToolkit.CreateDocument("with-chart.pdf", doc =>
         {
             var section = doc.AddSection();
             section.AddParagraph("Statistik-Bericht").Format.Font.Size = 20;
 
             // SkiaSharp Custom Chart
-            toolkit.AddSkiaGraphic(section, canvas =>
+            toolkit.AddSkiaGraphic(section, static canvas =>
             {
                 // Hintergrund
                 canvas.Clear(SKColors.White);
@@ -288,13 +280,13 @@ public class Examples
                 // Balkendiagramm zeichnen
                 var paint = new SKPaint
                 {
-                    Color = SKColors.Blue, Style = SKPaintStyle.Fill
+                    Color = SKColors.Blue, Style = SKPaintStyle.Fill,
                 };
 
                 int[] values =
-                {
+                [
                     50, 80, 120, 90,
-                };
+                ];
                 for (var i = 0; i < values.Length; i++)
                 {
                     canvas.DrawRect(
@@ -309,7 +301,7 @@ public class Examples
                 // Achsen
                 using var axisPaint = new SKPaint
                 {
-                    Color = SKColors.Black, StrokeWidth = 2, Style = SKPaintStyle.Stroke
+                    Color = SKColors.Black, StrokeWidth = 2, Style = SKPaintStyle.Stroke,
                 };
 
                 canvas.DrawLine(40, 300, 400, 300, axisPaint); // X
@@ -318,7 +310,7 @@ public class Examples
         });
 
         // 5. Komplexes mehrseitiges Dokument
-        toolkit.CreateDocument("complex.pdf", doc =>
+        PdfToolkit.CreateDocument("complex.pdf", static doc =>
         {
             // Seite 1: Deckblatt
             var section1 = doc.AddSection();
@@ -348,29 +340,24 @@ public class Examples
 
             var financialData = new string[][]
             {
-                new[]
-                {
+                [
                     "Quartal", "Umsatz", "Gewinn", "Wachstum",
-                },
-                new[]
-                {
+                ],
+                [
                     "Q1", "100.000€", "15.000€", "+5%",
-                },
-                new[]
-                {
+                ],
+                [
                     "Q2", "120.000€", "18.000€", "+20%",
-                },
-                new[]
-                {
+                ],
+                [
                     "Q3", "115.000€", "17.000€", "-4%",
-                },
-                new[]
-                {
+                ],
+                [
                     "Q4", "140.000€", "22.000€", "+22%",
-                }
+                ],
             };
 
-            toolkit.AddTable(section3, financialData);
+            PdfToolkit.AddTable(section3, financialData);
         });
     }
 }

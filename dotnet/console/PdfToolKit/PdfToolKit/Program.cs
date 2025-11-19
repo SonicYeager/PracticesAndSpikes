@@ -1,5 +1,5 @@
 using PdfSharp.Fonts;
-using PdfToolKit;
+using PdfToolKit.Library;
 
 Console.WriteLine("Setting global font resolver...");
 GlobalFontSettings.FontResolver = new FailsafeFontResolver();
