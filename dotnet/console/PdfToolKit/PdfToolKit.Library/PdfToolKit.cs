@@ -202,6 +202,18 @@ public sealed class PdfToolkit
 
 public class Examples
 {
+    public static void CreateDummyPdf(string outputPath, string title)
+    {
+        var toolkit = new PdfToolkit();
+        toolkit.CreateDocument(outputPath, doc =>
+        {
+            var section = doc.AddSection();
+            var paragraph = section.AddParagraph(title);
+            paragraph.Format.Font.Size = 20;
+            paragraph.Format.Font.Bold = true;
+        });
+    }
+
     public static void DemoAll()
     {
         var toolkit = new PdfToolkit();
