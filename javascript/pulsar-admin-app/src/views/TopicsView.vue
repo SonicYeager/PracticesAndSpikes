@@ -1,10 +1,12 @@
 ﻿<script setup>
 import {computed, onMounted, reactive, ref} from 'vue'
 import {usePulsarAdminStore} from '@/stores/pulsar-admin.js'
+import {useNotificationStore} from '@/stores/notification.js'
 import TopicMonitorPanel from '@/components/TopicMonitorPanel.vue'
 import TopicPublisherPanel from '@/components/TopicPublisherPanel.vue'
 
 const store = usePulsarAdminStore()
+const notificationStore = useNotificationStore()
 
 /**
  * A computed property that indicates whether the list of tenants is currently being loaded.
@@ -55,7 +57,8 @@ const addForm = ref({
   retentionTimeInMinutes: '',
   retentionSizeInMB: '',
   role: '',
-  actions: '', // csv
+  role: '',
+  actions: [], // array
 })
 
 onMounted(async () => {
@@ -140,7 +143,13 @@ const consumersFor = (t) => {
  * @param {object} t - The topic object to delete.
  */
 const doDelete = async (t) => {
-  await store.deleteTopic({ tenant: t.tenant, namespace: t.namespace, topic: t.topic, force: true })
+  if (!confirm(`Are you sure you want to delete topic ${t.fqdn}?`)) return
+  try {
+    await store.deleteTopic({ tenant: t.tenant, namespace: t.namespace, topic: t.topic, force: true })
+    notificationStore.success(`Topic ${t.topic} deleted`)
+  } catch (e) {
+    // handled by store or here if needed
+  }
 }
 
 
@@ -173,7 +182,12 @@ const saveRetention = async (t) => {
     retentionTimeInMinutes: r.time === '' ? -1 : Number(r.time),
     retentionSizeInMB: r.size === '' ? -1 : Number(r.size),
   }
-  await store.updateRetention({ tenant: t.tenant, namespace: t.namespace, topic: t.topic, retention })
+  try {
+    await store.updateRetention({ tenant: t.tenant, namespace: t.namespace, topic: t.topic, retention })
+    notificationStore.success('Retention policy updated')
+  } catch (e) {
+    // error handled by store
+  }
 }
 
 /**
@@ -182,11 +196,25 @@ const saveRetention = async (t) => {
  * @param {string} role - The role to grant permissions to.
  * @param {string} actionsCsv - A comma-separated string of actions to grant.
  */
-const grantPerm = async (t, role, actionsCsv) => {
-  const actions = actionsCsv.split(',').map(a => a.trim()).filter(Boolean)
-  await store.grantPermissions({ tenant: t.tenant, namespace: t.namespace, topic: t.topic, role, actions })
-  const perms = await store.getPermissions({ tenant: t.tenant, namespace: t.namespace, topic: t.topic })
-  permCache.set(t.fqdn, perms)
+const grantPerm = async (t, role, actions) => {
+  if (!role || !actions || actions.length === 0) {
+    notificationStore.warning('Please specify role and at least one action')
+    return
+  }
+  try {
+    await store.grantPermissions({ tenant: t.tenant, namespace: t.namespace, topic: t.topic, role, actions })
+    const perms = await store.getPermissions({ tenant: t.tenant, namespace: t.namespace, topic: t.topic })
+    permCache.set(t.fqdn, perms)
+    notificationStore.success(`Permissions granted to ${role}`)
+    // clear inputs
+    const inputs = permCache.get(t.fqdn + ':new')
+    if (inputs) {
+      inputs.role = ''
+      inputs.actions = []
+    }
+  } catch (e) {
+    // error handled by store
+  }
 }
 
 /**
@@ -195,9 +223,14 @@ const grantPerm = async (t, role, actionsCsv) => {
  * @param {string} role - The role to revoke permissions from.
  */
 const revokePerm = async (t, role) => {
-  await store.revokePermissions({ tenant: t.tenant, namespace: t.namespace, topic: t.topic, role })
-  const perms = await store.getPermissions({ tenant: t.tenant, namespace: t.namespace, topic: t.topic })
-  permCache.set(t.fqdn, perms)
+  try {
+    await store.revokePermissions({ tenant: t.tenant, namespace: t.namespace, topic: t.topic, role })
+    const perms = await store.getPermissions({ tenant: t.tenant, namespace: t.namespace, topic: t.topic })
+    permCache.set(t.fqdn, perms)
+    notificationStore.success(`Permissions revoked for ${role}`)
+  } catch (e) {
+    // error handled by store
+  }
 }
 
 /**
@@ -211,7 +244,7 @@ const openAdd = () => {
     retentionTimeInMinutes: '',
     retentionSizeInMB: '',
     role: '',
-    actions: '',
+    actions: [],
   }
   addTopicOpen.value = true
 }
@@ -228,12 +261,17 @@ const createTopic = async () => {
       retentionTimeInMinutes: addForm.value.retentionTimeInMinutes === '' ? undefined : Number(addForm.value.retentionTimeInMinutes),
       retentionSizeInMB: addForm.value.retentionSizeInMB === '' ? undefined : Number(addForm.value.retentionSizeInMB),
     },
-    permissions: addForm.value.role && addForm.value.actions ? [
-      { role: addForm.value.role, actions: addForm.value.actions.split(',').map(a => a.trim()).filter(Boolean) }
+    permissions: addForm.value.role && addForm.value.actions.length ? [
+      { role: addForm.value.role, actions: addForm.value.actions }
     ] : [],
   }
-  await store.createTopic(payload)
-  addTopicOpen.value = false
+  try {
+    await store.createTopic(payload)
+    notificationStore.success(`Topic ${addForm.value.topic} created`)
+    addTopicOpen.value = false
+  } catch (e) {
+    // error handled by store
+  }
 }
 
 </script>
@@ -360,8 +398,20 @@ const createTopic = async () => {
                   </div>
                   <div v-else class="text-sm opacity-70">No explicit permissions</div>
                   <div class="flex flex-wrap gap-2 items-end mt-2">
-                    <input type="text" class="input input-bordered input-sm w-40" placeholder="Role" v-model="(permCache.get(t.fqdn + ':new') || (permCache.set(t.fqdn + ':new', {role:'',actions:''}), permCache.get(t.fqdn + ':new'))).role" />
-                    <input type="text" class="input input-bordered input-sm w-64" placeholder="Actions (e.g. produce,consume)" v-model="(permCache.get(t.fqdn + ':new') || (permCache.set(t.fqdn + ':new', {role:'',actions:''}), permCache.get(t.fqdn + ':new'))).actions" />
+                    <input type="text" class="input input-bordered input-sm w-40" placeholder="Role" v-model="(permCache.get(t.fqdn + ':new') || (permCache.set(t.fqdn + ':new', {role:'',actions:[]}), permCache.get(t.fqdn + ':new'))).role" />
+                    
+                    <div class="dropdown dropdown-top">
+                      <div tabindex="0" role="button" class="btn btn-sm btn-outline m-1">Actions</div>
+                      <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+                        <li v-for="act in ['produce', 'consume', 'functions']" :key="act">
+                          <label class="label cursor-pointer">
+                            <span class="label-text">{{ act }}</span> 
+                            <input type="checkbox" class="checkbox checkbox-xs" :value="act" v-model="(permCache.get(t.fqdn + ':new') || (permCache.set(t.fqdn + ':new', {role:'',actions:[]}), permCache.get(t.fqdn + ':new'))).actions" />
+                          </label>
+                        </li>
+                      </ul>
+                    </div>
+
                     <button class="btn btn-xs btn-primary" @click="grantPerm(t, permCache.get(t.fqdn + ':new').role, permCache.get(t.fqdn + ':new').actions)">Grant</button>
                   </div>
                 </div>
@@ -414,7 +464,20 @@ const createTopic = async () => {
             </div>
             <div class="form-control">
               <label class="label"><span class="label-text">Initial Actions</span></label>
-              <input class="input input-bordered" v-model="addForm.actions" placeholder="e.g. produce,consume" />
+              <div class="flex gap-4">
+                 <label class="label cursor-pointer gap-2">
+                    <span class="label-text">produce</span> 
+                    <input type="checkbox" class="checkbox checkbox-xs" value="produce" v-model="addForm.actions" />
+                  </label>
+                  <label class="label cursor-pointer gap-2">
+                    <span class="label-text">consume</span> 
+                    <input type="checkbox" class="checkbox checkbox-xs" value="consume" v-model="addForm.actions" />
+                  </label>
+                  <label class="label cursor-pointer gap-2">
+                    <span class="label-text">functions</span> 
+                    <input type="checkbox" class="checkbox checkbox-xs" value="functions" v-model="addForm.actions" />
+                  </label>
+              </div>
             </div>
           </div>
           <div class="modal-action">

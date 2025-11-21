@@ -24,7 +24,7 @@ The repository is organized by technology/language:
 
 ### JavaScript (`/javascript`)
 - **`codewars`**: JavaScript solutions for Codewars.
-- **`personal`**: Personal JavaScript projects.
+- **`pulsar-admin-app`**: Pulsar Admin UI application.
 - **`vue-udemy`**: Vue.js projects from Udemy courses.
 
 ### Rust (`/rust`)
