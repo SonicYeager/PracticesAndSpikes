@@ -1,147 +1,48 @@
 ﻿<script setup>
-import {computed, onMounted, reactive, ref} from 'vue'
+import {computed, onMounted, ref} from 'vue'
 import {usePulsarAdminStore} from '@/stores/pulsar-admin.js'
 import {useNotificationStore} from '@/stores/notification.js'
-import TopicMonitorPanel from '@/components/TopicMonitorPanel.vue'
-import TopicPublisherPanel from '@/components/TopicPublisherPanel.vue'
+import TopicCreateModal from '@/components/TopicCreateModal.vue'
+import TopicListItem from '@/components/TopicListItem.vue'
 
 const store = usePulsarAdminStore()
 const notificationStore = useNotificationStore()
 
-/**
- * A computed property that indicates whether the list of tenants is currently being loaded.
- * @returns {boolean}
- */
 const isTenantsLoading = computed(() => store.loadingStates.get('tenants'))
-
-/**
- * A computed property that indicates whether the list of namespaces is currently being loaded.
- * @returns {boolean}
- */
 const isNamespacesLoading = computed(() => store.loadingStates.get('namespaces'))
-
-/**
- * A computed property that indicates whether the list of topics is currently being loaded.
- * @returns {boolean}
- */
 const isTopicsLoading = computed(() => store.loadingStates.get('topics'))
 
-/**
- * A map to track the expanded state of each topic's details view.
- * The key is the topic FQDN, and the value is a boolean.
- * @type {Map<string, boolean>}
- */
-const expanded = reactive(new Map()) // key: fqdn -> boolean
-
-/**
- * A cache for the permissions of each topic.
- * The key is the topic FQDN, and the value is the permissions object.
- * @type {Map<string, object>}
- */
-const permCache = reactive(new Map()) // key: fqdn -> permissions object
-
-/**
- * A ref to control the visibility of the "Add Topic" modal.
- * @type {import('vue').Ref<boolean>}
- */
 const addTopicOpen = ref(false)
 
-/**
- * A ref to hold the form data for creating a new topic.
- * @type {import('vue').Ref<object>}
- */
-const addForm = ref({
-  tenant: '',
-  namespace: '',
-  topic: '',
-  retentionTimeInMinutes: '',
-  retentionSizeInMB: '',
-  role: '',
-  role: '',
-  actions: [], // array
-})
-
 onMounted(async () => {
-  if (!store.tenants.length) {
-    await store.getTenants()
-  }
-  const tenant = store.selectedTenant || (store.tenants[0] || null)
-  if (tenant) {
-    if (!store.selectedTenant) {
-      await store.selectTenant(tenant)
+  try {
+    if (!store.tenants.length) {
+      await store.getTenants()
     }
-    await store.getNamespaces(tenant)
-    await store.getAllTopicsForTenant(tenant)
+    const tenant = store.selectedTenant || (store.tenants[0] || null)
+    if (tenant) {
+      if (!store.selectedTenant) {
+        await store.selectTenant(tenant)
+      }
+      await store.getNamespaces(tenant)
+      await store.getAllTopicsForTenant(tenant)
+    }
+  } catch (e) {
+    console.error('Error loading initial data:', e)
+    notificationStore.error('Failed to load initial data')
   }
 })
 
-/**
- * Handles the selection of a tenant from the dropdown menu.
- * @param {string} tenant - The name of the selected tenant.
- */
 const handleTenantSelect = async (tenant) => {
   await store.selectTenant(tenant)
   await store.getNamespaces(tenant)
   await store.getAllTopicsForTenant(tenant)
-  addForm.value.tenant = tenant
 }
 
-/**
- * Handles the selection of a namespace from the dropdown menu.
- * @param {string} ns - The name of the selected namespace.
- */
 const handleNamespaceSelect = async (ns) => {
   store.selectNamespace(ns)
 }
 
-/**
- * Toggles the expanded view of a topic's details.
- * If the details are not already loaded, it fetches them from the store.
- * @param {object} t - The topic object.
- */
-const toggleExpand = async (t) => {
-  const key = t.fqdn
-  const now = !expanded.get(key)
-  expanded.set(key, now)
-  if (now && !t.details) {
-    await store.fetchTopicDetails(t.tenant, t.namespace, t.topic)
-    // load permissions too
-    const perms = await store.getPermissions({ tenant: t.tenant, namespace: t.namespace, topic: t.topic })
-    permCache.set(key, perms)
-  }
-}
-
-/**
- * Returns the list of publishers for a given topic.
- * @param {object} t - The topic object.
- * @returns {Array<object>} The list of publishers.
- */
-const publishersFor = (t) => {
-  const stats = t.details?.stats
-  return Array.isArray(stats?.publishers) ? stats.publishers : []
-}
-
-/**
- * Returns the list of consumers for a given topic.
- * @param {object} t - The topic object.
- * @returns {Array<object>} The list of consumers.
- */
-const consumersFor = (t) => {
-  const stats = t.details?.stats
-  if (!stats || !stats.subscriptions) return []
-  const list = []
-  for (const [sub, subObj] of Object.entries(stats.subscriptions)) {
-    if (Array.isArray(subObj.consumers)) {
-      subObj.consumers.forEach(c => list.push({ subscription: sub, ...c }))
-    }
-  }
-  return list
-}
-
-/**
- * Deletes a topic.
- * @param {object} t - The topic object to delete.
- */
 const doDelete = async (t) => {
   if (!confirm(`Are you sure you want to delete topic ${t.fqdn}?`)) return
   try {
@@ -152,128 +53,33 @@ const doDelete = async (t) => {
   }
 }
 
-
-/**
- * A map to store the input values for updating a topic's retention policy.
- * The key is the topic FQDN.
- * @type {Map<string, object>}
- */
-const retentionInputs = reactive(new Map()) // fqdn -> {time, size}
-
-/**
- * Ensures that there are input fields for the retention policy of a topic.
- * @param {object} t - The topic object.
- */
-const ensureRetentionInputs = (t) => {
-  const r = retentionInputs.get(t.fqdn)
-  if (!r) {
-    retentionInputs.set(t.fqdn, { time: '', size: '' })
-  }
-}
-
-/**
- * Saves the retention policy for a topic.
- * @param {object} t - The topic object.
- */
-const saveRetention = async (t) => {
-  ensureRetentionInputs(t)
-  const r = retentionInputs.get(t.fqdn)
-  const retention = {
-    retentionTimeInMinutes: r.time === '' ? -1 : Number(r.time),
-    retentionSizeInMB: r.size === '' ? -1 : Number(r.size),
-  }
-  try {
-    await store.updateRetention({ tenant: t.tenant, namespace: t.namespace, topic: t.topic, retention })
-    notificationStore.success('Retention policy updated')
-  } catch (e) {
-    // error handled by store
-  }
-}
-
-/**
- * Grants permissions to a role on a topic.
- * @param {object} t - The topic object.
- * @param {string} role - The role to grant permissions to.
- * @param {string} actionsCsv - A comma-separated string of actions to grant.
- */
-const grantPerm = async (t, role, actions) => {
-  if (!role || !actions || actions.length === 0) {
-    notificationStore.warning('Please specify role and at least one action')
-    return
-  }
-  try {
-    await store.grantPermissions({ tenant: t.tenant, namespace: t.namespace, topic: t.topic, role, actions })
-    const perms = await store.getPermissions({ tenant: t.tenant, namespace: t.namespace, topic: t.topic })
-    permCache.set(t.fqdn, perms)
-    notificationStore.success(`Permissions granted to ${role}`)
-    // clear inputs
-    const inputs = permCache.get(t.fqdn + ':new')
-    if (inputs) {
-      inputs.role = ''
-      inputs.actions = []
-    }
-  } catch (e) {
-    // error handled by store
-  }
-}
-
-/**
- * Revokes all permissions from a role on a topic.
- * @param {object} t - The topic object.
- * @param {string} role - The role to revoke permissions from.
- */
-const revokePerm = async (t, role) => {
-  try {
-    await store.revokePermissions({ tenant: t.tenant, namespace: t.namespace, topic: t.topic, role })
-    const perms = await store.getPermissions({ tenant: t.tenant, namespace: t.namespace, topic: t.topic })
-    permCache.set(t.fqdn, perms)
-    notificationStore.success(`Permissions revoked for ${role}`)
-  } catch (e) {
-    // error handled by store
-  }
-}
-
-/**
- * Opens the "Add Topic" modal and initializes the form.
- */
 const openAdd = () => {
-  addForm.value = {
-    tenant: store.selectedTenant || '',
-    namespace: store.selectedNamespace && store.selectedNamespace !== 'All' ? store.selectedNamespace : (store.namespaces[0] || ''),
-    topic: '',
-    retentionTimeInMinutes: '',
-    retentionSizeInMB: '',
-    role: '',
-    actions: [],
-  }
   addTopicOpen.value = true
 }
 
-/**
- * Creates a new topic based on the data in the "Add Topic" form.
- */
-const createTopic = async () => {
-  const payload = {
-    tenant: addForm.value.tenant,
-    namespace: addForm.value.namespace,
-    topic: addForm.value.topic,
-    retention: {
-      retentionTimeInMinutes: addForm.value.retentionTimeInMinutes === '' ? undefined : Number(addForm.value.retentionTimeInMinutes),
-      retentionSizeInMB: addForm.value.retentionSizeInMB === '' ? undefined : Number(addForm.value.retentionSizeInMB),
-    },
-    permissions: addForm.value.role && addForm.value.actions.length ? [
-      { role: addForm.value.role, actions: addForm.value.actions }
-    ] : [],
-  }
+const handleCreate = async (formData) => {
+  const ns = formData.namespace || store.selectedNamespace
+  const localNs = ns.includes('/') ? ns.split('/')[1] : ns
+  
   try {
-    await store.createTopic(payload)
-    notificationStore.success(`Topic ${addForm.value.topic} created`)
+    await store.createTopic({
+      tenant: formData.tenant || store.selectedTenant,
+      namespace: localNs,
+      topic: formData.topic,
+      retention: {
+        retentionTimeInMinutes: formData.retentionTimeInMinutes === '' ? undefined : Number(formData.retentionTimeInMinutes),
+        retentionSizeInMB: formData.retentionSizeInMB === '' ? undefined : Number(formData.retentionSizeInMB),
+      },
+      permissions: formData.role && formData.actions.length ? [
+        { role: formData.role, actions: formData.actions }
+      ] : [],
+    })
+    notificationStore.success(`Topic ${formData.topic} created successfully`)
     addTopicOpen.value = false
   } catch (e) {
     // error handled by store
   }
 }
-
 </script>
 
 <template>
@@ -335,157 +141,22 @@ const createTopic = async () => {
               <span>No topics found for the selected tenant/namespace.</span>
             </div>
           </div>
-          <div v-for="t in store.filteredTopics" :key="t.fqdn" class="card bg-base-100 shadow">
-            <div class="card-body">
-              <div class="flex items-start justify-between">
-                <div>
-                  <h3 class="card-title text-lg break-all">{{ t.fqdn }}</h3>
-                  <p class="text-xs opacity-70">Tenant: {{ t.tenant }} | Namespace: {{ t.namespace }}</p>
-                </div>
-                <div class="flex gap-2">
-                  <button class="btn btn-sm" @click="toggleExpand(t)">
-                    {{ expanded.get(t.fqdn) ? 'Hide' : 'Details' }}
-                  </button>
-                  <button class="btn btn-sm btn-error" @click="doDelete(t)">Delete</button>
-                </div>
-              </div>
-
-              <div v-if="expanded.get(t.fqdn)" class="mt-3 space-y-3">
-                <div class="divider">Schema</div>
-                <div v-if="t.details?.schema" class="text-sm">
-                  <div>Type: <span class="badge">{{ t.details.schema.type }}</span></div>
-                  <pre class="mt-2 whitespace-pre-wrap break-all bg-base-200 p-2 rounded max-h-40 overflow-auto">{{ t.details.schema.schema }}</pre>
-                </div>
-                <div v-else class="text-sm opacity-70">No schema or not loaded.</div>
-
-                <div class="divider">Publishers</div>
-                <div v-if="publishersFor(t).length">
-                  <ul class="list-disc list-inside text-sm">
-                    <li v-for="(p, idx) in publishersFor(t)" :key="idx">{{ p.producerName || p.producerId || 'Producer' }} (msgRateOut: {{ p.msgRateOut?.toFixed?.(2) ?? p.msgRateOut ?? 0 }})</li>
-                  </ul>
-                </div>
-                <div v-else class="text-sm opacity-70">No publishers</div>
-
-                <div class="divider">Consumers</div>
-                <div v-if="consumersFor(t).length">
-                  <ul class="list-disc list-inside text-sm">
-                    <li v-for="(c, idx) in consumersFor(t)" :key="idx">{{ c.consumerName || 'Consumer' }} (sub: {{ c.subscription }}, msgRateIn: {{ c.msgRateIn?.toFixed?.(2) ?? c.msgRateIn ?? 0 }})</li>
-                  </ul>
-                </div>
-                <div v-else class="text-sm opacity-70">No consumers</div>
-
-                <div class="divider">Retention</div>
-                <div class="flex flex-wrap gap-2 items-end">
-                  <div class="form-control">
-                    <label class="label"><span class="label-text">Time (min)</span></label>
-                    <input type="number" class="input input-bordered input-sm w-36" v-model="(retentionInputs.get(t.fqdn) ?? (ensureRetentionInputs(t), retentionInputs.get(t.fqdn))).time" placeholder="-1 (infinite)" />
-                  </div>
-                  <div class="form-control">
-                    <label class="label"><span class="label-text">Size (MB)</span></label>
-                    <input type="number" class="input input-bordered input-sm w-36" v-model="(retentionInputs.get(t.fqdn) ?? (ensureRetentionInputs(t), retentionInputs.get(t.fqdn))).size" placeholder="-1 (infinite)" />
-                  </div>
-                  <button class="btn btn-sm btn-primary" @click="saveRetention(t)">Save</button>
-                </div>
-
-                <div class="divider">Permissions</div>
-                <div class="space-y-2">
-                  <div v-if="Object.keys(permCache.get(t.fqdn) || {}).length">
-                    <div v-for="(acts, role) in permCache.get(t.fqdn)" :key="role" class="flex items-center gap-2">
-                      <span class="badge badge-outline">{{ role }}</span>
-                      <span class="text-sm">{{ Array.isArray(acts) ? acts.join(', ') : JSON.stringify(acts) }}</span>
-                      <button class="btn btn-xs btn-error" @click="revokePerm(t, role)">Revoke</button>
-                    </div>
-                  </div>
-                  <div v-else class="text-sm opacity-70">No explicit permissions</div>
-                  <div class="flex flex-wrap gap-2 items-end mt-2">
-                    <input type="text" class="input input-bordered input-sm w-40" placeholder="Role" v-model="(permCache.get(t.fqdn + ':new') || (permCache.set(t.fqdn + ':new', {role:'',actions:[]}), permCache.get(t.fqdn + ':new'))).role" />
-                    
-                    <div class="dropdown dropdown-top">
-                      <div tabindex="0" role="button" class="btn btn-sm btn-outline m-1">Actions</div>
-                      <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
-                        <li v-for="act in ['produce', 'consume', 'functions']" :key="act">
-                          <label class="label cursor-pointer">
-                            <span class="label-text">{{ act }}</span> 
-                            <input type="checkbox" class="checkbox checkbox-xs" :value="act" v-model="(permCache.get(t.fqdn + ':new') || (permCache.set(t.fqdn + ':new', {role:'',actions:[]}), permCache.get(t.fqdn + ':new'))).actions" />
-                          </label>
-                        </li>
-                      </ul>
-                    </div>
-
-                    <button class="btn btn-xs btn-primary" @click="grantPerm(t, permCache.get(t.fqdn + ':new').role, permCache.get(t.fqdn + ':new').actions)">Grant</button>
-                  </div>
-                </div>
-
-                <div class="divider">Test Publisher</div>
-                <TopicPublisherPanel :tenant="t.tenant" :namespace="t.namespace" :topic="t.topic" :type="t.type || 'persistent'" />
-
-                <div class="divider">Monitor</div>
-                <TopicMonitorPanel :tenant="t.tenant" :namespace="t.namespace" :topic="t.topic" :type="t.type || 'persistent'" />
-              </div>
-            </div>
-          </div>
+          <TopicListItem 
+            v-for="t in store.filteredTopics" 
+            :key="t.fqdn" 
+            :topic="t" 
+            @delete="doDelete" 
+          />
         </template>
       </div>
 
-      <!-- Add Topic Modal -->
-      <dialog class="modal" :open="addTopicOpen">
-        <div class="modal-box">
-          <h3 class="font-bold text-lg mb-2">Create Topic</h3>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div class="form-control">
-              <label class="label"><span class="label-text">Tenant</span></label>
-              <select class="select select-bordered" v-model="addForm.tenant">
-                <option value="" disabled>Select tenant</option>
-                <option v-for="t in store.tenants" :key="t" :value="t">{{ t }}</option>
-              </select>
-            </div>
-            <div class="form-control">
-              <label class="label"><span class="label-text">Namespace</span></label>
-              <select class="select select-bordered" v-model="addForm.namespace">
-                <option value="" disabled>Select namespace</option>
-                <option v-for="ns in store.namespaces" :key="ns" :value="(ns.includes('/') ? ns.split('/')[1] : ns)">{{ ns.includes('/') ? ns.split('/')[1] : ns }}</option>
-              </select>
-            </div>
-            <div class="form-control md:col-span-2">
-              <label class="label"><span class="label-text">Topic</span></label>
-              <input class="input input-bordered" v-model="addForm.topic" placeholder="topic-name" />
-            </div>
-            <div class="form-control">
-              <label class="label"><span class="label-text">Retention Time (min)</span></label>
-              <input type="number" class="input input-bordered" v-model="addForm.retentionTimeInMinutes" placeholder="optional" />
-            </div>
-            <div class="form-control">
-              <label class="label"><span class="label-text">Retention Size (MB)</span></label>
-              <input type="number" class="input input-bordered" v-model="addForm.retentionSizeInMB" placeholder="optional" />
-            </div>
-            <div class="form-control">
-              <label class="label"><span class="label-text">Initial Role</span></label>
-              <input class="input input-bordered" v-model="addForm.role" placeholder="optional" />
-            </div>
-            <div class="form-control">
-              <label class="label"><span class="label-text">Initial Actions</span></label>
-              <div class="flex gap-4">
-                 <label class="label cursor-pointer gap-2">
-                    <span class="label-text">produce</span> 
-                    <input type="checkbox" class="checkbox checkbox-xs" value="produce" v-model="addForm.actions" />
-                  </label>
-                  <label class="label cursor-pointer gap-2">
-                    <span class="label-text">consume</span> 
-                    <input type="checkbox" class="checkbox checkbox-xs" value="consume" v-model="addForm.actions" />
-                  </label>
-                  <label class="label cursor-pointer gap-2">
-                    <span class="label-text">functions</span> 
-                    <input type="checkbox" class="checkbox checkbox-xs" value="functions" v-model="addForm.actions" />
-                  </label>
-              </div>
-            </div>
-          </div>
-          <div class="modal-action">
-            <button class="btn" @click="addTopicOpen = false">Cancel</button>
-            <button class="btn btn-primary" :disabled="!addForm.tenant || !addForm.namespace || !addForm.topic" @click="createTopic">Create</button>
-          </div>
-        </div>
-      </dialog>
+      <TopicCreateModal 
+        v-model="addTopicOpen"
+        :tenant="store.selectedTenant"
+        :namespaces="store.namespaces.map(ns => ns.includes('/') ? ns.split('/')[1] : ns)"
+        :selectedNamespace="store.selectedNamespace"
+        @create="handleCreate"
+      />
     </div>
   </main>
 </template>
