@@ -1,27 +1,39 @@
-import {ref, computed} from 'vue'
-import {defineStore} from 'pinia'
+import { ref, computed } from 'vue'
+import { defineStore } from 'pinia'
 
 /**
- * Pinia store for managing user preferences.
+ * Pinia store for managing user preferences including cluster configuration.
  */
 export const usePreferencesStore = defineStore('preferences', () => {
     /**
-     * The URL of the Pulsar REST API.
-     * @type {import('vue').Ref<string>}
+     * Cluster configuration including URL and authentication settings.
      */
-    const pulsarUrl = ref('')
+    const clusterConfig = ref({
+        url: 'http://localhost:8080',
+        auth: {
+            enabled: false,
+            type: 'oauth2-client-credentials',
+            clientId: '',
+            clientSecret: '',
+            tokenEndpoint: '',
+            scope: ''
+        }
+    })
 
     /**
      * Saves the user's preferences to local storage.
-     * @param {object} formData - The form data containing the preferences to save.
-     * @param {string} formData.pulsarUrl - The Pulsar URL to save.
+     * @param {object} config - The configuration to save
      */
-    const savePreferences = (formData) => {
-        console.log('Saving preferences:', formData.value)
+    const savePreferences = (config) => {
+        console.log('Saving preferences:', config)
 
-        pulsarUrl.value = formData.pulsarUrl
+        if (config.clusterConfig) {
+            clusterConfig.value = { ...clusterConfig.value, ...config.clusterConfig }
+        }
 
-        localStorage.setItem('preferences', JSON.stringify(formData.value))
+        localStorage.setItem('preferences', JSON.stringify({
+            clusterConfig: clusterConfig.value
+        }))
     }
 
     /**
@@ -30,23 +42,47 @@ export const usePreferencesStore = defineStore('preferences', () => {
     const loadPreferences = () => {
         const saved = localStorage.getItem('preferences')
         if (saved) {
-            const parsed = JSON.parse(saved)
-            pulsarUrl.value = parsed.pulsarUrl
+            try {
+                const parsed = JSON.parse(saved)
+                if (parsed.clusterConfig) {
+                    clusterConfig.value = { ...clusterConfig.value, ...parsed.clusterConfig }
+                }
+            } catch (e) {
+                console.error('Failed to load preferences:', e)
+            }
         }
     }
 
     /**
-     * A computed property that returns an object containing the current preferences.
-     * @returns {object}
+     * Resets preferences to defaults.
+     */
+    const resetPreferences = () => {
+        clusterConfig.value = {
+            url: 'http://localhost:8080',
+            auth: {
+                enabled: false,
+                type: 'oauth2-client-credentials',
+                clientId: '',
+                clientSecret: '',
+                tokenEndpoint: '',
+                scope: ''
+            }
+        }
+        localStorage.removeItem('preferences')
+    }
+
+    /**
+     * Computed property for easy access to preferences.
      */
     const preferences = computed(() => ({
-        pulsarUrl: pulsarUrl.value,
+        clusterConfig: clusterConfig.value
     }))
-    
+
     return {
-        pulsarUrl,
+        clusterConfig,
         preferences,
         savePreferences,
-        loadPreferences
+        loadPreferences,
+        resetPreferences
     }
 })

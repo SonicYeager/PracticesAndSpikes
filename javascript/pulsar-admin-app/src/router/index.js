@@ -26,7 +26,12 @@ const router = createRouter({
     {
       path: '/topics',
       name: 'topics',
-      component: Topics,
+      component: () => import('../views/TopicsView.vue')
+    },
+    {
+      path: '/settings',
+      name: 'settings',
+      component: () => import('../views/SettingsView.vue')
     },
     {
       path: '/preferences',

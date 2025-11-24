@@ -1,13 +1,16 @@
 import { useNotificationStore } from '@/stores/notification.js'
+import { usePreferencesStore } from '@/stores/preferences.js'
+import { oauth2Service } from '@/services/auth.js'
 
 /**
  * Composable that provides a centralized HTTP client for the Pulsar Admin REST API.
- * Automatically handles error notifications and response parsing.
+ * Automatically handles error notifications, dynamic cluster URLs, and OAuth2 authentication.
  * 
  * @returns {object} An object containing the fetchAdmin function
  */
 export function useFetchAdmin() {
     const notificationStore = useNotificationStore()
+    const preferencesStore = usePreferencesStore()
 
     /**
      * Makes a request to the Pulsar Admin API.
@@ -19,8 +22,44 @@ export function useFetchAdmin() {
         // Ensure no leading slash in endpoint
         const ep = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint
 
+        // Get cluster configuration
+        const { url: clusterUrl, auth } = preferencesStore.clusterConfig
+
+        // Build full URL
+        const baseUrl = clusterUrl || 'http://localhost:8080'
+        const fullUrl = `${baseUrl}/admin/v2/${ep}`
+
+        // Prepare headers
+        const headers = { ...options.headers }
+
+        // Add OAuth2 authentication if enabled
+        if (auth?.enabled && auth.type === 'oauth2-client-credentials') {
+            try {
+                // Initialize OAuth2 service if needed
+                if (!oauth2Service.isInitialized()) {
+                    oauth2Service.initialize({
+                        clientId: auth.clientId,
+                        clientSecret: auth.clientSecret,
+                        tokenEndpoint: auth.tokenEndpoint,
+                        scope: auth.scope
+                    })
+                }
+
+                // Get valid token (will refresh if needed)
+                const token = await oauth2Service.getValidToken()
+                headers['Authorization'] = `Bearer ${token}`
+            } catch (authError) {
+                notificationStore.error(`Authentication failed: ${authError.message}`)
+                return new Response(null, { status: 401, statusText: 'Authentication failed' })
+            }
+        }
+
         try {
-            const res = await fetch(`/admin/v2/${ep}`, options)
+            const res = await fetch(fullUrl, {
+                ...options,
+                headers,
+                mode: 'cors'  // Enable CORS for remote clusters
+            })
 
             if (!res.ok) {
                 // Try to parse error message

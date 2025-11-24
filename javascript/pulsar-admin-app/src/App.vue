@@ -14,7 +14,7 @@ import ToastContainer from '@/components/ToastContainer.vue'
           <ul class="menu menu-horizontal px-1">
             <li><RouterLink to="/">Dashboard</RouterLink></li>
             <li><RouterLink to="/topics">Topics</RouterLink></li>
-            <li><RouterLink to="/preferences">Preferences</RouterLink></li>
+            <li><RouterLink to="/settings">Settings</RouterLink></li>
           </ul>
         </div>
       </div>
