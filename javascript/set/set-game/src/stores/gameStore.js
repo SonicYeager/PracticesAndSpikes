@@ -6,6 +6,7 @@ import {
     dealCards,
     isSet,
     hasSet,
+    findSets,
 } from '@/logic/SetLogic.js';
 
 export const useGameStore = defineStore('game', () => {
@@ -18,6 +19,14 @@ export const useGameStore = defineStore('game', () => {
     const hintMessage = ref(null);
     const hintType = ref('info'); // 'info', 'success', 'error'
     const gameOver = ref(false);
+
+    // Hint System State
+    const showingHints = ref(false);
+    const availableSets = ref([]);
+
+    // Action History State
+    const history = ref([]);
+    let historyIdCounter = 0;
 
     // Getters
     const selectedCardIds = computed(() =>
@@ -36,6 +45,9 @@ export const useGameStore = defineStore('game', () => {
      * Starts a new game: generates and shuffles deck, deals 12 cards
      */
     function startGame() {
+        // Clear history from previous game
+        clearHistory();
+
         // Generate and shuffle a new deck
         const newDeck = generateDeck();
         shuffleArray(newDeck);
@@ -51,8 +63,14 @@ export const useGameStore = defineStore('game', () => {
         hintMessage.value = null;
         gameOver.value = false;
 
+        // Hide hints from previous game
+        hideHints();
+
         // Ensure there's at least one SET on the board
         ensureSetsAvailable();
+
+        // Add history entry
+        addHistoryEntry('game_start', { message: 'Neues Spiel gestartet' });
     }
 
     /**
@@ -123,8 +141,18 @@ export const useGameStore = defineStore('game', () => {
         // Clear selection
         selectedCards.value = [];
 
+        // Hide hints (they're now outdated)
+        hideHints();
+
         // Show success message
         showHint('Korrektes SET! +1 Punkt', 'success');
+
+        // Add history entry
+        addHistoryEntry('set_found', {
+            message: 'SET gefunden! +1 Punkt',
+            cards: setCards,
+            scoreDelta: 1,
+        });
 
         // Ensure there's still a SET on the board
         ensureSetsAvailable();
@@ -151,11 +179,24 @@ export const useGameStore = defineStore('game', () => {
             score.value--;
 
             showHint('Falsches SET! Letztes SET wurde zurückgelegt.', 'error');
+
+            // Add history entries
+            addHistoryEntry('wrong_set', { message: 'Falsches SET!' });
+            addHistoryEntry('penalty', {
+                message: 'Strafe: Letztes SET zurückgelegt, -1 Punkt',
+                cards: lastSet,
+                scoreDelta: -1,
+            });
+
+            // Hide hints (they're now outdated)
+            hideHints();
         } else {
             showHint('Falsches SET! Versuche es erneut.', 'error');
 
+            // Add history entry
+            addHistoryEntry('wrong_set', { message: 'Falsches SET! (keine Strafe)' });
+
             // Even without penalty, ensure there's a SET available
-            // (in case the board somehow has no SET)
             ensureSetsAvailable();
             checkGameOver();
         }
@@ -181,6 +222,9 @@ export const useGameStore = defineStore('game', () => {
             board.value.push(...newCards);
             showHint('3 neue Karten hinzugefügt.', 'info');
 
+            // Add history entry
+            addHistoryEntry('cards_dealt', { message: '3 Karten manuell nachgelegt' });
+
             // After adding cards, check if there's now a SET
             // If not, keep adding until there is one (or deck is empty)
             ensureSetsAvailable();
@@ -201,6 +245,11 @@ export const useGameStore = defineStore('game', () => {
         if (deck.value.length === 0 && !hasSet(board.value)) {
             gameOver.value = true;
             showHint(`Spiel beendet! Endpunktzahl: ${score.value}`, 'success');
+
+            addHistoryEntry('game_over', {
+                message: `Spiel beendet! Endstand: ${score.value}`,
+                scoreDelta: score.value
+            });
         }
     }
 
@@ -226,6 +275,86 @@ export const useGameStore = defineStore('game', () => {
         hintMessage.value = null;
     }
 
+    // =========================================
+    // HINT SYSTEM ACTIONS
+    // =========================================
+
+    /**
+     * Toggles hint visibility on/off
+     */
+    function toggleHints() {
+        if (showingHints.value) {
+            hideHints();
+        } else {
+            revealHints();
+        }
+    }
+
+    /**
+     * Reveals all available SETs on the board
+     */
+    function revealHints() {
+        availableSets.value = findSets(board.value);
+        showingHints.value = true;
+
+        const count = availableSets.value.length;
+        showHint(`${count} SET${count !== 1 ? 's' : ''} gefunden!`, 'info');
+
+        addHistoryEntry('hint_used', {
+            message: `Hinweis genutzt: ${count} SETs verfügbar`
+        });
+    }
+
+    /**
+     * Hides the hint display
+     */
+    function hideHints() {
+        showingHints.value = false;
+        availableSets.value = [];
+    }
+
+    // =========================================
+    // HISTORY ACTIONS
+    // =========================================
+
+    /**
+     * Adds an entry to the action history.
+     * @param {string} type - Type of action ('game_start', 'set_found', 'wrong_set', 'penalty', 'cards_dealt', 'hint_used', 'game_over')
+     * @param {Object} data - Additional data (cards, scoreDelta, message)
+     */
+    function addHistoryEntry(type, data = {}) {
+        history.value.push({
+            id: historyIdCounter++,
+            timestamp: new Date(),
+            type,
+            ...data,
+        });
+    }
+
+    /**
+     * Gets the icon for a history entry type
+     */
+    function getHistoryIcon(type) {
+        const icons = {
+            game_start: '🎮',
+            set_found: '✅',
+            wrong_set: '❌',
+            penalty: '⚠️',
+            cards_dealt: '🃏',
+            hint_used: '💡',
+            game_over: '🏆',
+        };
+        return icons[type] || '📝';
+    }
+
+    /**
+     * Clears the history (called when starting new game)
+     */
+    function clearHistory() {
+        history.value = [];
+        historyIdCounter = 0;
+    }
+
     return {
         // State
         deck,
@@ -236,6 +365,9 @@ export const useGameStore = defineStore('game', () => {
         hintMessage,
         hintType,
         gameOver,
+        showingHints,
+        availableSets,
+        history,
         // Getters
         selectedCardIds,
         cardsInDeck,
@@ -248,5 +380,11 @@ export const useGameStore = defineStore('game', () => {
         dealThreeMore,
         showHint,
         clearHint,
+        toggleHints,
+        revealHints,
+        hideHints,
+        addHistoryEntry,
+        getHistoryIcon,
+        clearHistory,
     };
 });
