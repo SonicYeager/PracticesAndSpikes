@@ -7,6 +7,8 @@ public sealed record ImageMetadata
     public int OriginalHeight { get; set; }
     public int ScaledWidth { get; set; }
     public int ScaledHeight { get; set; }
+    public int Quality { get; set; }
+    public string ScalingMethod { get; set; } = string.Empty;
     public string OriginalMinioPath { get; set; } = null!;
     public string ScaledMinioPath { get; set; } = null!;
     public DateTime CreatedAt { get; set; }

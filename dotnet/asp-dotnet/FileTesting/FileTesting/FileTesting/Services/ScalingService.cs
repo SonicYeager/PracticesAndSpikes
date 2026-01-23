@@ -15,11 +15,29 @@ public sealed class ScalingService : IScalingService
         catch (Exception)
         {
             // Fallback to Magick
-            return ScaleWithMagick(inputBytes, maxWidth, maxHeight);
+            return ScaleWithMagickOnly(inputBytes, maxWidth, maxHeight);
         }
     }
 
-    private (byte[] ImageBytes, int Width, int Height, string Method) ScaleWithSkia(byte[] inputBytes, int maxWidth, int maxHeight)
+    /// <inheritdoc />
+    public (byte[] ImageBytes, int Width, int Height, string Method) ScaleWithMagickOnly(byte[] inputBytes, int maxWidth, int maxHeight)
+    {
+        using var image = new MagickImage(inputBytes);
+        image.Resize((uint)maxWidth, (uint)maxHeight); // Magick maintains aspect ratio by default with this overload
+        image.Quality = 90;
+        image.Format = MagickFormat.Jpeg;
+
+        return (image.ToByteArray(), (int)image.Width, (int)image.Height, "Magick.NET");
+    }
+
+    /// <inheritdoc />
+    public (int Width, int Height) GetDimensionsWithMagick(byte[] inputBytes)
+    {
+        using var image = new MagickImage(inputBytes);
+        return ((int)image.Width, (int)image.Height);
+    }
+
+    private static (byte[] ImageBytes, int Width, int Height, string Method) ScaleWithSkia(byte[] inputBytes, int maxWidth, int maxHeight)
     {
         using var inputStream = new MemoryStream(inputBytes);
         using var original = SKBitmap.Decode(inputStream);
@@ -39,17 +57,5 @@ public sealed class ScalingService : IScalingService
         using var data = image.Encode(SKEncodedImageFormat.Jpeg, 90);
 
         return (data.ToArray(), newWidth, newHeight, "SkiaSharp");
-    }
-
-    private static (byte[] ImageBytes, int Width, int Height, string Method) ScaleWithMagick(byte[] inputBytes, int maxWidth, int maxHeight)
-    {
-        using var image = new MagickImage(inputBytes);
-        image.Resize((uint)maxWidth, (uint)maxHeight); // Magick maintains aspect ratio by default with this overload
-        image.Quality = 90; // Properties usually handle int->uint implicitly or are int?
-        // If Quality is uint, 90 literal works.
-        // Let's verify Resize first.
-        image.Format = MagickFormat.Jpeg;
-
-        return (image.ToByteArray(), (int)image.Width, (int)image.Height, "Magick.NET");
     }
 }

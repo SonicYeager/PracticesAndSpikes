@@ -8,6 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="14.10.2" />
       <PackageReference Include="Refit" Version="9.0.2" />
       <PackageReference Include="Refit.HttpClientFactory" Version="9.0.2" />
       <PackageReference Include="SkiaSharp" Version="3.119.1" />

@@ -13,7 +13,7 @@ builder.WebHost.ConfigureKestrel(static options =>
     // HTTP endpoint: HTTP/1.1 and HTTP/2 (H2C)
     // Note: HTTP/3 always requires TLS and won't work here.
     options.ListenLocalhost(5000, static o => o.Protocols = HttpProtocols.Http1AndHttp2);
-    
+
     // HTTPS endpoint: HTTP/1.1, HTTP/2, and HTTP/3
     options.ListenLocalhost(5001, static o =>
     {
@@ -56,6 +56,7 @@ builder.Services.AddSingleton<IAmazonS3>(_ =>
 
 builder.Services.AddScoped<IMinioClient, MinioService>();
 builder.Services.AddScoped<IScalingService, ScalingService>();
+builder.Services.AddScoped<IImageRepairService, ImageRepairService>();
 
 var app = builder.Build();
 
