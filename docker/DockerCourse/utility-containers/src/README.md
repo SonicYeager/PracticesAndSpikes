@@ -64,3 +64,11 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+<!-- DIRECTORY_NAVIGATION:START -->
+## Directory Navigation
+
+- Directory: `docker/DockerCourse/utility-containers/src`
+- Parent: [`..`](..) | [Parent README](../README.md)
+- Children: [app](app/) | [README](app/README.md), [bootstrap](bootstrap/) | [README](bootstrap/README.md), [config](config/) | [README](config/README.md), [database](database/) | [README](database/README.md), [public](public/) | [README](public/README.md), [resources](resources/) | [README](resources/README.md), [routes](routes/) | [README](routes/README.md), [storage](storage/) | [README](storage/README.md), [tests](tests/) | [README](tests/README.md)
+<!-- DIRECTORY_NAVIGATION:END -->

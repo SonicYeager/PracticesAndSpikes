@@ -1,4 +1,4 @@
-﻿# Regex validate PIN code
+# Regex validate PIN code
 
 ### by JMurphyWeb on Codewars
 
@@ -15,3 +15,11 @@ If the function is passed a valid PIN string, return true, else return false.
 "12345"  -->  false
 "a234"   -->  false
 ```
+
+<!-- DIRECTORY_NAVIGATION:START -->
+## Directory Navigation
+
+- Directory: `dotnet/codewars/Codewars.Training/Codewars.Training.RegexPinValidate`
+- Parent: [`..`](..) | [Parent README](../README.md)
+- Children: _None_
+<!-- DIRECTORY_NAVIGATION:END -->

@@ -1,4 +1,4 @@
-﻿# Sum of Digits / Digital Root
+# Sum of Digits / Digital Root
 ### by user578387 on Codewars
 
 ---
@@ -15,3 +15,11 @@ Given n, take the sum of the digits of n. If that value has more than one digit,
 132189  -->  1 + 3 + 2 + 1 + 8 + 9 = 24  -->  2 + 4 = 6
 493193  -->  4 + 9 + 3 + 1 + 9 + 3 = 29  -->  2 + 9 = 11  -->  1 + 1 = 2
 ```
+
+<!-- DIRECTORY_NAVIGATION:START -->
+## Directory Navigation
+
+- Directory: `dotnet/codewars/Codewars.Training/Codewars.Training.SumOfDigits`
+- Parent: [`..`](..) | [Parent README](../README.md)
+- Children: _None_
+<!-- DIRECTORY_NAVIGATION:END -->

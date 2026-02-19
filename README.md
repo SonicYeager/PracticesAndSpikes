@@ -49,3 +49,11 @@ Contributions are welcome! If you have any suggestions, improvements, or new pro
 ## License
 
 This repository is licensed under the MIT License. See the [LICENSE](./LICENSE) file for more details.
+
+<!-- DIRECTORY_NAVIGATION:START -->
+## Directory Navigation
+
+- Directory: `/` (repository root)
+- Parent: _None_
+- Children: [.vscode](.vscode/) | [README](.vscode/README.md), [cpp](cpp/) | [README](cpp/README.md), [docker](docker/) | [README](docker/README.md), [dotnet](dotnet/) | [README](dotnet/README.md), [javascript](javascript/) | [README](javascript/README.md), [rust](rust/) | [README](rust/README.md), [sql](sql/) | [README](sql/README.md)
+<!-- DIRECTORY_NAVIGATION:END -->

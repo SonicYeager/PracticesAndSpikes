@@ -1,4 +1,4 @@
-﻿# Highest and Lowest
+# Highest and Lowest
 
 ### by Deantwo on Codewars
 
@@ -19,3 +19,11 @@ Kata.HighAndLow("1 9 3 4 -5"); // return "9 -5"
 All numbers are valid Int32, no need to validate them.
 There will always be at least one number in the input string.
 Output string must be two numbers separated by a single space, and highest number is first.
+
+<!-- DIRECTORY_NAVIGATION:START -->
+## Directory Navigation
+
+- Directory: `dotnet/codewars/Codewars.Training/Codewars.Training.HighestAndLowest`
+- Parent: [`..`](..) | [Parent README](../README.md)
+- Children: _None_
+<!-- DIRECTORY_NAVIGATION:END -->

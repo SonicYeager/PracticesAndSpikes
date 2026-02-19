@@ -24,26 +24,26 @@ A .NET 10 ASP.NET Core Web API for image processing, storage, and repair. Featur
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                     FileTesting API                         │
-├─────────────────────────────────────────────────────────────┤
-│  Controllers                                                │
-│  └── ImagesController                                       │
-│      ├── POST /Images          (Upload & Scale)             │
-│      ├── GET  /Images          (List All)                   │
-│      ├── GET  /Images/{id}     (Get Metadata)               │
-│      ├── POST /Images/diagnose (Diagnose Image)             │
-│      ├── POST /Images/repair   (Repair & Download)          │
-│      └── POST /Images/repair/details (Repair Info)          │
-├─────────────────────────────────────────────────────────────┤
-│  Services                                                   │
-│  ├── ScalingService     (SkiaSharp + Magick.NET)            │
-│  ├── ImageRepairService (Magick.NET diagnostics/repair)     │
-│  └── MinioService       (S3 storage operations)             │
-├─────────────────────────────────────────────────────────────┤
-│  Data                                                       │
-│  └── AppDbContext       (EF Core MySQL)                     │
-└─────────────────────────────────────────────────────────────┘
+â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+â”‚                     FileTesting API                         â”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚  Controllers                                                â”‚
+â”‚  â””â”€â”€ ImagesController                                       â”‚
+â”‚      â”œâ”€â”€ POST /Images          (Upload & Scale)             â”‚
+â”‚      â”œâ”€â”€ GET  /Images          (List All)                   â”‚
+â”‚      â”œâ”€â”€ GET  /Images/{id}     (Get Metadata)               â”‚
+â”‚      â”œâ”€â”€ POST /Images/diagnose (Diagnose Image)             â”‚
+â”‚      â”œâ”€â”€ POST /Images/repair   (Repair & Download)          â”‚
+â”‚      â””â”€â”€ POST /Images/repair/details (Repair Info)          â”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚  Services                                                   â”‚
+â”‚  â”œâ”€â”€ ScalingService     (SkiaSharp + Magick.NET)            â”‚
+â”‚  â”œâ”€â”€ ImageRepairService (Magick.NET diagnostics/repair)     â”‚
+â”‚  â””â”€â”€ MinioService       (S3 storage operations)             â”‚
+â”œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”¤
+â”‚  Data                                                       â”‚
+â”‚  â””â”€â”€ AppDbContext       (EF Core MySQL)                     â”‚
+â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 ```
 
 ## Getting Started
@@ -225,32 +225,32 @@ var options = new RepairOptions
 
 ```
 FileTesting/
-├── FileTesting/                 # ASP.NET Core API
-│   ├── Controllers/
-│   │   └── ImagesController.cs
-│   ├── Models/
-│   │   ├── ImageMetadata.cs
-│   │   ├── ImageDiagnosticResult.cs
-│   │   ├── ImageRepairResult.cs
-│   │   └── RepairOptions.cs
-│   ├── Services/
-│   │   ├── IScalingService.cs
-│   │   ├── ScalingService.cs
-│   │   ├── IImageRepairService.cs
-│   │   ├── ImageRepairService.cs
-│   │   ├── IMinioClient.cs
-│   │   └── MinioService.cs
-│   ├── Data/
-│   │   └── AppDbContext.cs
-│   └── Program.cs
-│
-├── FileTesting.Client/          # Load Test Console App
-│   ├── Program.cs
-│   ├── IFileTestingApi.cs
-│   ├── DiagnosticModels.cs
-│   └── TestImages/
-│
-└── FileTesting.sln
+â”œâ”€â”€ FileTesting/                 # ASP.NET Core API
+â”‚   â”œâ”€â”€ Controllers/
+â”‚   â”‚   â””â”€â”€ ImagesController.cs
+â”‚   â”œâ”€â”€ Models/
+â”‚   â”‚   â”œâ”€â”€ ImageMetadata.cs
+â”‚   â”‚   â”œâ”€â”€ ImageDiagnosticResult.cs
+â”‚   â”‚   â”œâ”€â”€ ImageRepairResult.cs
+â”‚   â”‚   â””â”€â”€ RepairOptions.cs
+â”‚   â”œâ”€â”€ Services/
+â”‚   â”‚   â”œâ”€â”€ IScalingService.cs
+â”‚   â”‚   â”œâ”€â”€ ScalingService.cs
+â”‚   â”‚   â”œâ”€â”€ IImageRepairService.cs
+â”‚   â”‚   â”œâ”€â”€ ImageRepairService.cs
+â”‚   â”‚   â”œâ”€â”€ IMinioClient.cs
+â”‚   â”‚   â””â”€â”€ MinioService.cs
+â”‚   â”œâ”€â”€ Data/
+â”‚   â”‚   â””â”€â”€ AppDbContext.cs
+â”‚   â””â”€â”€ Program.cs
+â”‚
+â”œâ”€â”€ FileTesting.Client/          # Load Test Console App
+â”‚   â”œâ”€â”€ Program.cs
+â”‚   â”œâ”€â”€ IFileTestingApi.cs
+â”‚   â”œâ”€â”€ DiagnosticModels.cs
+â”‚   â””â”€â”€ TestImages/
+â”‚
+â””â”€â”€ FileTesting.sln
 ```
 
 ## Development
@@ -272,3 +272,11 @@ dotnet build FileTesting.sln
 ## License
 
 MIT
+
+<!-- DIRECTORY_NAVIGATION:START -->
+## Directory Navigation
+
+- Directory: `dotnet/asp-dotnet/FileTesting/FileTesting`
+- Parent: [`..`](..) | [Parent README](../README.md)
+- Children: [FileTesting](FileTesting/) | [README](FileTesting/README.md), [FileTesting.Client](FileTesting.Client/) | [README](FileTesting.Client/README.md)
+<!-- DIRECTORY_NAVIGATION:END -->

@@ -76,3 +76,11 @@ npm run preview
 *   **State Management:** All application state should be managed through Pinia. New stateful logic should be added to existing stores or encapsulated in new ones within the `src/stores` directory.
 *   **API Interaction:** All communication with the Pulsar Admin REST API is centralized in the `pulsar-admin.js` store. This provides a single place to manage API calls, loading states, and error handling. The `fetchAdmin` utility function should be used for making requests.
 *   **Component Structure:** The application is organized into `views` (top-level page components) and `components` (reusable UI elements).
+
+<!-- DIRECTORY_NAVIGATION:START -->
+## Directory Navigation
+
+- Directory: `javascript/pulsar-admin-app`
+- Parent: [`..`](..) | [Parent README](../README.md)
+- Children: [.junie](.junie/) | [README](.junie/README.md), [.vscode](.vscode/) | [README](.vscode/README.md), [docs](docs/) | [README](docs/README.md), [public](public/) | [README](public/README.md), [src](src/) | [README](src/README.md)
+<!-- DIRECTORY_NAVIGATION:END -->

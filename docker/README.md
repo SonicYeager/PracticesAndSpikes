@@ -8,3 +8,11 @@ This section is dedicated to various Docker projects and related exercises. Dock
 - Kubernetes Course: This section covers the exercises and projects from the Kubernetes Mastery course. //TODO by whom?
 - Kubernetes Course Data: This section covers the data and resources used in the Kubernetes Mastery course. //TODO by whom?
 - Kubernetes Course Networking: This section covers the networking exercises and projects from the Kubernetes Mastery course. //TODO by whom?
+
+<!-- DIRECTORY_NAVIGATION:START -->
+## Directory Navigation
+
+- Directory: `docker`
+- Parent: [`..`](..) | [Parent README](../README.md)
+- Children: [DockerCourse](DockerCourse/) | [README](DockerCourse/README.md), [KubernetesCourse](KubernetesCourse/) | [README](KubernetesCourse/README.md), [KubernetesCourseData](KubernetesCourseData/) | [README](KubernetesCourseData/README.md), [KubernetesCourseNetworking](KubernetesCourseNetworking/) | [README](KubernetesCourseNetworking/README.md)
+<!-- DIRECTORY_NAVIGATION:END -->
