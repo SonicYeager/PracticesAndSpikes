@@ -1,0 +1,8 @@
+{
+  // NOTE: scoped to this solution folder on purpose — it switches `dotnet test`
+  // to Microsoft.Testing.Platform (MTP) mode, which only MTP test apps understand.
+  // A repo-root global.json would break VSTest-based suites elsewhere (e.g. MyGarage).
+  "test": {
+    "runner": "Microsoft.Testing.Platform"
+  }
+}

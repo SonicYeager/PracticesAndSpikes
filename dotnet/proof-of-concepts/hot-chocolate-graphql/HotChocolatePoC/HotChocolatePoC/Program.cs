@@ -2,6 +2,7 @@ using HotChocolatePoC.AutoMapperConfig;
 using HotChocolatePoC.Database.Context;
 using HotChocolatePoC.MutationTypes;
 using HotChocolatePoC.QueryTypes;
+using HotChocolatePoC.Subscriptions;
 using HotChocolatePoC.TypeExtensions;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,33 +11,44 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 
 var connectionString = builder.Configuration.GetConnectionString("HotelListingDbConnectionString");
-builder.Services.AddDbContext<DbContext, ArticlesDbContext>(options =>
+builder.Services.AddPooledDbContextFactory<ArticlesDbContext>(options =>
 {
-    var version = ServerVersion.AutoDetect(connectionString);
-    options.UseMySql(connectionString, version);
+    options.UseMySql(connectionString, GetServerVersion(connectionString));
 });
 
-builder.Services.AddAutoMapper(typeof(AutoMapperConfiguration));
+builder.Services.AddAutoMapper(cfg => { }, typeof(AutoMapperConfiguration));
 builder.Services.AddTransient<CustomsTariffRateResolver>();
 
 builder.Services.AddHttpContextAccessor();
 
 builder.Services
     .AddGraphQLServer()
-    .RegisterDbContext<ArticlesDbContext>()
-    .AddDefaultTransactionScopeHandler()
+    .RegisterDbContextFactory<ArticlesDbContext>()
     .AddMutationConventions()
-    //.AddMutationConventions(applyToAllMutations: true)
-    //.AddSubscriptionType<ArticleAddedSubscription>() //Web socket based
+    .AddSubscriptionType<ArticleAddedSubscription>()
     .AddTypeExtension<ArticleExtension>()
     .AddAuthorization()
     .AddMutationType<ArticleMutation>()
     .AddQueryType<ArticleQuery>()
+    .AddInMemorySubscriptions()
     .AddProjections()
     .AddFiltering()
-    .AddSorting();
+    .AddSorting()
+    .AddErrorFilter(error =>
+    {
+        if (error.Exception is System.Collections.Generic.KeyNotFoundException ex)
+        {
+            return ErrorBuilder
+                .FromError(error)
+                .SetMessage(ex.Message)
+                .SetCode("KEY_NOT_FOUND")
+                .Build();
+        }
 
-builder.Services.AddInMemorySubscriptions();
+        return error;
+    })
+    .ModifyRequestOptions(options =>
+        options.IncludeExceptionDetails = builder.Environment.IsDevelopment());
 
 var app = builder.Build();
 
@@ -49,3 +61,19 @@ app.UseWebSockets();
 app.MapGraphQL();
 
 app.Run();
+
+static ServerVersion GetServerVersion(string? connectionString)
+{
+    try
+    {
+        // Requires a reachable database; fails fast otherwise (see fallback below).
+        return ServerVersion.AutoDetect(connectionString);
+    }
+    catch (Exception ex)
+    {
+        // Startup (and tests) must not require a live database just to resolve
+        // the server version — SQL-compat details only. Fall back to recent MariaDB.
+        Console.WriteLine($"Warning: DB version auto-detect failed ({ex.Message}); falling back to MariaDB 11.7.");
+        return new MariaDbServerVersion(new Version(11, 7, 0));
+    }
+}

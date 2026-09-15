@@ -83,11 +83,9 @@ public sealed class ArticlesDbContext : DbContext
             e.Property(a => a.PurchasePrice)
                 .HasColumnType(COLUMN_TYPE_DECIMAL);
 
-            e.Property(c => c.CreatedAt)
-                .ValueGeneratedOnAdd();
+            e.Property(c => c.CreatedAt);
 
-            e.Property(c => c.UpdatedAt)
-                .ValueGeneratedOnAddOrUpdate();
+            e.Property(c => c.UpdatedAt);
 
             e.Property(p => p.CustomsTariffNumber)
                 .HasMaxLength(MAX_LENGTH_SHORT_STRING);
@@ -108,27 +106,23 @@ public sealed class ArticlesDbContext : DbContext
         {
             e.HasKey(a => a.ArticleId);
 
-            e.Property(c => c.CreatedAt)
-                .ValueGeneratedOnAdd();
+            e.Property(c => c.CreatedAt);
 
-            e.Property(c => c.UpdatedAt)
-                .ValueGeneratedOnAddOrUpdate();
+            e.Property(c => c.UpdatedAt);
         });
 
         modelBuilder.Entity<ArticleCommentEntity>(e =>
         {
             e.HasKey(p => p.Id);
 
-            e.Property(m => m.CreatedAt)
-                .ValueGeneratedOnAdd();
+            e.Property(m => m.CreatedAt);
         });
 
         modelBuilder.Entity<ArticleSimilarityEntity>(e =>
         {
             e.HasKey(p => new { p.ArticleId, p.SimilarArticleId });
 
-            e.Property(m => m.CreatedAt)
-                .ValueGeneratedOnAdd();
+            e.Property(m => m.CreatedAt);
         });
 
         modelBuilder.Entity<ImageEntity>(i =>
@@ -138,11 +132,9 @@ public sealed class ArticlesDbContext : DbContext
             i.Property(e => e.Url)
                 .HasMaxLength(MAX_LENGTH_STRING);
 
-            i.Property(e => e.CreatedAt)
-                .ValueGeneratedOnAdd();
+            i.Property(e => e.CreatedAt);
 
-            i.Property(e => e.UpdatedAt)
-                .ValueGeneratedOnAddOrUpdate();
+            i.Property(e => e.UpdatedAt);
         });
     }
 }
