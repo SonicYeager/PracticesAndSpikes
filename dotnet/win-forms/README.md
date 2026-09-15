@@ -2,6 +2,11 @@
 
 Auto-generated directory index for `dotnet/win-forms`.
 
+## About
+
+Windows Forms desktop exercises — currently the `ResourceCompare` resource-file
+comparison tool (see its README).
+
 <!-- DIRECTORY_NAVIGATION:START -->
 ## Directory Navigation
 

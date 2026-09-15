@@ -2,6 +2,12 @@
 
 Auto-generated directory index for `dotnet/console`.
 
+## About
+
+Console apps, libraries and spikes: validation playground, Copilot demo, PDF
+tooling, image prototypes, a NuGet-packaged contracts library and a threaded
+logger. Each folder is standalone — see its README for stack and commands.
+
 <!-- DIRECTORY_NAVIGATION:START -->
 ## Directory Navigation
 

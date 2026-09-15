@@ -2,6 +2,16 @@
 
 Auto-generated directory index for `docker/KubernetesCourseNetworking`.
 
+## About
+
+Multi-service demo for the Kubernetes networking course: `auth-api`, `users-api`,
+`tasks-api` (Node/Express each) plus a frontend, wired via Compose and K8s
+manifests (`kubernetes/`).
+
+- Stack: Node/Express per service, Docker Compose, Kubernetes manifests
+- Entrypoint: none (collection; per service Dockerfile/app)
+- Commands: `docker compose up`; `kubectl apply -f kubernetes/`; per service `docker build`
+
 <!-- DIRECTORY_NAVIGATION:START -->
 ## Directory Navigation
 

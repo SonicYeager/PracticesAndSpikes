@@ -2,6 +2,15 @@
 
 Auto-generated directory index for `dotnet/asp-dotnet/HotelListing`.
 
+## About
+
+Hotel-listing Web API (course project) with API versioning, OData, JWT + Identity auth,
+Serilog logging and MySQL persistence. Four projects: Web, Contracts, Core, Data.
+
+- Stack: ASP.NET Core, net6.0, EF Core (MySQL), OData, Serilog
+- Entrypoint: `HotelListing/HotelListing/Program.cs`
+- Commands: `dotnet build HotelListing.sln`, `dotnet run --project HotelListing/HotelListing`
+
 <!-- DIRECTORY_NAVIGATION:START -->
 ## Directory Navigation
 

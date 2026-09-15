@@ -2,6 +2,16 @@
 
 Auto-generated directory index for `cpp/codewars-training`.
 
+## About
+
+C++ Codewars kata solutions (one folder per kata: `*_` headers in `include/`,
+implementations beside them) built as a static library — no binary, tested via
+`../codewars-training-tests`.
+
+- Stack: C++23, CMake ≥ 3.28
+- Entrypoint: none (static lib `codewars_training`)
+- Commands: `cmake -S . -B build`, `cmake --build build`
+
 <!-- DIRECTORY_NAVIGATION:START -->
 ## Directory Navigation
 

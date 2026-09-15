@@ -1,6 +1,7 @@
 # rust
 
-Auto-generated directory index for `rust`.
+Rust practice projects — currently the Codewars kata collection
+(`codewars-training`, Edition 2021, `cargo run` / `cargo test`, see its README).
 
 <!-- DIRECTORY_NAVIGATION:START -->
 ## Directory Navigation

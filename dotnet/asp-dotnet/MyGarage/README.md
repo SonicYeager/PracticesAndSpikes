@@ -2,6 +2,15 @@
 
 Auto-generated directory index for `dotnet/asp-dotnet/MyGarage`.
 
+## About
+
+Vehicle/garage/fuel-stop GraphQL API (HotChocolate) with PostgreSQL persistence,
+plus a traffic-generator client and NUnit API tests. Needs PostgreSQL (`mygarage` DB).
+
+- Stack: ASP.NET Core, net10.0, HotChocolate GraphQL, Npgsql, NUnit
+- Entrypoint: `MyGarage.Api/Program.cs` (traffic client: `MyGarage.Traffic/Program.cs`)
+- Commands: `dotnet build MyGarage.sln`, `dotnet run --project MyGarage.Api/MyGarage.Api`, `dotnet test MyGarage.sln`
+
 <!-- DIRECTORY_NAVIGATION:START -->
 ## Directory Navigation
 

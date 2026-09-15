@@ -2,6 +2,13 @@
 
 Auto-generated directory index for `javascript/vue-udemy`.
 
+## About
+
+Udemy Vue course material (Maximilian Schwarzmüller): ~25 per-module starting
+setups (basics, components, forms, routing, vuex, course projects). Learning
+snapshots, not maintained apps — run per folder (`npm install`, `npm run serve`
+or `npm run dev`, depending on the folder's `package.json`).
+
 <!-- DIRECTORY_NAVIGATION:START -->
 ## Directory Navigation
 

@@ -4,10 +4,10 @@ This section is dedicated to various Docker projects and related exercises. Dock
 
 ## Table of Contents
 
-- Docker Course: This section covers the exercises and projects from the Docker Mastery course. //TODO by whom?
-- Kubernetes Course: This section covers the exercises and projects from the Kubernetes Mastery course. //TODO by whom?
-- Kubernetes Course Data: This section covers the data and resources used in the Kubernetes Mastery course. //TODO by whom?
-- Kubernetes Course Networking: This section covers the networking exercises and projects from the Kubernetes Mastery course. //TODO by whom?
+- Docker Course: This section covers the exercises and projects from the Docker course by Academind (Maximilian Schwarzmüller).
+- Kubernetes Course: This section covers the exercises and projects from the Kubernetes course (minimal Express demo + manifests).
+- Kubernetes Course Data: This section covers the persistent-volume exercises (stories service + host PV/PVC).
+- Kubernetes Course Networking: This section covers the multi-service networking exercises (auth/users/tasks APIs + frontend).
 
 <!-- DIRECTORY_NAVIGATION:START -->
 ## Directory Navigation

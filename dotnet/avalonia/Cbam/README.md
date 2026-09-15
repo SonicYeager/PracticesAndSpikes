@@ -2,6 +2,14 @@
 
 Auto-generated directory index for `dotnet/avalonia/Cbam`.
 
+## About
+
+Avalonia desktop app ("Cbam") with ReactiveUI. Standalone sample/prototype app.
+
+- Stack: Avalonia 11, ReactiveUI, net8.0
+- Entrypoint: `Cbam/Cbam/Program.cs`
+- Commands: `dotnet build Cbam/Cbam.sln`, `dotnet run --project Cbam/Cbam`
+
 <!-- DIRECTORY_NAVIGATION:START -->
 ## Directory Navigation
 

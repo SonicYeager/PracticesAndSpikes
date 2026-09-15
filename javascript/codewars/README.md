@@ -2,6 +2,15 @@
 
 Auto-generated directory index for `javascript/codewars`.
 
+## About
+
+JavaScript Codewars kata solutions (digital-root, highest-and-lowest,
+regex-pin-code-validation, split-strings), verified with Mocha + Chai.
+
+- Stack: JS ESM, Mocha, Chai
+- Entrypoint: none (collection; tests per kata: `./*/test.js`)
+- Commands: `npm install`, `npm test`
+
 <!-- DIRECTORY_NAVIGATION:START -->
 ## Directory Navigation
 

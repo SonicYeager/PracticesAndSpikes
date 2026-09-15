@@ -42,6 +42,32 @@ Each top-level directory in this repository represents a different programming l
 - **[Rust](./rust/README.md):** A collection of Rust projects, including solutions to Codewars katas, exploring Rust's unique features for systems programming.
 - **[SQL](./sql/README.md):** A series of SQL scripts and projects, covering various aspects of database design and querying.
 
+## Project Map
+
+Every subproject documents itself in its own README (stack, entrypoint, commands).
+Start from the area README, then drill into the project README.
+
+- [cpp/](cpp/) ([area README](cpp/README.md)) — C++23 katas ([codewars-training](cpp/codewars-training/)) + [GTest harness](cpp/codewars-training-tests/)
+- [docker/](docker/) ([area README](docker/README.md)) — course material: [DockerCourse](docker/DockerCourse/), [KubernetesCourse](docker/KubernetesCourse/), [KubernetesCourseData](docker/KubernetesCourseData/), [KubernetesCourseNetworking](docker/KubernetesCourseNetworking/)
+- [dotnet/](dotnet/) ([area README](dotnet/README.md))
+  - [asp-dotnet/](dotnet/asp-dotnet/) — [FileTesting](dotnet/asp-dotnet/FileTesting/), [FindACoach](dotnet/asp-dotnet/FindACoach/), [HotelListing](dotnet/asp-dotnet/HotelListing/), [MyGarage](dotnet/asp-dotnet/MyGarage/), [TestWebApp](dotnet/asp-dotnet/TestWebApp/)
+  - [avalonia/](dotnet/avalonia/) — [Cbam](dotnet/avalonia/Cbam/), [LiveChartsPrototype](dotnet/avalonia/LiveChartsPrototype/), [MusicStoreAvaloniaExample](dotnet/avalonia/MusicStoreAvaloniaExample/)
+  - [codewars/](dotnet/codewars/) — [Codewars.Training](dotnet/codewars/Codewars.Training/) (19 katas + NUnit)
+  - [console/](dotnet/console/) — [AlgorithmTester](dotnet/console/AlgorithmTester/), [GitHubCopilotDemo](dotnet/console/GitHubCopilotDemo/), [LibraryPlayground](dotnet/console/LibraryPlayground/), [PdfToolKit](dotnet/console/PdfToolKit/), [Prototypes](dotnet/console/Prototypes/), [SomeContractsNDataAsNuGet](dotnet/console/SomeContractsNDataAsNuGet/), [ThreadedLogger](dotnet/console/ThreadedLogger/)
+  - [godot/](dotnet/godot/) — Squash the Creeps (Godot 4 C# tutorial)
+  - [maui/](dotnet/maui/) — [MauiAppTesty](dotnet/maui/MauiAppTesty/), [Practice.Maui](dotnet/maui/Practice.Maui/) (needs `googleapi.json`, see its README)
+  - [proof-of-concepts/](dotnet/proof-of-concepts/) — [handlebars.net](dotnet/proof-of-concepts/handlebars.net/), [hot-chocolate-graphql](dotnet/proof-of-concepts/hot-chocolate-graphql/)
+  - [win-forms/](dotnet/win-forms/) — [ResourceCompare](dotnet/win-forms/ResourceCompare/)
+- [javascript/](javascript/) ([area README](javascript/README.md)) — [pulsar-admin-app](javascript/pulsar-admin-app/) (Pulsar admin SPA), [set/set-game](javascript/set/set-game/) (Set card game), [codewars](javascript/codewars/) (JS katas), [vue-udemy](javascript/vue-udemy/) (course setups)
+- [rust/](rust/) ([area README](rust/README.md)) — [codewars-training](rust/codewars-training/) (Rust katas)
+- [sql/](sql/) ([area README](sql/README.md)) — [simple_group_by](sql/simple_group_by/), [sql_bug_fixing_the_join](sql/sql_bug_fixing_the_join/); databases via root `docker-compose.yml`
+
+## Notes
+
+- Git submodules (`quiz-scraper`, `ColorGenerator`, `GameOfLife`) are registered in `.gitmodules` but not checked out — run `git submodule update --init` to fetch them.
+- `pulsardata/` is an empty, currently unused data directory (the pulsar volume in the root `docker-compose.yml` is commented out).
+- Root `docker-compose.yml` provides shared services: PostgreSQL (`local_postgres`, 5432), MariaDB (`local_db`, 3306) and Pulsar standalone (`local_pulsar`, 8080/6650).
+
 ## Contributing
 
 Contributions are welcome! If you have any suggestions, improvements, or new projects to add, please feel free to open an issue or submit a pull request.

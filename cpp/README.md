@@ -1,6 +1,8 @@
 # C++ Practice
 
-This section is dedicated to practicing and understanding C++ programming.
+This section is dedicated to practicing and understanding C++ programming:
+kata solutions as a static library (`codewars-training`, C++23) plus its GTest
+harness (`codewars-training-tests`, `ctest`). See the folder READMEs for commands.
 
 ## Table of Contents
 

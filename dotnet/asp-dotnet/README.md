@@ -2,6 +2,13 @@
 
 Auto-generated directory index for `dotnet/asp-dotnet`.
 
+## About
+
+ASP.NET Core web APIs and web apps: file up-/download API (S3), coach finder,
+hotel listing, vehicle GraphQL API and an MVC sample. Each folder is a standalone
+solution — see its README for stack and commands. Web APIs needing a database
+document it in their own README.
+
 <!-- DIRECTORY_NAVIGATION:START -->
 ## Directory Navigation
 

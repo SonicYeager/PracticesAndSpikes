@@ -4,11 +4,14 @@ Contains various dotnet projects and related exercises. Dotnet is a free, open-s
 
 ## Table of Contents
 
-- Codewars: This section covers the katas I've completed on Codewars.
-- MAUI: This section covers the projects and exercises related to .NET MAUI.
-- GODOT: This section covers the projects and exercises related to .NET with the Godot Game Engine.
-- Console: This section covers the console applications and exercises related to .NET.
-//TODO add missing sections
+- ASP.NET: Web APIs and web apps (FileTesting, FindACoach, HotelListing, MyGarage, TestWebApp).
+- Avalonia: cross-platform desktop UI apps (Cbam, LiveChartsPrototype, MusicStoreAvaloniaExample).
+- Codewars: C# kata solutions with NUnit tests.
+- Console: console apps, libraries and spikes (validation, Copilot demo, PDF tooling, image prototypes, NuGet contracts, threaded logger).
+- MAUI: mobile/desktop exercises (MauiAppTesty, Practice.Maui).
+- GODOT: Godot 4 C# tutorial project (Squash the Creeps).
+- Proof of Concepts: backend spikes (Handlebars e-mail templates, HotChocolate GraphQL).
+- WinForms: desktop exercises (ResourceCompare).
 
 <!-- DIRECTORY_NAVIGATION:START -->
 ## Directory Navigation

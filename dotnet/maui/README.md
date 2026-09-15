@@ -2,6 +2,12 @@
 
 Auto-generated directory index for `dotnet/maui`.
 
+## About
+
+.NET MAUI mobile/desktop exercises: the stock learning-path app (`MauiAppTesty`)
+and a practice app with Google OAuth login (`Practice.Maui`, needs `googleapi.json`
+— see its README).
+
 <!-- DIRECTORY_NAVIGATION:START -->
 ## Directory Navigation
 

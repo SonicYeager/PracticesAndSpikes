@@ -2,6 +2,13 @@
 
 Auto-generated directory index for `docker/DockerCourse`.
 
+## About
+
+Docker course material (Academind, Maximilian Schwarzmüller): per-topic starting
+setups (first demo, volumes, networks, compose, multi-container, Node/Python apps,
+utility containers, assignment). Learning snapshots — run per folder
+(`docker build`, `docker compose up`, see the folder's Dockerfile/Compose file).
+
 <!-- DIRECTORY_NAVIGATION:START -->
 ## Directory Navigation
 

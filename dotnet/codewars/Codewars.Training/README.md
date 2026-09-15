@@ -2,6 +2,15 @@
 
 Auto-generated directory index for `dotnet/codewars/Codewars.Training`.
 
+## About
+
+19 C# Codewars kata solutions (e.g. MoveZerosToEnd, TcpFsm, WhichAreIn), each a
+class library, verified by a central NUnit test project.
+
+- Stack: .NET, net10.0, NUnit
+- Entrypoint: none (libraries; tests entry e.g. `Codewars.Training/WhichAreInTests.cs`)
+- Commands: `dotnet build Codewars.Training.sln`, `dotnet test Codewars.Training.sln`
+
 <!-- DIRECTORY_NAVIGATION:START -->
 ## Directory Navigation
 
