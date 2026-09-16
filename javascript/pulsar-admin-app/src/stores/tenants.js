@@ -62,7 +62,7 @@ export const useTenantsStore = defineStore('tenants', () => {
         }
 
         return await withLoading('namespaces', async () => {
-            const res = await fetchAdmin(`tenants/${encodeURIComponent(t)}/namespaces`)
+            const res = await fetchAdmin(`namespaces/${encodeURIComponent(t)}`)
             if (res.ok) {
                 const list = await res.json()
                 namespaces.value = Array.isArray(list) ? list : []

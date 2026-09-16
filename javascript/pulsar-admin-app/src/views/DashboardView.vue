@@ -55,7 +55,7 @@ const handleClusterSelect = (cluster) => {
             <div class="flex flex-col">
               <h1 class="flex card-title text-3xl">Dashboard</h1>
               <div class="flex gap-1">
-                <p class="badge">{{ preferencesStore.pulsarUrl }}</p>
+                <p class="badge">{{ preferencesStore.clusterConfig.url }}</p>
                 <div :class="['badge w-16', healthBadge, isHealthLoadingClass]">
                   {{ pulsarAdminStore.loadingStates.get('health') ? '' : pulsarAdminStore.isHealthy ? 'Healthy' : 'Unhealthy' }}
                 </div>

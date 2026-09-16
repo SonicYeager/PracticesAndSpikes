@@ -25,7 +25,7 @@ export const useClustersStore = defineStore('clusters', () => {
     const checkHealth = async () => {
         await withLoading('health', async () => {
             try {
-                const response = await fetchAdmin('broker-stats/health')
+                const response = await fetchAdmin('brokers/health')
                 isHealthy.value = !!response && response.ok
             } catch (e) {
                 isHealthy.value = false

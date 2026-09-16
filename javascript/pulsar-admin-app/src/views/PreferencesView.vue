@@ -12,12 +12,12 @@ const preferencesStore = usePreferencesStore()
  * Saves the current form data to the preferences store.
  */
 const savePreferences = () => {
-  preferencesStore.savePreferences(formData)
-  formData.value.pulsarUrl = preferencesStore.preferences.pulsarUrl
+  preferencesStore.savePreferences({ clusterConfig: { url: formData.value.pulsarUrl } })
+  formData.value.pulsarUrl = preferencesStore.clusterConfig.url
 }
 
 preferencesStore.loadPreferences()
-formData.value.pulsarUrl = preferencesStore.preferences.pulsarUrl
+formData.value.pulsarUrl = preferencesStore.clusterConfig.url
 
 </script>
 

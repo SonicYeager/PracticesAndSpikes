@@ -69,7 +69,7 @@ export const useTestPublisherStore = defineStore('test-publisher', () => {
    * @returns {string} The WebSocket origin URL (e.g., 'wss://pulsar.example.com').
    */
   const buildWsOrigin = () => {
-    const url = prefs.pulsarUrl
+    const url = prefs.clusterConfig?.url
     if (url) {
       try {
         const u = new URL(url)
