@@ -1,0 +1,9 @@
+# Godot editor artefacts (rebuilt by headless import)
+.godot/
+# GUT test reports
+reports/
+# Local telemetry runs (user:// also works without this)
+telemetry_local/
+# OS noise
+Thumbs.db
+Desktop.ini
