@@ -3,7 +3,8 @@ extends Node2D
 ## Combat (T03): deterministic waves, drones walk the live path, guns fire
 ## homing tracers, kills earn / leaks cost. T04: waves auto-chain after a
 ## BREAK_SECONDS intermission (Space skips it), game over shows a full-screen
-## summary with restart (R or button).
+## summary with restart (R or button). T06: trauma screen shake (Camera2D),
+## vignette overlay, barrel recoil, muzzle/impact polish.
 
 ## Wave phase: exactly one state is active at a time.
 enum Phase { IDLE, RUNNING, BREAK, GAME_OVER }
@@ -15,6 +16,12 @@ const ART_SCALE := Vector2(2, 2)
 const GAME_SEED := 1
 const SPAWN_INTERVAL := 0.7
 const BREAK_SECONDS := 5.0
+const SHAKE_DECAY := 1.6         # trauma lost per second
+const SHAKE_MAX_OFFSET := 9.0    # px at full trauma
+const SHAKE_KILL := 0.12
+const SHAKE_LEAK := 0.3
+const SHAKE_GAME_OVER := 0.7
+const RECOIL_PX := 3.0
 const DRONE_FRAME_TIME := 0.15
 const HIT_FLASH_TIME := 0.07
 const MUZZLE_OFFSET := 0.75
@@ -92,9 +99,12 @@ var _spawn_queue: Array[String] = []
 var _spawn_timer := 0.0
 var _phase: Phase = Phase.IDLE
 var _break_timer := 0.0  # remaining intermission seconds; only used in Phase.BREAK
+var _shake_trauma := 0.0
+var _jitter_phase := 0
 var _anim_time := 0.0
 var _fx_counter := 0
 
+@onready var _camera: Camera2D = $Camera
 @onready var _money_label: Label = $Hud/Panel/Rows/Row1/Money
 @onready var _gun_cost_label: Label = $Hud/Panel/Rows/Row1/GunCost
 @onready var _wave_label: Label = $Hud/Panel/Rows/Row2/Wave
@@ -112,6 +122,8 @@ func _ready() -> void:
 	economy = Economy.new(100)
 	telemetry = Telemetry.new(GAME_SEED)
 	origin = (Vector2(get_viewport_rect().size) - Vector2(MAP_SIZE) * TILE) * 0.5
+	_camera.position = Vector2(get_viewport_rect().size) * 0.5
+	_camera.make_current()
 	_game_over_screen.hide()
 	_make_bar_texture()
 	_setup_audio()
@@ -128,9 +140,11 @@ func _notification(what: int) -> void:
 
 
 func _process(delta: float) -> void:
-	if _phase == Phase.GAME_OVER:
-		return
 	_anim_time += delta
+	_update_shake(delta)
+	if _phase == Phase.GAME_OVER:
+		# Frozen world; the shake still decays.
+		return
 	_update_spawner(delta)
 	_update_drones(delta)
 	if _phase == Phase.GAME_OVER:
@@ -148,6 +162,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			_restart()
 		return
 	if event is InputEventMouseButton and event.pressed:
+		# Camera-aware: maps to the cell under the cursor even while shaking.
 		var cell := _to_cell(get_global_mouse_position())
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			# Rejected builds (maze would disconnect, drone in the way) refund.
@@ -260,6 +275,7 @@ func _on_leak(d: Drone) -> void:
 	economy.on_leak()
 	telemetry.event("leak", {"wave": _wave, "money": economy.money})
 	_play("leak")
+	_add_shake(SHAKE_LEAK)
 	_remove_drone(d)
 	if economy.is_game_over():
 		_end_run()
@@ -273,7 +289,7 @@ func _update_guns(delta: float) -> void:
 			_aim_barrel(cell, target)
 		var fired := gun.try_fire(delta, _drones)
 		if fired != null:
-			_fire(gun, fired)
+			_fire(cell, gun, fired)
 
 
 func _aim_barrel(cell: Vector2i, target: Drone) -> void:
@@ -286,7 +302,7 @@ func _aim_barrel(cell: Vector2i, target: Drone) -> void:
 	barrel.rotation = (target.position - Drone.center_of(cell)).angle() + PI / 2
 
 
-func _fire(gun: Gun, target: Drone) -> void:
+func _fire(cell: Vector2i, gun: Gun, target: Drone) -> void:
 	var direction := target.position - gun.position
 	if direction.length() < 0.001:
 		direction = Vector2.RIGHT
@@ -299,6 +315,7 @@ func _fire(gun: Gun, target: Drone) -> void:
 	sprite.scale = ART_SCALE
 	_projectile_sprites[p] = sprite
 	add_child(sprite)
+	_recoil(cell, direction)
 	_spawn_muzzle_flash(muzzle, direction)
 	_play("shoot")
 
@@ -319,6 +336,7 @@ func _resolve_hit(p: Projectile) -> void:
 		economy.on_kill()
 		_spawn_explosion(target.position)
 		_play("kill")
+		_add_shake(SHAKE_KILL)
 		_remove_drone(target)
 	else:
 		_hit_flash[target] = HIT_FLASH_TIME
@@ -355,6 +373,7 @@ func _end_run() -> void:
 	_game_over_stats.text = "Welle %d — Geld %d" % [_wave, economy.money]
 	_game_over_screen.show()
 	_play("gameover")
+	_add_shake(SHAKE_GAME_OVER)
 	telemetry.event("run_end", {"wave": _wave, "money": economy.money})
 	telemetry.flush(TELEMETRY_PATH % GAME_SEED)
 	_update_hud()
@@ -433,23 +452,59 @@ func _spawn_muzzle_flash(grid_pos: Vector2, direction: Vector2) -> void:
 	s.texture = MUZZLE_TEX
 	s.scale = ART_SCALE
 	s.position = _grid_to_world(grid_pos)
-	s.rotation = direction.angle()
+	s.rotation = direction.angle() + _jitter(0.3)
 	add_child(s)
 	var t := create_tween()
-	t.tween_property(s, "modulate:a", 0.0, 0.06)
+	t.tween_property(s, "scale", ART_SCALE * 1.35, 0.05)
+	t.parallel().tween_property(s, "modulate:a", 0.0, 0.05)
 	t.tween_callback(s.queue_free)
 
 
 func _spawn_impact(grid_pos: Vector2) -> void:
 	var s := Sprite2D.new()
 	s.texture = IMPACT_TEX
-	s.scale = ART_SCALE
+	s.scale = ART_SCALE * 0.7
 	s.position = _grid_to_world(grid_pos)
 	add_child(s)
 	var t := create_tween()
 	t.tween_property(s, "scale", ART_SCALE * 1.5, 0.12)
 	t.parallel().tween_property(s, "modulate:a", 0.0, 0.12)
 	t.tween_callback(s.queue_free)
+
+
+func _add_shake(amount: float) -> void:
+	_shake_trauma = minf(_shake_trauma + amount, 1.0)
+
+
+func _update_shake(delta: float) -> void:
+	_shake_trauma = maxf(_shake_trauma - SHAKE_DECAY * delta, 0.0)
+	# Deterministic pseudo-noise: no RNG in the scene layer.
+	var amount := _shake_trauma * _shake_trauma
+	_camera.offset = Vector2(
+		sin(_anim_time * 37.0) + 0.5 * sin(_anim_time * 61.0),
+		cos(_anim_time * 43.0) + 0.5 * cos(_anim_time * 71.0)
+	) * (SHAKE_MAX_OFFSET * amount)
+
+
+func _jitter(radians: float) -> float:
+	# Deterministic per-effect variation; separate counter so the explosion
+	# frame alternation stays strict.
+	_jitter_phase += 1
+	return (float(_jitter_phase % 3) - 1.0) * radians
+
+
+func _recoil(cell: Vector2i, direction: Vector2) -> void:
+	var root := _tower_nodes.get(cell) as Node2D
+	if root == null:
+		return
+	var barrel := root.get_node_or_null("Barrel") as Node2D
+	if barrel == null:
+		return
+	# Gun cadence (0.6 s) is far above the tween time (0.08 s): shots never
+	# overlap, so resetting the position per shot is safe.
+	barrel.position = -direction * RECOIL_PX
+	var t := create_tween()
+	t.tween_property(barrel, "position", Vector2.ZERO, 0.08)
 
 
 func _spawn_explosion(grid_pos: Vector2) -> void:

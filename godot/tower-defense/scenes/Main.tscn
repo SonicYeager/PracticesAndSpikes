@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scripts/game.gd" id="1_game"]
 [ext_resource type="Texture2D" path="res://art/hud_coin.png" id="2_coin"]
@@ -7,6 +7,7 @@
 [ext_resource type="Texture2D" path="res://art/hud_mouse_right.png" id="5_rmb"]
 [ext_resource type="Texture2D" path="res://art/hud_space.png" id="6_space"]
 [ext_resource type="Texture2D" path="res://art/hud_wave.png" id="7_wave"]
+[ext_resource type="Texture2D" path="res://art/vignette.png" id="8_vignette"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hud"]
 bg_color = Color(0.113725, 0.0862745, 0.0745098, 0.88)
@@ -23,7 +24,20 @@ content_margin_bottom = 6.0
 [node name="Main" type="Node2D"]
 script = ExtResource("1_game")
 
+[node name="Camera" type="Camera2D" parent="."]
+position = Vector2(640, 360)
+
 [node name="Hud" type="CanvasLayer" parent="."]
+
+[node name="Vignette" type="TextureRect" parent="Hud"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture_filter = 2
+texture = ExtResource("8_vignette")
 
 [node name="Panel" type="PanelContainer" parent="Hud"]
 offset_left = 8.0

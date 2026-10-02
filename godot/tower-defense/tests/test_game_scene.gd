@@ -107,3 +107,30 @@ func test_game_over_shows_screen_and_flushes_telemetry() -> void:
 	var content := FileAccess.get_file_as_string(path)
 	assert_true(content.contains("\"run_end\""), "Log ends with the run_end event")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+
+
+func test_shake_offsets_and_decays() -> void:
+	var game = load("res://scenes/Main.tscn").instantiate()
+	add_child_autofree(game)
+	assert_not_null(game.get_node_or_null("Camera"), "Camera exists")
+	var vignette := game.get_node_or_null("Hud/Vignette") as TextureRect
+	assert_not_null(vignette, "Vignette overlay exists")
+	assert_not_null(vignette.texture, "Vignette texture is wired")
+	game._add_shake(1.0)
+	game._process(STEP)
+	assert_gt(game._camera.offset.length(), 0.5, "Shake offsets the camera")
+	for i in 120:
+		game._process(STEP)
+	assert_lt(game._camera.offset.length(), 0.001, "Shake decays back to rest")
+
+	# The shake also decays while the world is frozen at game over.
+	game.economy.money = -1
+	game._end_run()
+	game._process(STEP)
+	assert_gt(game._camera.offset.length(), 0.5, "Game-over shake offsets the camera")
+	for i in 120:
+		game._process(STEP)
+	assert_lt(game._camera.offset.length(), 0.001, "Shake decays during game over")
+	DirAccess.remove_absolute(
+		ProjectSettings.globalize_path("user://run_%d.jsonl" % game.GAME_SEED)
+	)

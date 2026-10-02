@@ -95,6 +95,9 @@ The tanks/fast split changes with the seed; count/hp/speed do not.
 | `GAME_SEED` | 1 | fixed; the seed flow is still open |
 | `SPAWN_INTERVAL` | 0.7 s | between two drones of a wave |
 | `BREAK_SECONDS` | 5.0 s | intermission between waves (Space skips it) |
+| `SHAKE_DECAY` / `SHAKE_MAX_OFFSET` | 1.6 /s · 9 px | trauma decay / max camera offset |
+| `SHAKE_KILL` / `SHAKE_LEAK` / `SHAKE_GAME_OVER` | 0.12 / 0.3 / 0.7 | trauma per event |
+| `RECOIL_PX` | 3.0 | barrel kick per shot (tween back, 0.08 s) |
 | `DRONE_FRAME_TIME` | 0.15 s | 2-frame bob |
 | `HIT_FLASH_TIME` | 0.07 s | white hit flash |
 | `MUZZLE_OFFSET` | 0.75 cells | tracer spawn at the barrel tip |

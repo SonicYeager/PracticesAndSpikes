@@ -39,15 +39,16 @@ breit = Tank. Nie nur über Farbe unterscheiden.
 - Pivot: Center; Ausnahme `gun_barrel` zeigt nach oben, Drehpunkt (8,12)
   via `Sprite2D.offset` (T03 umgesetzt).
 - Boden texturiert: `floor_0/1/2` rotieren im Schachbrett + Nieten/Kratzer,
-  keine glatten Flächen. Vignette später als Overlay (T06).
+  keine glatten Flächen. Vignette als Overlay umgesetzt (T06, `vignette.png`,
+  640×360 Alpha-Gradient, linear gefiltert).
 - Spawn vs. Basis: runder grüner Portal-Ring (`spawn`) gegen eckigen Bunker
   mit Ember-Reaktor (`base`) — Form UND Farbe unterscheiden sich; beide
   pulsieren im Code (Scale), damit sie nie verwechselt werden.
 - HUD-Icons 16×16, 2× skaliert: `hud_coin` (Geld), `hud_wave` (Chevron),
   `hud_space` (Leertaste), `hud_mouse_left`/`hud_mouse_right` (jeweils die
   aktive Taste orange); Gun-Icon nutzt `gun_base`.
-- Effekte: `impact` (8×8 Trefferblitz), `muzzle` (8×8 Mündungsblitz),
-  `explosion_0/1` (16×16 Kill).
+- Effekte: `impact` (8×8 Trefferblitz, Pop von 0.7×), `muzzle` (8×8
+  Mündungsblitz, 0.05 s + Skalierungs-Pop), `explosion_0/1` (16×16 Kill).
 - Animation minimal: 2-Frame-Bob (Drohnen) + Code-Waddle/Flip (normal/tank)
   bzw. Rotation entlang des Pfads (fast), Flash-Frames (Muzzle/Impact/
   Explosion), HP-Balken als 1px-Textur-Sprites (kein Asset).
@@ -65,9 +66,10 @@ breit = Tank. Nie nur über Farbe unterscheiden.
 | `spawn` | 16×16 | Spawn-Portal (grüner Ring, pulsiert) |
 | `base` | 16×16 | Basis-Bunker mit Ember-Reaktor (pulsiert) |
 | `projectile` | 8×8 | Tracer, rotiert zur Flugrichtung |
-| `muzzle` | 8×8 | Mündungsblitz (0.06 s) |
-| `impact` | 8×8 | Trefferblitz (0.12 s) |
+| `muzzle` | 8×8 | Mündungsblitz (0.05 s, Pop + ±Rotation) |
+| `impact` | 8×8 | Trefferblitz (0.12 s, Pop von 0.7×) |
 | `explosion_0/1` | 16×16 | Kill-Explosion, 2 Frames alternierend |
+| `vignette` | 640×360 | Randabdunkelung (Alpha-Gradient, linear gefiltert, HUD-Overlay) |
 | `hud_coin` | 16×16 | HUD: Geld |
 | `hud_wave` | 16×16 | HUD: Welle (Doppel-Chevron) |
 | `hud_space` | 16×16 | HUD: Leertaste |

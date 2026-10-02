@@ -6,6 +6,7 @@ one char per pixel, mapped through PAL. Edit the art, rerun, done.
 
 Usage: python3 make_placeholders.py   (writes ../art/*.png)
 """
+import math
 import os
 import struct
 import zlib
@@ -462,6 +463,24 @@ SPRITES = {
 }
 
 
+def write_png_raw(path, w, h, raw):
+    """Write an 8-bit RGBA PNG from pre-filtered scanline bytes."""
+    ihdr = struct.pack(">IIBBBBB", w, h, 8, 6, 0, 0, 0)
+
+    def chunk(tag, data):
+        c = struct.pack(">I", len(data)) + tag + data
+        return c + struct.pack(">I", zlib.crc32(tag + data) & 0xFFFFFFFF)
+
+    png = (
+        b"\x89PNG\r\n\x1a\n"
+        + chunk(b"IHDR", ihdr)
+        + chunk(b"IDAT", zlib.compress(bytes(raw), 9))
+        + chunk(b"IEND", b"")
+    )
+    with open(path, "wb") as f:
+        f.write(png)
+
+
 def write_png(path, art):
     h = len(art)
     w = len(art[0])
@@ -479,27 +498,38 @@ def write_png(path, art):
                 raw.extend((0, 0, 0, 0))
             else:
                 raw.extend((*px, 255))
-    ihdr = struct.pack(">IIBBBBB", w, h, 8, 6, 0, 0, 0)
+    write_png_raw(path, w, h, raw)
 
-    def chunk(tag, data):
-        c = struct.pack(">I", len(data)) + tag + data
-        return c + struct.pack(">I", zlib.crc32(tag + data) & 0xFFFFFFFF)
 
-    png = (
-        b"\x89PNG\r\n\x1a\n"
-        + chunk(b"IHDR", ihdr)
-        + chunk(b"IDAT", zlib.compress(bytes(raw), 9))
-        + chunk(b"IEND", b"")
-    )
-    with open(path, "wb") as f:
-        f.write(png)
+# Vignette: warm near-black alpha ramp towards the corners (screen overlay).
+VIGNETTE_W, VIGNETTE_H = 640, 360
+VIGNETTE_INNER = 0.45  # normalized distance where darkening starts
+VIGNETTE_OUTER = 1.15  # normalized distance at full opacity
+VIGNETTE_ALPHA = 0.55  # max edge opacity
+
+
+def vignette_raw(w, h):
+    cx, cy = w * 0.5, h * 0.5
+    base = PAL["K"]
+    raw = bytearray()
+    for y in range(h):
+        raw.append(0)  # filter: none
+        dy = (y + 0.5 - cy) / cy
+        for x in range(w):
+            dx = (x + 0.5 - cx) / cx
+            t = (math.hypot(dx, dy) - VIGNETTE_INNER) / (VIGNETTE_OUTER - VIGNETTE_INNER)
+            t = min(max(t, 0.0), 1.0)
+            raw.extend((*base, int(255 * VIGNETTE_ALPHA * t * t)))
+    return raw
 
 
 def main():
     os.makedirs(OUT, exist_ok=True)
     for name, art in SPRITES.items():
         write_png(os.path.join(OUT, name + ".png"), art)
-    print(f"wrote {len(SPRITES)} sprites to {OUT}")
+    raw = vignette_raw(VIGNETTE_W, VIGNETTE_H)
+    write_png_raw(os.path.join(OUT, "vignette.png"), VIGNETTE_W, VIGNETTE_H, raw)
+    print(f"wrote {len(SPRITES)} sprites + vignette to {OUT}")
 
 
 if __name__ == "__main__":

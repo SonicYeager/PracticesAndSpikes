@@ -52,6 +52,7 @@ only).
 
 ## Frame order (`game.gd _process`)
 
+0. `_update_shake` — trauma decay + camera offset (also runs after game over)
 1. `_update_spawner` — runs the `BREAK_SECONDS` countdown (auto-starts the
    next wave), pops one drone from the queue every `SPAWN_INTERVAL`
 2. `_update_drones` — advance along the path, handle leaks
@@ -126,6 +127,7 @@ Gameplay RNG exists in exactly one place: `WaveGen`, seeded with
 - floor variety: `(x * 7 + y * 13) % 3` (stable pattern)
 - explosion frame alternation: `_fx_counter`
 - animation phases: spawn index (`_drone_phase`), not RNG
+- screen shake: sine pseudo-noise of `_anim_time` (presentation only)
 
 Same seed + same build/sell sequence ⇒ identical run. `GAME_SEED` is
 currently fixed to `1` in `game.gd`; the run seed is written into the
@@ -139,6 +141,11 @@ stay above all drones. The live path preview is drawn in `Main._draw()`
 (behind all children). The HUD is a `CanvasLayer` and therefore unaffected by
 world coordinates.
 
+A `Camera2D` centered on the viewport carries the screen shake; CanvasLayer
+content is not affected by it, so the HUD stays fixed. The vignette is the
+first child of the HUD layer (world → vignette → panel → game-over overlay,
+in that draw order).
+
 ## Testing
 
 - Core classes: pure GUT tests in `tests/test_*.gd`, no scene needed
@@ -147,8 +154,9 @@ world coordinates.
 - Scene: `tests/test_game_scene.gd` instantiates `Main.tscn` and steps
   `_process(1.0 / 60.0)` manually, so assertions are frame-rate independent;
   it covers spawn → walk → shoot → kill, the payout, break → auto-chain,
-  the Space skip, and the game-over screen incl. telemetry flush and
-  restart-button wiring (writes only `user://`, then deletes the file).
+  the Space skip, the game-over screen incl. telemetry flush and
+  restart-button wiring, and the camera shake offset/decay (writes only
+  `user://`, then deletes the file).
 - Gotcha: GUT's GUI panel covers the right half of the window, so
   screenshots taken from a GUT run are cropped. For visual QA use a
   temporary `SceneTree` script (`godot --path . -s tools/x.gd`,
