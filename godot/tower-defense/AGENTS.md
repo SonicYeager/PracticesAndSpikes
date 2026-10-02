@@ -196,7 +196,8 @@ Project has no CI; run from the project dir:
   PoC) — do not touch, do not bundle into commits.
 - Visual QA: GUT's GUI panel covers the right half of the window, so a
   screenshot taken from a GUT run is cropped. Use the reusable tool instead
-  (windowed — headless renders no pixels):
+  (windowed — headless runs are refused):
   `Godot --path . -s tools/shot.gd -- --states idle,running --towers "8,3;9,6" --spawn fast,tank`
-  → writes `reports/<prefix>_<state>.png`, logs `SHOT <path> <WxH>`; full flag
-  list in the script header. Bad args/states fail loudly (exit 1).
+  → writes `<out-prefix>_<state>.png` (default prefix `reports/shot`), logs
+  `SHOT <path> <WxH>`; full flag list in the script header. Bad args/states
+  fail loudly (exit 1).

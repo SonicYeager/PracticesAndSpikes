@@ -228,8 +228,9 @@ panel → game-over overlay, in that draw order).
   shake offset/decay (writes only `user://`, then deletes the file).
 - Gotcha: GUT's GUI panel covers the right half of the window, so
   screenshots taken from a GUT run are cropped. For visual QA use
-  `tools/shot.gd` (windowed): `Godot --path . -s tools/shot.gd -- --states
-  idle,running --towers "8,3;9,6"` → `reports/<prefix>_<state>.png`.
+  `tools/shot.gd` (windowed; headless is refused): `Godot --path . -s
+  tools/shot.gd -- --states idle,running --towers "8,3;9,6"` →
+  `<out-prefix>_<state>.png` (default `reports/shot`).
 
 ## Extension points
 
