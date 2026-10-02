@@ -11,7 +11,7 @@ extends Node2D
 ## framework (scenes/Hud.tscn + scripts/hud.gd) with status, build/sell
 ## panel, segmented wave bar and game-over overlay. T12.5: the wave flow
 ## lives in `WaveDirector` (phase, queue, timers, modifier knobs); the scene
-## orchestrates and owns the visuals.
+## orchestrates and owns the visuals. T13: all art 32×32 (fx 16×16), 1:1.
 
 ## Map edges used as entry/exit zones (T08). The lists stay generic — more
 ## sides later, segments are a future config detail.
@@ -22,7 +22,7 @@ const ENTRY_SIDES: Array = [Side.LEFT]
 const EXIT_SIDES: Array = [Side.RIGHT]
 const MAP_SIZE := Vector2i(20, 12)
 const SELL_REFUND := Economy.GUN_COST / 2
-const ART_SCALE := Vector2(2, 2)
+const ART_SCALE := Vector2(1, 1)
 const SCATTER_SEED_MUL := 1000003
 const SCATTER_WAVE_MUL := 104729
 const DECAL_CAP := 300
@@ -468,8 +468,8 @@ func _spawn_ember_burst(grid_pos: Vector2) -> void:
 	p.initial_velocity_min = 30.0
 	p.initial_velocity_max = 90.0
 	p.gravity = Vector2(0, 60)
-	p.scale_amount_min = 0.6
-	p.scale_amount_max = 1.4
+	p.scale_amount_min = 0.3
+	p.scale_amount_max = 0.7
 	p.color = Color(1.0, 0.75, 0.35, 0.95)
 	add_child(p)
 	p.emitting = true
@@ -830,8 +830,8 @@ func _add_embers(cell: Vector2i) -> void:
 	p.initial_velocity_min = 9.0
 	p.initial_velocity_max = 20.0
 	p.gravity = Vector2(0, -4)
-	p.scale_amount_min = 0.5
-	p.scale_amount_max = 1.1
+	p.scale_amount_min = 0.25
+	p.scale_amount_max = 0.55
 	p.color = Color(1.0, 0.7, 0.3, 0.85)
 	add_child(p)
 
@@ -848,8 +848,8 @@ func _add_sparks(cell: Vector2i) -> void:
 	p.initial_velocity_min = 14.0
 	p.initial_velocity_max = 30.0
 	p.gravity = Vector2(0, 40)
-	p.scale_amount_min = 0.3
-	p.scale_amount_max = 0.6
+	p.scale_amount_min = 0.15
+	p.scale_amount_max = 0.3
 	p.color = Color(1.0, 0.85, 0.45, 0.9)
 	add_child(p)
 
@@ -868,8 +868,8 @@ func _add_smoke(cell: Vector2i) -> void:
 	p.initial_velocity_min = 4.0
 	p.initial_velocity_max = 9.0
 	p.gravity = Vector2(0, -2)
-	p.scale_amount_min = 1.0
-	p.scale_amount_max = 2.0
+	p.scale_amount_min = 0.5
+	p.scale_amount_max = 1.0
 	p.color = Color(0.25, 0.2, 0.18, 0.35)
 	add_child(p)
 
@@ -946,7 +946,7 @@ func _show_tower(cell: Vector2i) -> void:
 	barrel.texture = GUN_BARREL_TEX
 	barrel.scale = ART_SCALE
 	# Pivot at the barrel base: texture (8, 12) sits on the tower center.
-	barrel.offset = Vector2(0, -4)
+	barrel.offset = Vector2(0, -8)
 	root.add_child(base)
 	root.add_child(barrel)
 	add_child(root)

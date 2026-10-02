@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Generate Xeno-Tactic-inspired placeholder sprites as 16x16 (or 8x8) PNGs.
+"""Generate Xeno-Tactic-inspired placeholder sprites as 32x32 (fx 16x16) PNGs.
 
-Stdlib only (zlib + struct), no Pillow. Each sprite is ASCII art:
-one char per pixel, mapped through PAL. Edit the art, rerun, done.
+Stdlib only (zlib + struct), no Pillow. Sprites are painted with a small
+pixel canvas (rect/disc/ellipse/ring/dither/bevel helpers) in the XT palette;
+hand art can replace any file under the same name, no code changes needed.
 
 Palette/look: Xeno Tactic reference (see ../art/STYLEGUIDE.md "Zielbild") —
 dark steel lab tiles, blue player turrets, white/green alien bugs, warm
@@ -19,631 +20,520 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.normpath(os.path.join(HERE, "..", "art"))
 
 # XT palette (see ../art/STYLEGUIDE.md)
-PAL = {
-    ".": None,                  # transparent
-    "K": (0x0B, 0x10, 0x16),    # outline, near-black blue
-    "F": (0x1B, 0x22, 0x2C),    # floor base, dark steel
-    "f": (0x21, 0x29, 0x34),    # floor alt
-    "R": (0x4A, 0x56, 0x66),    # rivet / light steel
-    "S": (0x2A, 0x33, 0x40),    # scratch / dark panel
-    "B": (0x2F, 0x3B, 0x4A),    # panel blue (props)
-    "O": (0x5A, 0x8F, 0xC8),    # player blue
-    "D": (0x33, 0x5E, 0x8C),    # player blue shade
-    "M": (0x7A, 0x86, 0x96),    # gunmetal light
-    "H": (0x9F, 0xD8, 0xFF),    # cyan highlight
-    "T": (0xFF, 0x8A, 0x2E),    # fire orange
-    "C": (0xFF, 0xB4, 0x4A),    # ember
-    "G": (0xD8, 0xDE, 0xE6),    # alien white
-    "g": (0x9A, 0xA4, 0xB0),    # alien shade
-    "Y": (0x8E, 0xE0, 0x4A),    # acid green
-    "N": (0x5A, 0x66, 0x72),    # tank gray-blue
-    "n": (0x3A, 0x44, 0x50),    # tank shade
-    "E": (0xFF, 0x3B, 0x30),    # eye red / hazard red
-    "V": (0x54, 0xE0, 0x8A),    # breach green
-    "P": (0x9F, 0xD8, 0xFF),    # projectile cyan
-    "W": (0xFF, 0xFF, 0xFF),    # white hot core
-    "U": (0xFF, 0xD7, 0x5E),    # gold
-    "u": (0xB8, 0x8A, 0x2E),    # gold shade
-    "Z": (0xE8, 0xE4, 0xDA),    # hazard white
+C = {
+    "outline": (0x0B, 0x10, 0x16),   # near-black blue
+    "floor": (0x1B, 0x22, 0x2C),     # dark steel
+    "floor_alt": (0x21, 0x29, 0x34),
+    "rivet": (0x4A, 0x56, 0x66),     # light steel
+    "scratch": (0x2A, 0x33, 0x40),   # dark panel
+    "panel": (0x2F, 0x3B, 0x4A),     # panel blue
+    "blue": (0x5A, 0x8F, 0xC8),      # player blue
+    "blue_dark": (0x33, 0x5E, 0x8C),
+    "gunmetal": (0x7A, 0x86, 0x96),
+    "cyan": (0x9F, 0xD8, 0xFF),
+    "orange": (0xFF, 0x8A, 0x2E),
+    "ember": (0xFF, 0xB4, 0x4A),
+    "alien": (0xD8, 0xDE, 0xE6),
+    "alien_shade": (0x9A, 0xA4, 0xB0),
+    "acid": (0x8E, 0xE0, 0x4A),
+    "tank": (0x5A, 0x66, 0x72),
+    "tank_dark": (0x3A, 0x44, 0x50),
+    "red": (0xFF, 0x3B, 0x30),
+    "green": (0x54, 0xE0, 0x8A),
+    "white": (0xFF, 0xFF, 0xFF),
+    "gold": (0xFF, 0xD7, 0x5E),
+    "gold_dark": (0xB8, 0x8A, 0x2E),
+    "hazard": (0xE8, 0xE4, 0xDA),
 }
 
-FLOOR_0 = [
-    "FFFFFFFFFFFFFFFS",
-    "FFFFFFFFFFFFFFFS",
-    "FFFFFFFFFFFFFFFS",
-    "FFFFFFFFFFFFFFFS",
-    "FFFFFFFFFFFFFFFS",
-    "FFFFFFFFFFFFFFFS",
-    "FFFFFFFFFFFFFFFS",
-    "FFFFFFFFFFFFFFFS",
-    "FFFFFFFFFFFFFFFS",
-    "FFFFFFFFFFFFFFFS",
-    "FFFFFFFFFFFFFFFS",
-    "FFFFFFFFFFFFFFFS",
-    "FFFFFFFFFFFFFFFS",
-    "FFFFFFFFFFFFFFFS",
-    "FFFFFFFFFFFFFFFS",
-    "SSSSSSSSSSSSSSSS",
-]
 
-FLOOR_1 = [
-    "FFFFFFFFFFFFFFFS",
-    "FFFFFFFFFFFFFFFS",
-    "FFRFFFFFFFFFFRFS",
-    "FFFFFFFFFFFFFFFS",
-    "FFFFFFFFFFFFFFFS",
-    "FFFFFFFFFFFFFFFS",
-    "FFFFFFFFFFFFFFFS",
-    "FFFFFFFFFFFFFFFS",
-    "FFFFFFFFFFFFFFFS",
-    "FFFFFFFFFFFFFFFS",
-    "FFFFFFFFFFFFFFFS",
-    "FFFFFFFFFFFFFFFS",
-    "FFFFFFFFFFFFFFFS",
-    "FFRFFFFFFFFFFRFS",
-    "FFFFFFFFFFFFFFFS",
-    "SSSSSSSSSSSSSSSS",
-]
+def mix(a, b, t):
+    return tuple(int(round(x + (y - x) * t)) for x, y in zip(a, b))
 
-FLOOR_2 = [
-    "FFFFFFFFFFFFFFFS",
-    "FFSSSSFFFFFFFFFS",
-    "FFSSSSSFFFFFFFFS",
-    "FFFSSSSFFFFFFFFS",
-    "FFFFSSFFFFFFFFFS",
-    "FFFFFFFFFFFFSFFS",
-    "FFFFFFFFFFFSFFFS",
-    "FFFFFFFFFFSFFFFS",
-    "FFFFFFFFFSFFFFFS",
-    "FFFFFFFFFFFFFFFS",
-    "FFFFFFFFFFFFFFFS",
-    "FFFFFFFFFFFFFFFS",
-    "FFFFFFFFFFFFFFFS",
-    "FFFFFFFFFFFFFFFS",
-    "FFFFFFFFFFFFFFFS",
-    "SSSSSSSSSSSSSSSS",
-]
 
-GUN_BASE = [
-    "................",
-    "................",
-    "................",
-    "....KKKKKKKK....",
-    "..KKMMMMMMMMKK..",
-    "..KMMRRRRRRMMK..",
-    "..KMSSSSSSSSMK..",
-    "..KMSSOOOOOSMK..",
-    "..KMSSOHHOSSMK..",
-    "..KMSSOHHOSSMK..",
-    "..KMSSOOOOOSMK..",
-    "..KMSSSSSSSSMK..",
-    "..KMMRRRRRRMMK..",
-    "..KKMMMMMMMMKK..",
-    "....KKKKKKKK....",
-    "................",
-]
+def lighten(color, t):
+    return mix(color, (255, 255, 255), t)
 
-# Barrel points up; pivot ~ (8, 12) via Sprite2D offset (T03).
-GUN_BARREL = [
-    ".....KKKK.......",
-    ".....KHHK.......",
-    ".....KHHK.......",
-    ".....KMKK.......",
-    ".....KMKK.......",
-    ".....KMKK.......",
-    ".....KMKK.......",
-    ".....KMKK.......",
-    ".....KMKK.......",
-    ".....KMKK.......",
-    ".....KMKK.......",
-    ".....KMKK.......",
-    ".....KKKK.......",
-    "................",
-    "................",
-    "................",
-]
 
-DRONE_0 = [
-    "................",
-    "................",
-    "................",
-    "................",
-    "................",
-    ".....KKKKK......",
-    "...KKGGGGGK.....",
-    "..KGGE EGGK......".replace(" ", ""),
-    "..KGGE EGGK......".replace(" ", ""),
-    "..KGGGGGGGK.....",
-    "..KgGGGGGgK.....",
-    "...KKKKKKK......",
-    "................",
-    "................",
-    "................",
-    "................",
-]
+def darken(color, t):
+    return mix(color, (0, 0, 0), t)
 
-DRONE_1 = [
-    "................",
-    "................",
-    "................",
-    "................",
-    "................",
-    ".....KKKKK......",
-    "...KKGGGGGK.....",
-    "..KGGGGGGGK.....",
-    "..KGGE EGGK......".replace(" ", ""),
-    "..KGGE EGGK......".replace(" ", ""),
-    "..KgGGGGGgK.....",
-    "...KKKKKKK......",
-    "................",
-    "................",
-    "................",
-    "................",
-]
 
-FAST_0 = [
-    "................",
-    "................",
-    "................",
-    "................",
-    "................",
-    ".......KK.......",
-    ".....KKYYKK.....",
-    "...KKYYYYYYKK...",
-    "...KYYEEYYYYK...",
-    "...KKYYYYYYKK...",
-    ".....KKYYKK.....",
-    ".......KK.......",
-    "................",
-    "................",
-    "................",
-    "................",
-]
+class Canvas:
+    """Tiny RGBA pixel canvas; None is transparent."""
 
-FAST_1 = [
-    "................",
-    "................",
-    "................",
-    "................",
-    "................",
-    "................",
-    ".......KK.......",
-    ".....KKYYKK.....",
-    "...KKYYYYYYKK...",
-    "...KYYEEYYYYK...",
-    "...KKYYYYYYKK...",
-    ".....KKYYKK.....",
-    ".......KK.......",
-    "................",
-    "................",
-    "................",
-]
+    def __init__(self, w=32, h=32):
+        self.w, self.h = w, h
+        self.px = [[None] * w for _ in range(h)]
 
-TANK = [
-    "................",
-    "................",
-    "................",
-    "................",
-    "..KKKKKKKKKKKK..",
-    ".KNNNNNNNNNNNNK.",
-    ".KNNEENNNNEENNK.",
-    ".KNNEENNNNEENNK.",
-    ".KNNNNNNNNNNNNK.",
-    ".KnNNNNNNNNNNnK.",
-    "..KKKKKKKKKKKK..",
-    "................",
-    "................",
-    "................",
-    "................",
-    "................",
-]
+    def in_bounds(self, x, y):
+        return 0 <= x < self.w and 0 <= y < self.h
 
-# Dark breach with a green rim: "they come from here".
-SPAWN = [
-    "................",
-    "................",
-    ".....KKKKKK.....",
-    "...KKVVVVVVKK...",
-    "..KVVKKKKKKVVK..",
-    "..KVKKKKKKKKVK..",
-    ".KVVKKKKKKKKVVK.",
-    ".KVKKKKKKKKKKVK.",
-    ".KVKKKKKKKKKKVK.",
-    ".KVVKKKKKKKKVVK.",
-    "..KVKKKKKKKKVK..",
-    "..KVVKKKKKKVVK..",
-    "...KKVVVVVVKK...",
-    ".....KKKKKK.....",
-    "................",
-    "................",
-]
+    def set(self, x, y, color):
+        if self.in_bounds(x, y):
+            self.px[y][x] = color
 
-# Containment door with hazard stripes: "they want to get out".
-BASE = [
-    "................",
-    "................",
-    "..KKKKKKKKKKKK..",
-    "..KMMMMMMMMMMK..",
-    "..KMEEZZEEZZMK..",
-    "..KMZZEEZZEEMK..",
-    "..KMEEZZEEZZMK..",
-    "..KMZZEEZZEEMK..",
-    "..KMEEZZEEZZMK..",
-    "..KMMMMMMMMMMK..",
-    "..KMRRRRRRRRMK..",
-    "..KMMMMMMMMMMK..",
-    "..KKKKKKKKKKKK..",
-    "................",
-    "................",
-    "................",
-]
+    def get(self, x, y):
+        return self.px[y][x] if self.in_bounds(x, y) else None
 
-IMPACT = [
-    "........",
-    "...TT...",
-    "..TCCT..",
-    ".TCWWCT.",
-    ".TCWWCT.",
-    "..TCCT..",
-    "...TT...",
-    "........",
-]
+    def fill(self, color):
+        for y in range(self.h):
+            for x in range(self.w):
+                self.px[y][x] = color
 
-HUD_COIN = [
-    "................",
-    "................",
-    ".....KKKKKK.....",
-    "...KKUUUUUUKK...",
-    "..KWUUUUUUUUUK..",
-    "..KWUUUUUUUUUK..",
-    ".KUUUuuuuuuUUUK.",
-    ".KUUuuuuuuuuUUK.",
-    ".KUUuuuuuuuuUUK.",
-    ".KUUUuuuuuuUUUK.",
-    "..KUUUUUUUUUUK..",
-    "..KUUUUUUUUUUK..",
-    "...KKUUUUUUKK...",
-    ".....KKKKKK.....",
-    "................",
-    "................",
-]
+    def rect(self, x0, y0, x1, y1, color):
+        for y in range(y0, y1 + 1):
+            for x in range(x0, x1 + 1):
+                self.set(x, y, color)
 
-# Double chevron ">>": incoming wave.
-HUD_WAVE = [
-    "................",
-    "................",
-    "................",
-    "..K........K....",
-    "..KK......KK....",
-    "..KHK....KHK....",
-    "..KHHK..KHHK....",
-    "..KHHHKKHHHK....",
-    "..KHHHHHHHHK....",
-    "..KHHHKKHHHK....",
-    "..KHHK..KHHK....",
-    "..KHK....KHK....",
-    "..KK......KK....",
-    "..K........K....",
-    "................",
-    "................",
-]
+    def hline(self, x0, x1, y, color):
+        for x in range(x0, x1 + 1):
+            self.set(x, y, color)
 
-HUD_SPACE = [
-    "................",
-    "................",
-    "................",
-    "..KKKKKKKKKKKK..",
-    ".KMMMMMMMMMMMMK.",
-    ".KMMMMMMMMMMMMK.",
-    ".KMMKKKKKKKKMMK.",
-    ".KMMKKKKKKKKMMK.",
-    ".KMMMMMMMMMMMMK.",
-    ".KMMMMMMMMMMMMK.",
-    ".KSSSSSSSSSSSSK.",
-    "..KKKKKKKKKKKK..",
-    "................",
-    "................",
-    "................",
-    "................",
-]
+    def vline(self, x, y0, y1, color):
+        for y in range(y0, y1 + 1):
+            self.set(x, y, color)
 
-HUD_MOUSE_LEFT = [
-    "................",
-    "................",
-    "....KKKKKKKK....",
-    "...KOOOOMMMMK...",
-    "..KOOOOOMMMMMK..",
-    "..KOOOOOMMMMMK..",
-    "..KOOOOOMMMMMK..",
-    "..KOOOOOMMMMMK..",
-    "..KOOOOOMMMMMK..",
-    "..KOOOOOMMMMMK..",
-    "..KOOOOOMMMMMK..",
-    "..KOOOOOMMMMMK..",
-    "..KKKKKKKKKKKK..",
-    "................",
-    "................",
-    "................",
-]
+    def disc(self, cx, cy, r, color):
+        for y in range(self.h):
+            for x in range(self.w):
+                if (x - cx) ** 2 + (y - cy) ** 2 <= r * r + 0.25:
+                    self.set(x, y, color)
 
-HUD_MOUSE_RIGHT = [
-    "................",
-    "................",
-    "....KKKKKKKK....",
-    "...KMMMMOOOOK...",
-    "..KMMMMMOOOOOK..",
-    "..KMMMMMOOOOOK..",
-    "..KMMMMMOOOOOK..",
-    "..KMMMMMOOOOOK..",
-    "..KMMMMMOOOOOK..",
-    "..KMMMMMOOOOOK..",
-    "..KMMMMMOOOOOK..",
-    "..KMMMMMOOOOOK..",
-    "..KKKKKKKKKKKK..",
-    "................",
-    "................",
-    "................",
-]
+    def ellipse(self, cx, cy, rx, ry, color):
+        for y in range(self.h):
+            for x in range(self.w):
+                if ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 <= 1.0:
+                    self.set(x, y, color)
 
-# T09 terrain: blocking clusters + cosmetic decor + battle decals (lab look).
-ROCK = [
-    "................",
-    "................",
-    "..KKKKKKKKKKKK..",
-    "..KMMMMMMMMMMK..",
-    "..KMSSSSSSSSMK..",
-    "..KMSBBBBBBBMK..",
-    "..KMSBBBBBBBMK..",
-    "..KMSBBBBBBBMK..",
-    "..KMSSSSSSSSMK..",
-    "..KMSSSSSSSSMK..",
-    "..KMMMMMMMMMMK..",
-    "..KRRRRRRRRRRK..",
-    "..KKKKKKKKKKKK..",
-    "................",
-    "................",
-    "................",
-]
+    def diamond(self, cx, cy, rx, ry, color):
+        for y in range(self.h):
+            for x in range(self.w):
+                if abs(x - cx) / rx + abs(y - cy) / ry <= 1.0:
+                    self.set(x, y, color)
 
-RUBBLE = [
-    "................",
-    "................",
-    "................",
-    "................",
-    "................",
-    "................",
-    ".....KK...KK....",
-    "....KSSK.KRSK...",
-    "..KKKSSKKKSSKK..",
-    ".KSSSSSSSSSSSSK.",
-    ".KSSRSSSSRSSSSK.",
-    "..KSSSSSSSSSSK..",
-    "...KKKKKKKKKK...",
-    "................",
-    "................",
-    "................",
-]
+    def ring(self, cx, cy, r, color, thickness=1.0):
+        for y in range(self.h):
+            for x in range(self.w):
+                if abs(math.hypot(x - cx, y - cy) - r) <= thickness / 2.0:
+                    self.set(x, y, color)
 
-VENT = [
-    "................",
-    "................",
-    "..KKKKKKKKKKKK..",
-    "..KMMMMMMMMMMK..",
-    "..KMKKKKKKKKMK..",
-    "..KMKCCCCCCKMK..",
-    "..KMKCHHHHCKMK..",
-    "..KMKCHWWHCKMK..",
-    "..KMKCHWWHCKMK..",
-    "..KMKCHHHHCKMK..",
-    "..KMKCCCCCCKMK..",
-    "..KMKKKKKKKKMK..",
-    "..KMMMMMMMMMMK..",
-    "..KKKKKKKKKKKK..",
-    "................",
-    "................",
-]
+    def dither(self, x0, y0, x1, y1, color, phase=0):
+        for y in range(y0, y1 + 1):
+            for x in range(x0, x1 + 1):
+                if (x + y + phase) % 2 == 0:
+                    self.set(x, y, color)
 
-DECOR_CRACK = [
-    "................",
-    "................",
-    "........S.......",
-    "........S.......",
-    ".......S........",
-    ".......S........",
-    "......SS........",
-    "......S.........",
-    ".......S........",
-    ".......S.S......",
-    "........S.......",
-    "........S.......",
-    "........S.......",
-    "................",
-    "................",
-    "................",
-]
+    def bevel(self, light=0.22, dark=0.28):
+        """1px rim light on top edges, shade on bottom edges."""
+        out = [row[:] for row in self.px]
+        for y in range(self.h):
+            for x in range(self.w):
+                color = self.px[y][x]
+                if color is None or color == C["outline"]:
+                    continue
+                above = self.get(x, y - 1)
+                below = self.get(x, y + 1)
+                if above is None or above == C["outline"]:
+                    out[y][x] = lighten(color, light)
+                elif below is None or below == C["outline"]:
+                    out[y][x] = darken(color, dark)
+        self.px = out
 
-DECOR_STAIN = [
-    "................",
-    "................",
-    "................",
-    "....SS...S......",
-    "...SSSS.SSS.....",
-    "..SSSSSSSSSS....",
-    "..SSSSSSSSSS....",
-    "...SSSSSSSSS....",
-    "....SSSSSSS.....",
-    "...SS..SSS......",
-    "........S.......",
-    "................",
-    "................",
-    "................",
-    "................",
-    "................",
-]
+    def outline(self, color=None):
+        """1px contour around every opaque region."""
+        color = color or C["outline"]
+        out = [row[:] for row in self.px]
+        for y in range(self.h):
+            for x in range(self.w):
+                if self.px[y][x] is not None:
+                    continue
+                neighbors = (
+                    self.get(x + 1, y), self.get(x - 1, y),
+                    self.get(x, y + 1), self.get(x, y - 1),
+                )
+                if any(n is not None for n in neighbors):
+                    out[y][x] = color
+        self.px = out
 
-SCORCH = [
-    "................",
-    "................",
-    ".....KKKKK......",
-    "...KKSSSSSKK....",
-    "..KSSSSSSSSSK...",
-    "..KSSSSSSSSSK...",
-    ".KSSSSSSSSSSSK..",
-    ".KSSSSSSSSSSSK..",
-    ".KSSSSSTSSSSSK..",
-    "..KSSSSSSSSSK...",
-    "..KSSKSSSSSK....",
-    "...KKSKSSKK.....",
-    ".....KKKK.......",
-    "................",
-    "................",
-    "................",
-]
 
-SKID = [
-    "................",
-    "................",
-    "................",
-    "................",
-    ".....S..........",
-    "....SS..........",
-    "...SS...........",
-    "..SS............",
-    "..S.............",
-    ".SS.............",
-    ".S..............",
-    "................",
-    "................",
-    "................",
-    "................",
-    "................",
-]
+def rivet(c, x, y):
+    c.rect(x - 1, y - 1, x + 1, y + 1, C["rivet"])
+    c.set(x, y, C["outline"])
 
-DEBRIS = [
-    "................",
-    "................",
-    "................",
-    "................",
-    "................",
-    ".......S........",
-    "....S.SSS.......",
-    "...SSS.S.S......",
-    "....S..SS.......",
-    ".......S........",
-    "................",
-    "................",
-    "................",
-    "................",
-    "................",
-    "................",
-]
 
-# Neutral white dot: tinted per emitter (embers, sparks, smoke).
-EMBER = [
-    "...WW...",
-    "..WWWW..",
-    ".WWWWWW.",
-    ".WWWWWW.",
-    "..WWWW..",
-    "...WW...",
-    "........",
-    "........",
-]
+def chevron(c, x0, yc, size, color):
+    """A '>' band of thickness 4."""
+    for i in range(size):
+        c.vline(x0 + i, yc - size + i, yc - size + i + 3, color)
+        c.vline(x0 + i, yc + size - i - 3, yc + size - i, color)
 
-PROJECTILE = [
-    "...PP...",
-    "..PWWP..",
-    ".PWWWWP.",
-    "PPWWWWPP",
-    ".PWWWWP.",
-    "..PWWP..",
-    "...PP...",
-    "........",
-]
 
-MUZZLE = [
-    "H..HH..H",
-    "...HH...",
-    "...HH...",
-    "...HH...",
-    "HHHHHHHH",
-    "...HH...",
-    "...HH...",
-    "...HH...",
-]
+# ---------------------------------------------------------------- sprites
 
-EXPLOSION_0 = [
-    "................",
-    "................",
-    "................",
-    ".....TTTTT......",
-    "...TTTCCCTTT....",
-    "..TTCCCWWCCTT...",
-    "..TCCWWWWWCCT...",
-    "..TCWWWWWWWCT...",
-    "..TCWWWWWWWCT...",
-    "..TCCWWWWWCCT...",
-    "...TTCCCWWTT....",
-    ".....TTTTT......",
-    "................",
-    "................",
-    "................",
-    "................",
-]
+def floor_tile(variant):
+    c = Canvas()
+    c.fill(C["floor"])
+    for y in range(32):
+        for x in range(32):
+            if (x * 7 + y * 13) % 29 == 0:
+                c.set(x, y, C["floor_alt"])
+    c.hline(0, 31, 31, C["scratch"])
+    c.vline(31, 0, 31, C["scratch"])
+    if variant == 0:
+        rivet(c, 6, 6)
+        rivet(c, 25, 25)
+    elif variant == 1:
+        rivet(c, 5, 5)
+        rivet(c, 26, 5)
+        rivet(c, 5, 26)
+        rivet(c, 26, 26)
+    else:
+        for i in range(11):
+            c.set(7 + i, 23 - i, C["scratch"])
+            c.set(7 + i, 24 - i, C["scratch"])
+        c.disc(23, 8, 4, darken(C["floor"], 0.2))
+        c.disc(24, 9, 2, darken(C["floor"], 0.32))
+    return c
 
-EXPLOSION_1 = [
-    "................",
-    "................",
-    "......C.C.......",
-    "...C.CWCWC.C....",
-    "....CWWWWWC.....",
-    "..C.WWWWWWW.C...",
-    "....WWWWWWW.....",
-    "..C.WWWWWWW.C...",
-    "....CWWWWWC.....",
-    "...C.CWCWC.C....",
-    "......C.C.......",
-    "................",
-    "................",
-    "................",
-    "................",
-    "................",
-]
+
+def gun_base():
+    c = Canvas()
+    c.disc(16, 16, 13, C["gunmetal"])
+    c.ring(16, 16, 12, C["rivet"])
+    c.disc(16, 16, 10, C["scratch"])
+    c.disc(16, 16, 8, C["blue"])
+    c.disc(16, 16, 3, C["cyan"])
+    for x, y in ((16, 4), (16, 27), (4, 16), (27, 16)):
+        c.disc(x, y, 2, C["rivet"])
+        c.set(x, y, C["outline"])
+    c.bevel(0.18, 0.22)
+    c.outline()
+    return c
+
+
+def gun_barrel():
+    c = Canvas()
+    c.rect(10, 22, 21, 27, C["gunmetal"])          # base flange
+    c.rect(12, 19, 19, 23, C["rivet"])             # collar
+    c.rect(13, 5, 18, 21, C["gunmetal"])           # barrel
+    c.vline(14, 5, 20, lighten(C["gunmetal"], 0.28))
+    c.vline(18, 5, 20, darken(C["gunmetal"], 0.32))
+    c.rect(14, 2, 17, 5, C["cyan"])                # muzzle tip
+    c.rect(15, 1, 16, 3, C["white"])
+    c.set(12, 25, C["outline"])
+    c.set(19, 25, C["outline"])
+    c.bevel(0.15, 0.2)
+    c.outline()
+    return c
+
+
+def drone_normal(frame):
+    c = Canvas()
+    bob = 1 if frame else 0
+    c.ellipse(16, 16 + bob, 10, 7, C["alien"])
+    c.rect(10, 12 + bob, 12, 15 + bob, C["red"])
+    c.rect(19, 12 + bob, 21, 15 + bob, C["red"])
+    c.dither(7, 19 + bob, 25, 22 + bob, C["alien_shade"])
+    c.bevel(0.3, 0.3)
+    c.outline()
+    return c
+
+
+def drone_fast(frame):
+    c = Canvas()
+    shrink = 1 if frame else 0
+    c.diamond(16, 16, 11 - shrink, 7 - shrink, C["acid"])
+    c.rect(11, 13, 13, 15, C["red"])
+    c.rect(19, 13, 21, 15, C["red"])
+    c.bevel(0.32, 0.3)
+    c.outline()
+    return c
+
+
+def drone_tank():
+    c = Canvas()
+    c.ellipse(16, 16, 12, 8, C["tank"])
+    c.rect(7, 12, 24, 15, C["tank_dark"])
+    c.rect(9, 13, 12, 15, C["red"])
+    c.rect(19, 13, 22, 15, C["red"])
+    c.rect(4, 20, 27, 22, C["tank_dark"])
+    c.bevel(0.25, 0.28)
+    c.outline()
+    return c
+
+
+def spawn():
+    c = Canvas()
+    c.disc(16, 16, 11, C["outline"])
+    c.ring(16, 16, 10, C["green"], 2)
+    c.disc(16, 16, 7, C["scratch"])
+    c.disc(16, 16, 4, C["outline"])
+    for x, y in ((16, 5), (16, 26), (5, 16), (26, 16)):
+        c.rect(x - 1, y - 1, x + 1, y + 1, C["green"])
+    c.outline()
+    return c
+
+
+def base():
+    c = Canvas()
+    c.rect(3, 3, 28, 28, C["gunmetal"])
+    c.rect(6, 6, 25, 25, C["scratch"])
+    for x in range(6, 26):
+        if ((x - 6) // 3) % 2 == 0:
+            c.vline(x, 6, 25, C["red"] if ((x - 6) // 6) % 2 == 0 else C["hazard"])
+    c.rect(3, 3, 28, 5, C["rivet"])
+    for x, y in ((5, 5), (26, 5), (5, 26), (26, 26)):
+        c.set(x, y, C["outline"])
+    c.bevel(0.16, 0.2)
+    c.outline()
+    return c
+
+
+def rock():
+    c = Canvas()
+    c.rect(4, 6, 27, 27, C["scratch"])
+    c.rect(4, 6, 27, 12, C["gunmetal"])
+    c.rect(8, 14, 23, 21, C["panel"])
+    c.rect(4, 24, 27, 27, C["rivet"])
+    c.set(10, 9, C["outline"])
+    c.set(11, 9, C["outline"])
+    c.set(20, 26, C["outline"])
+    c.bevel(0.2, 0.25)
+    c.outline()
+    return c
+
+
+def rubble():
+    c = Canvas()
+    c.disc(10, 21, 6, C["scratch"])
+    c.disc(21, 22, 6, C["gunmetal"])
+    c.disc(16, 16, 5, C["scratch"])
+    c.disc(6, 24, 3, C["rivet"])
+    c.disc(26, 24, 3, C["rivet"])
+    c.bevel(0.22, 0.25)
+    c.outline()
+    return c
+
+
+def vent():
+    c = Canvas()
+    c.rect(4, 4, 27, 27, C["gunmetal"])
+    c.rect(7, 7, 24, 24, C["outline"])
+    for x in range(9, 24, 3):
+        c.vline(x, 9, 22, C["ember"])
+        c.vline(x + 1, 9, 22, C["orange"])
+    c.rect(14, 13, 17, 18, C["white"])
+    c.rect(4, 4, 27, 6, C["rivet"])
+    c.bevel(0.15, 0.2)
+    c.outline()
+    return c
+
+
+def decor_crack():
+    c = Canvas()
+    points = [(23, 5), (21, 9), (22, 12), (19, 16), (20, 20), (17, 24), (18, 28)]
+    for x, y in points:
+        c.set(x, y, C["scratch"])
+        c.set(x, y + 1, C["scratch"])
+    for x, y in ((21, 9), (19, 16), (20, 20)):
+        c.set(x - 2, y, C["scratch"])
+    return c
+
+
+def decor_stain():
+    c = Canvas()
+    c.disc(13, 15, 6, darken(C["floor"], 0.22))
+    c.disc(20, 19, 7, darken(C["floor"], 0.18))
+    c.disc(15, 22, 5, darken(C["floor"], 0.25))
+    c.dither(8, 12, 26, 26, darken(C["floor"], 0.3), phase=1)
+    return c
+
+
+def scorch():
+    c = Canvas()
+    c.disc(16, 16, 9, C["outline"])
+    c.disc(11, 19, 5, C["outline"])
+    c.disc(21, 19, 5, C["outline"])
+    c.disc(16, 16, 5, C["scratch"])
+    for x, y in ((13, 13), (19, 15), (16, 20), (10, 17), (22, 22)):
+        c.set(x, y, C["ember"])
+    return c
+
+
+def skid():
+    c = Canvas()
+    for i in range(15):
+        c.set(7 + i, 25 - i, C["scratch"])
+        c.set(10 + i, 25 - i, C["scratch"])
+        if i > 3 and i < 12:
+            c.set(8 + i, 25 - i, C["scratch"])
+    c.dither(5, 23, 9, 27, C["scratch"])
+    return c
+
+
+def debris():
+    c = Canvas()
+    for x, y in ((12, 14), (18, 12), (15, 18), (20, 20), (11, 21), (16, 23)):
+        c.rect(x, y, x + 1, y + 1, C["scratch"])
+        c.set(x, y, C["rivet"])
+    c.set(22, 16, C["scratch"])
+    c.set(9, 17, C["scratch"])
+    return c
+
+
+def hud_coin():
+    c = Canvas()
+    c.disc(16, 16, 13, C["gold"])
+    c.ring(16, 16, 10, C["gold_dark"])
+    c.disc(16, 16, 8, C["gold_dark"])
+    c.disc(16, 16, 6, C["gold"])
+    c.rect(11, 9, 14, 10, C["white"])
+    c.dither(10, 12, 16, 14, C["white"])
+    c.bevel(0.25, 0.3)
+    c.outline()
+    return c
+
+
+def hud_wave():
+    c = Canvas()
+    chevron(c, 7, 16, 9, C["cyan"])
+    chevron(c, 16, 16, 9, C["cyan"])
+    c.outline()
+    return c
+
+
+def hud_space():
+    c = Canvas()
+    c.rect(3, 5, 28, 26, C["gunmetal"])
+    c.rect(7, 9, 24, 20, C["outline"])
+    c.rect(9, 11, 22, 18, C["scratch"])
+    c.rect(3, 23, 28, 26, C["scratch"])
+    c.bevel(0.2, 0.25)
+    c.outline()
+    return c
+
+
+def hud_mouse(highlight_left):
+    c = Canvas()
+    c.rect(9, 4, 22, 27, C["gunmetal"])
+    if highlight_left:
+        c.rect(9, 4, 15, 13, C["blue"])
+    else:
+        c.rect(16, 4, 22, 13, C["blue"])
+    c.vline(16, 4, 27, C["outline"])
+    c.hline(9, 22, 14, C["outline"])
+    c.rect(15, 7, 16, 11, C["outline"])
+    c.bevel(0.2, 0.25)
+    c.outline()
+    return c
+
+
+def explosion_0():
+    c = Canvas()
+    c.disc(16, 16, 13, C["orange"])
+    c.disc(16, 16, 10, C["ember"])
+    c.disc(16, 16, 6, C["white"])
+    for y in range(32):
+        for x in range(32):
+            d = math.hypot(x - 15.5, y - 15.5)
+            if 10 < d <= 13 and (x + y) % 2 == 0:
+                c.set(x, y, C["ember"])
+            elif 6 < d <= 10 and (x + y) % 2 == 0:
+                c.set(x, y, C["white"])
+    return c
+
+
+def explosion_1():
+    c = Canvas()
+    c.ring(16, 16, 11, C["ember"], 2)
+    for y in range(32):
+        for x in range(32):
+            d = math.hypot(x - 15.5, y - 15.5)
+            if 9 <= d <= 13 and (x + y) % 2 == 0:
+                c.set(x, y, C["orange"])
+    c.disc(16, 16, 4, C["white"])
+    for x, y in ((9, 9), (23, 9), (9, 23), (23, 23), (16, 4), (16, 28)):
+        c.rect(x - 1, y - 1, x, y, C["white"])
+    return c
+
+
+def projectile():
+    c = Canvas(16, 16)
+    c.disc(8, 8, 6, C["cyan"])
+    c.disc(8, 8, 4, C["blue"])
+    c.disc(8, 8, 2, C["white"])
+    c.ring(8, 8, 6, C["white"])
+    return c
+
+
+def muzzle():
+    c = Canvas(16, 16)
+    c.hline(0, 15, 8, C["ember"])
+    c.vline(8, 0, 15, C["ember"])
+    c.disc(8, 8, 3, C["white"])
+    for x, y in ((3, 3), (12, 3), (3, 12), (12, 12)):
+        c.set(x, y, C["ember"])
+    return c
+
+
+def impact():
+    c = Canvas(16, 16)
+    c.disc(8, 8, 5, C["orange"])
+    c.ring(8, 8, 5, C["ember"])
+    c.disc(8, 8, 2, C["white"])
+    for x, y in ((2, 8), (13, 8), (8, 2), (8, 13)):
+        c.set(x, y, C["ember"])
+    return c
+
+
+def ember():
+    c = Canvas(16, 16)
+    c.disc(8, 8, 4, C["white"])
+    for y in range(16):
+        for x in range(16):
+            d = math.hypot(x - 8, y - 8)
+            if 4 < d <= 6 and (x + y) % 2 == 0:
+                c.set(x, y, C["white"])
+    return c
+
 
 SPRITES = {
-    "floor_0": FLOOR_0,
-    "floor_1": FLOOR_1,
-    "floor_2": FLOOR_2,
-    "gun_base": GUN_BASE,
-    "gun_barrel": GUN_BARREL,
-    "drone_0": DRONE_0,
-    "drone_1": DRONE_1,
-    "drone_fast_0": FAST_0,
-    "drone_fast_1": FAST_1,
-    "drone_tank": TANK,
-    "spawn": SPAWN,
-    "base": BASE,
-    "projectile": PROJECTILE,
-    "muzzle": MUZZLE,
-    "impact": IMPACT,
-    "explosion_0": EXPLOSION_0,
-    "explosion_1": EXPLOSION_1,
-    "hud_coin": HUD_COIN,
-    "hud_wave": HUD_WAVE,
-    "hud_space": HUD_SPACE,
-    "hud_mouse_left": HUD_MOUSE_LEFT,
-    "hud_mouse_right": HUD_MOUSE_RIGHT,
-    "rock": ROCK,
-    "rubble": RUBBLE,
-    "vent": VENT,
-    "decor_crack": DECOR_CRACK,
-    "decor_stain": DECOR_STAIN,
-    "scorch": SCORCH,
-    "skid": SKID,
-    "debris": DEBRIS,
-    "ember": EMBER,
+    "floor_0": floor_tile(0),
+    "floor_1": floor_tile(1),
+    "floor_2": floor_tile(2),
+    "gun_base": gun_base(),
+    "gun_barrel": gun_barrel(),
+    "drone_0": drone_normal(0),
+    "drone_1": drone_normal(1),
+    "drone_fast_0": drone_fast(0),
+    "drone_fast_1": drone_fast(1),
+    "drone_tank": drone_tank(),
+    "spawn": spawn(),
+    "base": base(),
+    "projectile": projectile(),
+    "muzzle": muzzle(),
+    "impact": impact(),
+    "explosion_0": explosion_0(),
+    "explosion_1": explosion_1(),
+    "hud_coin": hud_coin(),
+    "hud_wave": hud_wave(),
+    "hud_space": hud_space(),
+    "hud_mouse_left": hud_mouse(True),
+    "hud_mouse_right": hud_mouse(False),
+    "rock": rock(),
+    "rubble": rubble(),
+    "vent": vent(),
+    "decor_crack": decor_crack(),
+    "decor_stain": decor_stain(),
+    "scorch": scorch(),
+    "skid": skid(),
+    "debris": debris(),
+    "ember": ember(),
 }
 
+
+# ---------------------------------------------------------------- output
 
 def write_png_raw(path, w, h, raw):
     """Write an 8-bit RGBA PNG from pre-filtered scanline bytes."""
@@ -663,24 +553,18 @@ def write_png_raw(path, w, h, raw):
         f.write(png)
 
 
-def write_png(path, art):
-    h = len(art)
-    w = len(art[0])
-    assert (w, h) in [(16, 16), (8, 8)], f"bad size {(w, h)} in {path}"
-    for row in art:
-        assert len(row) == w, f"ragged row in {path}: {row!r}"
-        for ch in row:
-            assert ch in PAL, f"unknown char {ch!r} in {path}"
+def write_canvas(path, canvas):
+    assert (canvas.w, canvas.h) in [(32, 32), (16, 16)], f"bad size {path}"
     raw = bytearray()
-    for row in art:
+    for y in range(canvas.h):
         raw.append(0)  # filter: none
-        for ch in row:
-            px = PAL[ch]
+        for x in range(canvas.w):
+            px = canvas.get(x, y)
             if px is None:
                 raw.extend((0, 0, 0, 0))
             else:
                 raw.extend((*px, 255))
-    write_png_raw(path, w, h, raw)
+    write_png_raw(path, canvas.w, canvas.h, raw)
 
 
 # Vignette: near-black blue alpha ramp towards the corners (screen overlay).
@@ -692,7 +576,7 @@ VIGNETTE_ALPHA = 0.55  # max edge opacity
 
 def vignette_raw(w, h):
     cx, cy = w * 0.5, h * 0.5
-    base = PAL["K"]
+    base = C["outline"]
     raw = bytearray()
     for y in range(h):
         raw.append(0)  # filter: none
@@ -707,8 +591,8 @@ def vignette_raw(w, h):
 
 def main():
     os.makedirs(OUT, exist_ok=True)
-    for name, art in SPRITES.items():
-        write_png(os.path.join(OUT, name + ".png"), art)
+    for name, canvas in SPRITES.items():
+        write_canvas(os.path.join(OUT, name + ".png"), canvas)
     raw = vignette_raw(VIGNETTE_W, VIGNETTE_H)
     write_png_raw(os.path.join(OUT, "vignette.png"), VIGNETTE_W, VIGNETTE_H, raw)
     print(f"wrote {len(SPRITES)} sprites + vignette to {OUT}")
