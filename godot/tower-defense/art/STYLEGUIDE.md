@@ -41,8 +41,10 @@ breit = Tank. Nie nur über Farbe unterscheiden.
 
 ## Specs
 
-- Basis 16×16 px (Effekte/Projektile 8×8), transparentes PNG, 1px Outline.
-- Ingame 2× skaliert (TILE 32). `Nearest`-Filter ist im Projekt gesetzt.
+- Basis 32×32 px (Effekte/Projektile 16×16), transparentes PNG, 1px Outline.
+- Ingame 1:1 (TILE 32, 1 Art-Pixel = 1 Screen-Pixel). `Nearest` ist gesetzt.
+- T13 (2026-10-02): alle Sprites von 16×16 auf 32×32 (fx 16×16) neu
+  gezeichnet; Anzeige von 2× auf 1× umgestellt.
 - Pivot: Center; Ausnahme `gun_barrel` zeigt nach oben, Drehpunkt (8,12)
   via `Sprite2D.offset` (T03 umgesetzt).
 - Boden texturiert: `floor_0/1/2` rotieren im Schachbrett + Nieten/Kratzer,
@@ -53,17 +55,17 @@ breit = Tank. Nie nur über Farbe unterscheiden.
   unterscheiden sich; beide pulsieren im Code (Scale), damit sie nie
   verwechselt werden. T08: markieren jetzt jede Entry- bzw. Exit-Zelle der
   jeweiligen Seite.
-- HUD-Icons 16×16, 2× skaliert: `hud_coin` (Geld), `hud_wave` (Chevron),
+- HUD-Icons 32×32, 1:1: `hud_coin` (Geld), `hud_wave` (Chevron),
   `hud_space` (Leertaste), `hud_mouse_left`/`hud_mouse_right` (Spieler-Blau);
   Gun-Icon nutzt `gun_base`.
 - UI-Font: VT323 (`fonts/VT323-Regular.ttf`, OFL — Lizenztext daneben),
   projektweit via `gui/theme/custom_font`; HUD-Panels dunkelblau mit
   Stahl-Rahmen, Geld gold, Titel/Buttons cyan.
-- Effekte: `impact` (8×8 Trefferblitz, Pop von 0.7×), `muzzle` (8×8
-  Mündungsblitz, 0.05 s + Skalierungs-Pop), `explosion_0/1` (16×16 Kill).
+- Effekte: `impact` (16×16 Trefferblitz, Pop von 0.7×), `muzzle` (16×16
+  Mündungsblitz, 0.05 s + Skalierungs-Pop), `explosion_0/1` (32×32 Kill).
 - Terrain (T09): Blocker als solide Fels-/Geröll-/Vent-Cluster (geseedet,
   nie Entry-verstopfend), Deko + Decals als Grime-Schicht (z −1); Vents
-  glühen (C/H), alle Partikel nutzen `ember` (8×8, getintet).
+  glühen (C/H), alle Partikel nutzen `ember` (16×16, getintet).
 - Animation minimal: 2-Frame-Bob (Drohnen) + Code-Waddle/Flip (normal/tank)
   bzw. Rotation entlang des Pfads (fast), Flash-Frames (Muzzle/Impact/
   Explosion), HP-Balken als 1px-Textur-Sprites (kein Asset).
@@ -79,7 +81,7 @@ breit = Tank. Nie nur über Farbe unterscheiden.
 - Modifier-Chip färbt Text + Rahmen je Event (Ansturm orange, Schwarm grün,
   Blackout cyan, Kopfgeld gold).
 - HUD-Icons: `hud_coin`, `gun_base`, `hud_space`, `hud_mouse_*`, `hud_wave`
-  (16×16, 2× im HUD) — beim 32×32-Pass (T13) mitziehen.
+  (32×32, 1:1 im HUD).
 
 ## Referenz-Anker (Xeno Tactic)
 
@@ -115,36 +117,36 @@ Quelle: Titel-/Help-Screen, Kachel-/Effekt-Sprites, eingebettete Texte.
 
 | Datei | Größe | Verwendung |
 |---|---|---|
-| `floor_0/1/2` | 16×16 | Bodenkacheln, deterministisches Muster `(x*7+y*13) % 3` |
-| `gun_base` | 16×16 | Turm-Sockel: Stahl-Rahmen, blaue Kuppel, Cyan-Kern (zugleich HUD-Icon „Gun") |
-| `gun_barrel` | 16×16 | Stahl-Lauf mit Cyan-Spitze, zeigt nach oben, Drehpunkt (8,12) |
-| `drone_0/1` | 16×16 | Standard-Drohne: weißer Alien-Bug, rote Augen, 2-Frame-Bob |
-| `drone_fast_0/1` | 16×16 | Schnelle Drohne (Acid-Grün, Pfeilform), rotiert entlang des Pfads |
-| `drone_tank` | 16×16 | Tank-Drohne (grau-blau, breit), ein Frame |
-| `spawn` | 16×16 | Breach-Portal mit grünem Ring (pulsiert, jede Entry-Zelle) |
-| `base` | 16×16 | Containment-Tür mit Hazard-Streifen (pulsiert, jede Exit-Zelle) |
-| `projectile` | 8×8 | Tracer, rotiert zur Flugrichtung |
-| `muzzle` | 8×8 | Mündungsblitz (0.05 s, Pop + ±Rotation) |
-| `impact` | 8×8 | Trefferblitz (0.12 s, Pop von 0.7×) |
-| `explosion_0/1` | 16×16 | Kill-Explosion, 2 Frames alternierend |
+| `floor_0/1/2` | 32×32 | Bodenkacheln, deterministisches Muster `(x*7+y*13) % 3` |
+| `gun_base` | 32×32 | Turm-Sockel: Stahl-Rahmen, blaue Kuppel, Cyan-Kern (zugleich HUD-Icon „Gun") |
+| `gun_barrel` | 32×32 | Stahl-Lauf mit Cyan-Spitze, zeigt nach oben, Drehpunkt (16,24) |
+| `drone_0/1` | 32×32 | Standard-Drohne: weißer Alien-Bug, rote Augen, 2-Frame-Bob |
+| `drone_fast_0/1` | 32×32 | Schnelle Drohne (Acid-Grün, Diamantform), rotiert entlang des Pfads |
+| `drone_tank` | 32×32 | Tank-Drohne (grau-blau, breit), ein Frame |
+| `spawn` | 32×32 | Breach-Portal mit grünem Ring (pulsiert, jede Entry-Zelle) |
+| `base` | 32×32 | Containment-Tür mit Hazard-Streifen (pulsiert, jede Exit-Zelle) |
+| `projectile` | 16×16 | Tracer, rotiert zur Flugrichtung |
+| `muzzle` | 16×16 | Mündungsblitz (0.05 s, Pop + ±Rotation) |
+| `impact` | 16×16 | Trefferblitz (0.12 s, Pop von 0.7×) |
+| `explosion_0/1` | 32×32 | Kill-Explosion, 2 Frames alternierend |
 | `vignette` | 640×360 | Randabdunkelung (Alpha-Gradient, linear gefiltert, HUD-Overlay) |
-| `hud_coin` | 16×16 | HUD: Geld |
-| `hud_wave` | 16×16 | HUD: Welle (Doppel-Chevron) |
-| `hud_space` | 16×16 | HUD: Leertaste |
-| `hud_mouse_left/right` | 16×16 | HUD: linke/rechte Maustaste (Spieler-Blau) |
-| `rock` | 16×16 | Terrain-Blocker: Fels (solid, nie bebaubar) |
-| `rubble` | 16×16 | Terrain-Blocker: Geröll |
-| `vent` | 16×16 | Terrain-Blocker: Glut-Vent (glüht, Partikel-Emitter) |
-| `decor_crack` | 16×16 | Deko: Riss (kosmetisch, z −1) |
-| `decor_stain` | 16×16 | Deko: Fleck (kosmetisch, z −1) |
-| `scorch` | 16×16 | Decal: Brandfleck (Kill, z −1) |
-| `skid` | 16×16 | Decal: Schleifspur (Leak, z −1) |
-| `debris` | 16×16 | Decal: Trümmer (Treffer, z −1) |
-| `ember` | 8×8 | Partikel-Textur (Glut/Funke/Rauch, getintet) |
+| `hud_coin` | 32×32 | HUD: Geld |
+| `hud_wave` | 32×32 | HUD: Welle (Doppel-Chevron) |
+| `hud_space` | 32×32 | HUD: Leertaste |
+| `hud_mouse_left/right` | 32×32 | HUD: linke/rechte Maustaste (Spieler-Blau) |
+| `rock` | 32×32 | Terrain-Blocker: Fels (solid, nie bebaubar) |
+| `rubble` | 32×32 | Terrain-Blocker: Geröll |
+| `vent` | 32×32 | Terrain-Blocker: Glut-Vent (glüht, Partikel-Emitter) |
+| `decor_crack` | 32×32 | Deko: Riss (kosmetisch, z −1) |
+| `decor_stain` | 32×32 | Deko: Fleck (kosmetisch, z −1) |
+| `scorch` | 32×32 | Decal: Brandfleck (Kill, z −1) |
+| `skid` | 32×32 | Decal: Schleifspur (Leak, z −1) |
+| `debris` | 32×32 | Decal: Trümmer (Treffer, z −1) |
+| `ember` | 16×16 | Partikel-Textur (Glut/Funke/Rauch, getintet) |
 
 ## Handoff (deine Skizzen → Projekt)
 
-- PNG, 16×16-Vielfache, transparent, gleiche Dateinamen in `art/` ersetzen —
+- PNG, 32×32 (fx 16×16), transparent, gleiche Dateinamen in `art/` ersetzen —
   kein Code-Umbau nötig (`gun_base.png`, `drone_0.png`, …).
 - Neue Sprites: Namen + Größe hier eintragen, dann im Code referenzieren.
 - Platzhalter-Generator: `tools/make_placeholders.py` (stdlib-only).

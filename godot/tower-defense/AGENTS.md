@@ -28,7 +28,7 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
 
 ## Fixed decisions (Vision V1, 2026-09-21)
 
-- **Grid**: variable map size (default 20×12, TILE 32 = 16px art at 2×).
+- **Grid**: variable map size (default 20×12, TILE 32 = 32 px art at 1:1).
 - **Maze**: free building; any build that leaves an entry without a
   reachable exit is rejected with instant refund (multi-source BFS).
   Entry/exit tiles never buildable; sealed exits are inert.
@@ -97,7 +97,7 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
   drones with red eyes, shape+color coding (round/fast-dart/wide-tank),
   textured floors, hazard-strip containment base. UI font VT323 (OFL,
   `fonts/`) via `gui/theme/custom_font`, HUD panels dark blue/steel, gold
-  money. 16×16 (fx 8×8) with the Nearest filter from `project.godot`; the
+  money. 32×32 (fx 16×16) with the Nearest filter from `project.godot`; the
   640×360 vignette overlay sets Linear on its node. Placeholders generated
   by `tools/make_placeholders.py` (stdlib-only, XT palette); hand art drops
   in under the same filenames, no code changes needed. Study reference
@@ -142,7 +142,8 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
   start button, sell toggle, game-over overlay); `game.gd` pushes state, the
   HUD emits intents. T12.5 (Refactor): the wave flow (phase, queue, timers,
   modifier knobs) lives in `scripts/wave_director.gd`; the scene orchestrates.
-  Suite: 68 tests / 510 asserts green.
+  T13 (Art): all sprites redrawn at 32×32 (fx 16×16) with the procedural
+  generator, displayed 1:1 (`ART_SCALE` 1). Suite: 68 tests / 510 asserts green.
 - Vision (2026-10-02): `docs/VISION.md` — pillars P1–P3 (workbench, living
   foundry, curiosity), values, anti-pillars; calibrations + next prototype
   questions (epilog twist, pressure curve, decal readability, meta, time

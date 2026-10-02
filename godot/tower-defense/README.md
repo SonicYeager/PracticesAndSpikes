@@ -169,8 +169,9 @@ The parser has stdlib regression tests: `python tools/test_analyze_run.py`.
 | T11 | XT pass: steel/lab look, VT323 UI font, drier SFX | done |
 | T12 | HUD framework: status/build panels, wave bar, game-over restyle | done |
 | T12.5 | Refactor: extract WaveDirector (wave state machine) | done |
+| T13 | Art pass: all sprites 32×32 at 1:1, fx 16×16 | done |
 
-All slices done (T01–T12.5). Post-prototype directions are collected in `docs/IDEAS.md`;
+All slices done (T01–T13). Post-prototype directions are collected in `docs/IDEAS.md`;
 the concrete candidate queue is `docs/BACKLOG.md`.
 
 ### From prototype to game

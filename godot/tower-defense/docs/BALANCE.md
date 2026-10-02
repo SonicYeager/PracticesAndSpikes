@@ -120,7 +120,7 @@ modifiers.
 | Constant | Value | Meaning |
 |---|---|---|
 | `MAP_SIZE` | 20×12 | cells |
-| `TILE` | 32 | px per cell (16 px art at 2×) |
+| `TILE` | 32 | px per cell (32 px art, 1:1) |
 | run seed | random per run | `_random_seed()`; logged as `run_start.seed`; `seed_override` >= 0 pins it (default -1) |
 | `SCATTER_SEED_MUL` / `SCATTER_WAVE_MUL` | 1000003 / 104729 | scatter seed: `game_seed * MUL + wave * MUL2 + index` (entry + exit) |
 | `BLOCKER_CLUSTERS` / `CLUSTER_MIN..MAX` | 7 / 1..3 | terrain clusters (`TerrainGen`) |
