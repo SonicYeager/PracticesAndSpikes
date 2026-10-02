@@ -105,8 +105,10 @@ func ember_burst(world_pos: Vector2) -> void:
 	var t := create_tween()
 	t.tween_interval(1.5)
 	t.tween_callback(p.queue_free)
+	# ±1 cell spread — pixel-space equivalent of the old grid-space jitter.
+	var spread := float(BoardView.TILE)
 	for i in 3:
-		explosion(world_pos + Vector2(_jitter(1.0), _jitter(1.0)))
+		explosion(world_pos + Vector2(_jitter(spread), _jitter(spread)))
 
 
 func recoil(tower_root: Node2D, direction: Vector2) -> void:

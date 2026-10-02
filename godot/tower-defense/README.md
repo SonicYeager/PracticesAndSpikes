@@ -9,7 +9,7 @@ telemetry for data-driven balancing.
 
 - Stack: Godot 4.7.2, GDScript (no .NET flow)
 - Entrypoint: `scenes/Main.tscn` (open/import the folder in the Godot editor)
-- Status: prototype complete + sides + dirty world + pulse + XT look + HUD (T01–T12) — see *Controls* and *Roadmap*
+- Status: prototype complete + sides + dirty world + pulse + XT look + HUD (T01–T14) — see *Controls* and *Roadmap*
 
 ## Controls
 
@@ -40,7 +40,7 @@ then auto-starts. Game over shows a run summary and restarts the scene.
 - Gun auto-targeting (closest to base, range 3.5 cells, 8 dmg / 0.6 s) with
   homing tracers fired from the barrel muzzle.
 - Three drone kinds (shape + color coded): normal, fast, tank.
-- Feedback: 9 synthesized SFX, muzzle flash, hit sparks, HP bars, walk
+- Feedback: 10 synthesized SFX, muzzle flash, hit sparks, HP bars, walk
   animation, explosions, HUD icon panel, pulsing spawn portal/base bunker.
 - Polish (T06): trauma-based screen shake (Camera2D, deterministic sines),
   vignette overlay, barrel recoil, muzzle/impact pops.
@@ -84,7 +84,7 @@ GODOT_DISABLE_LEAK_CHECKS=1 godot --headless --path . \
   -s res://addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
 ```
 
-GUT 9.6.1 is vendored under `addons/gut/`. The suite (58 tests / 472 asserts)
+GUT 9.6.1 is vendored under `addons/gut/`. The suite (68 tests / 510 asserts)
 covers every core class plus one scene integration smoke test that steps the
 real `Main.tscn` (spawn → walk → shoot → kill with scattered entries and
 terrain, break → auto-chain, game over + log flush, restart wiring, camera

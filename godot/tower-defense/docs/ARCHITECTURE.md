@@ -195,8 +195,9 @@ written into the telemetry log for replay/analysis (`tools/analyze_run.py`).
 Floor tiles, decor and decals are `Sprite2D` children of `Board`
 (`z_index = -1`); entry/exit markers and ambient emitters also live there.
 Towers, drones and projectiles are `Sprite2D` children of `Main` (default
-z 0) in creation order; FX sprites are added under `Fx`. HP bars use
-`z_index = 1` so they stay above all drones. The live path preview is drawn
+z 0) in creation order; FX sprites are added under `Fx` (`z_index = 1`, so
+effects cover units). HP bars also use `z_index = 1` and are appended after
+`Fx`, so they stay above the effects. The live path preview is drawn
 in `BoardView._draw()` (above floor/decor/decals, below units). The HUD is a
 `CanvasLayer` and therefore unaffected by world coordinates.
 

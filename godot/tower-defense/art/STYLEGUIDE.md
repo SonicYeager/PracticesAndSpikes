@@ -26,7 +26,7 @@ Ember-Foundry-Look ersetzt.
 | Ember            | `#ffb44a` | Glut/Funken (Texte getintet)     |
 | Alien White      | `#d8dee6` | Standard-Drohne                  |
 | Alien Shade      | `#9aa4b0` | Drohnen-Unterseite               |
-| Acid Green       | `#8ee04a` | Schnelle Drohne (Pfeilform!)     |
+| Acid Green       | `#8ee04a` | Schnelle Drohne (Diamantform!)   |
 | Tank Gray-Blue   | `#5a6672` | Tank-Drohne (breite Form!)       |
 | Tank Shade       | `#3a4450` | Tank-Unterseite                  |
 | Eye Red / Hazard | `#ff3b30` | Rotes Auge — alle Gegner; Hazard |
@@ -36,7 +36,7 @@ Ember-Foundry-Look ersetzt.
 | Gold Shade       | `#b88a2e` | Gold-Schatten                    |
 | Hazard White     | `#e8e4da` | Hazard-Streifen                  |
 
-Form + Farbe codieren gemeinsam: rund = Standard, pfeilförmig = schnell,
+Form + Farbe codieren gemeinsam: rund = Standard, diamantförmig = schnell,
 breit = Tank. Nie nur über Farbe unterscheiden.
 
 ## Specs
@@ -45,7 +45,7 @@ breit = Tank. Nie nur über Farbe unterscheiden.
 - Ingame 1:1 (TILE 32, 1 Art-Pixel = 1 Screen-Pixel). `Nearest` ist gesetzt.
 - T13 (2026-10-02): alle Sprites von 16×16 auf 32×32 (fx 16×16) neu
   gezeichnet; Anzeige von 2× auf 1× umgestellt.
-- Pivot: Center; Ausnahme `gun_barrel` zeigt nach oben, Drehpunkt (8,12)
+- Pivot: Center; Ausnahme `gun_barrel` zeigt nach oben, Drehpunkt (16,24)
   via `Sprite2D.offset` (T03 umgesetzt).
 - Boden texturiert: `floor_0/1/2` rotieren im Schachbrett + Nieten/Kratzer,
   keine glatten Flächen. Vignette als Overlay umgesetzt (T06, `vignette.png`,
@@ -66,7 +66,7 @@ breit = Tank. Nie nur über Farbe unterscheiden.
 - Terrain (T09): Blocker als solide Fels-/Geröll-/Vent-Cluster (geseedet,
   nie Entry-verstopfend), Deko + Decals als Grime-Schicht (z −1); Vents
   glühen (C/H), alle Partikel nutzen `ember` (16×16, getintet).
-- Animation minimal: 2-Frame-Bob (Drohnen) + Code-Waddle/Flip (normal/tank)
+- Animation minimal: 2-Frame-Lauf (Drohnen) + Code-Waddle/Flip (normal/tank)
   bzw. Rotation entlang des Pfads (fast), Flash-Frames (Muzzle/Impact/
   Explosion), HP-Balken als 1px-Textur-Sprites (kein Asset).
 

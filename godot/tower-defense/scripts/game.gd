@@ -629,7 +629,7 @@ func _show_tower(cell: Vector2i) -> void:
 	barrel.name = "Barrel"
 	barrel.texture = GUN_BARREL_TEX
 	barrel.scale = ART_SCALE
-	# Pivot at the barrel base: texture (8, 12) sits on the tower center.
+	# Pivot at the barrel base: texture (16, 24) sits on the tower center.
 	barrel.offset = Vector2(0, -8)
 	root.add_child(base)
 	root.add_child(barrel)
