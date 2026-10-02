@@ -227,9 +227,9 @@ panel → game-over overlay, in that draw order).
   screen incl. telemetry flush and restart-button wiring, and the camera
   shake offset/decay (writes only `user://`, then deletes the file).
 - Gotcha: GUT's GUI panel covers the right half of the window, so
-  screenshots taken from a GUT run are cropped. For visual QA use a
-  temporary `SceneTree` script (`godot --path . -s tools/x.gd`,
-  `root.add_child(main_scene)`, `await process_frame` before touching nodes).
+  screenshots taken from a GUT run are cropped. For visual QA use
+  `tools/shot.gd` (windowed): `Godot --path . -s tools/shot.gd -- --states
+  idle,running --towers "8,3;9,6"` → `reports/<prefix>_<state>.png`.
 
 ## Extension points
 

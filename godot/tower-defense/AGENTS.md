@@ -195,7 +195,8 @@ Project has no CI; run from the project dir:
 - Sub-repo worktree may contain unrelated dirty files (e.g. hot-chocolate
   PoC) — do not touch, do not bundle into commits.
 - Visual QA: GUT's GUI panel covers the right half of the window, so a
-  screenshot taken from a GUT run is cropped. For a full/zoomed capture,
-  run a temporary `SceneTree` script instead (`godot --path . -s tools/x.gd`,
-  `root.add_child(main_scene)`, `await process_frame` before touching nodes,
-  save `root.get_texture().get_image()`); delete it afterwards.
+  screenshot taken from a GUT run is cropped. Use the reusable tool instead
+  (windowed — headless renders no pixels):
+  `Godot --path . -s tools/shot.gd -- --states idle,running --towers "8,3;9,6" --spawn fast,tank`
+  → writes `reports/<prefix>_<state>.png`, logs `SHOT <path> <WxH>`; full flag
+  list in the script header. Bad args/states fail loudly (exit 1).
