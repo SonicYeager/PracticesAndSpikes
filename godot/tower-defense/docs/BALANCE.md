@@ -13,6 +13,7 @@ the map to them.
 | Drone kinds (hp/speed multipliers) | `scripts/drone.gd` (`KIND_MODS`) |
 | Wave scaling + composition | `scripts/wave.gd` (`WaveGen`) |
 | Wave pacing (spawn/break, modifier knobs) | `scripts/wave_director.gd` (`WaveDirector`) |
+| Combat FX (shake, recoil) | `scripts/fx.gd` (`Fx`) |
 | Scene pacing / layout | `scripts/game.gd` (top constants) |
 
 ## Economy (`economy.gd`)
@@ -128,14 +129,19 @@ modifiers.
 | `DECAL_CAP` / `DECAL_CELL_CAP` | 300 / 2 | battle decals per run (FIFO) / per cell |
 | `OVERCHARGE_COST` / `OVERCHARGE_COOLDOWN` | 20 / 6 s | vent overcharge cost and cooldown |
 | `OVERCHARGE_DAMAGE` / `OVERCHARGE_RADIUS` | 15 / 2.5 cells | vent burst damage and radius |
-| `SHAKE_DECAY` / `SHAKE_MAX_OFFSET` | 1.6 /s · 9 px | trauma decay / max camera offset |
-| `SHAKE_KILL` / `SHAKE_LEAK` / `SHAKE_GAME_OVER` | 0.12 / 0.3 / 0.7 | trauma per event |
-| `RECOIL_PX` | 3.0 | barrel kick per shot (tween back, 0.08 s) |
-| `DRONE_FRAME_TIME` | 0.15 s | 2-frame bob |
+| `SHAKE_KILL` / `SHAKE_LEAK` / `SHAKE_OVERCHARGE` / `SHAKE_GAME_OVER` | 0.12 / 0.3 / 0.35 / 0.7 | trauma per event (amounts live here, decay in `Fx`) |
+| `DRONE_FRAME_TIME` | 0.15 s | 2-frame gait |
 | `HIT_FLASH_TIME` | 0.07 s | white hit flash |
 | `MUZZLE_OFFSET` | 0.75 cells | tracer spawn at the barrel tip |
 | `BAR_WIDTH` / `BAR_HEIGHT` | 22 / 3 px | HP bar |
 | `BAR_OFFSET` | (0, −20) px | HP bar above the drone |
+
+## Fx (`fx.gd`)
+
+| Constant | Value | Meaning |
+|---|---|---|
+| `SHAKE_DECAY` / `SHAKE_MAX_OFFSET` | 1.6 /s · 9 px | trauma decay / max camera offset |
+| `RECOIL_PX` | 3.0 | barrel kick per shot (tween back, 0.08 s) |
 
 ## Tuning workflow
 

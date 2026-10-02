@@ -153,7 +153,7 @@ func test_shake_offsets_and_decays() -> void:
 	var vignette := game.get_node_or_null("Hud/Vignette") as TextureRect
 	assert_not_null(vignette, "Vignette overlay exists")
 	assert_not_null(vignette.texture, "Vignette texture is wired")
-	game._add_shake(1.0)
+	game._fx.shake(1.0)
 	game._process(STEP)
 	assert_gt(game._camera.offset.length(), 0.5, "Shake offsets the camera")
 	for i in 120:

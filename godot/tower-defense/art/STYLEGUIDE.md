@@ -3,7 +3,7 @@
 ## Richtung
 
 Kühl, technisch, Labor-Containment. Dunkle blaugraue Stahl-Kacheln mit
-Rasterlinien, blaue Spieler-Türme, weiß-grüne Alien-Drohnen (rotes Auge),
+Rasterlinien, blaue Plasma-Kanonen, mehrbeinige Alien-Bugs (rotes Auge),
 warme Pixel-Effekte als Kontrast. Gold/Cyan nur für UI und Gameplay-Signale.
 Lesbarkeit > Deko. Der XT-Pass (T11, 2026-10-02) hat den früheren
 Ember-Foundry-Look ersetzt.
@@ -118,11 +118,11 @@ Quelle: Titel-/Help-Screen, Kachel-/Effekt-Sprites, eingebettete Texte.
 | Datei | Größe | Verwendung |
 |---|---|---|
 | `floor_0/1/2` | 32×32 | Bodenkacheln, deterministisches Muster `(x*7+y*13) % 3` |
-| `gun_base` | 32×32 | Turm-Sockel: Stahl-Rahmen, blaue Kuppel, Cyan-Kern (zugleich HUD-Icon „Gun") |
-| `gun_barrel` | 32×32 | Stahl-Lauf mit Cyan-Spitze, zeigt nach oben, Drehpunkt (16,24) |
-| `drone_0/1` | 32×32 | Standard-Drohne: weißer Alien-Bug, rote Augen, 2-Frame-Bob |
-| `drone_fast_0/1` | 32×32 | Schnelle Drohne (Acid-Grün, Diamantform), rotiert entlang des Pfads |
-| `drone_tank` | 32×32 | Tank-Drohne (grau-blau, breit), ein Frame |
+| `gun_base` | 32×32 | Kanonen-Montierung: Stahlring, blaue Kuppel, Cyan-Kern (zugleich HUD-Icon „Gun") |
+| `gun_barrel` | 32×32 | Plasma-Lauf mit Seitenklauen (Cyan-Spitzen), zeigt nach oben, Drehpunkt (16,24) |
+| `drone_0/1` | 32×32 | Standard-Bug: weißer Käfer, Kopf + 3 Beinpaare, 2-Frame-Lauf |
+| `drone_fast_0/1` | 32×32 | Schneller Bug: Acid-Diamant mit Flossen + Beinen, rotiert entlang des Pfads |
+| `drone_tank` | 32×32 | Panzerkäfer: grau-blaue Schale, Kopfplatte, dicke Beine |
 | `spawn` | 32×32 | Breach-Portal mit grünem Ring (pulsiert, jede Entry-Zelle) |
 | `base` | 32×32 | Containment-Tür mit Hazard-Streifen (pulsiert, jede Exit-Zelle) |
 | `projectile` | 16×16 | Tracer, rotiert zur Flugrichtung |

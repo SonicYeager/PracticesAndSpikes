@@ -60,6 +60,9 @@ then auto-starts. Game over shows a run summary and restarts the scene.
   panel, segmented wave bar with a clickable SEND NEXT WAVE button; restyled
   game-over overlay. Owned by `scenes/Hud.tscn` + `scripts/hud.gd`; `game.gd`
   pushes state into it.
+- T14: plasma-cannon turret (side prongs, cyan core) and bug-style drones
+  (head + legs, 2-frame gait); combat FX (shake, muzzle/impact/explosion,
+  ember bursts, recoil) live in `scripts/fx.gd`.
 - Local telemetry: build/sell/wave/leak/run_end events →
   `user://run_<seed>.jsonl` (analysis: `tools/analyze_run.py`).
 - Meta stub: one persistent bonus (`SkillStub` → `user://skill_stub.cfg`).
@@ -99,6 +102,7 @@ modifiers, decal caps).
 | `scripts/game.gd` | Scene controller: input, orchestration, sprites, effects, audio, HUD push |
 | `scripts/wave_director.gd` | Wave flow state machine: phase, queue, timers, modifier knobs |
 | `scripts/board_view.gd` | Board rendering: floor/terrain/markers/decals, ambient, route preview, grid math |
+| `scripts/fx.gd` | Combat FX: screen shake, muzzle/impact/explosion, ember bursts, recoil |
 | `scripts/maze.gd` | Buildable grid + connectivity validation (`Maze`) |
 | `scripts/pathfinder.gd` | AStarGrid2D wrapper, 4-directional (`Pathfinder`) |
 | `scripts/economy.gd` | Money-is-HP rules (`Economy`) |
@@ -172,8 +176,9 @@ The parser has stdlib regression tests: `python tools/test_analyze_run.py`.
 | T12.5 | Refactor: extract WaveDirector (wave state machine) | done |
 | T13 | Art pass: all sprites 32×32 at 1:1, fx 16×16 | done |
 | T13.5 | Refactor: extract BoardView (board rendering + grid math) | done |
+| T14 | Turret & enemy redesign, Fx extraction | done |
 
-All slices done (T01–T13.5). Post-prototype directions are collected in `docs/IDEAS.md`;
+All slices done (T01–T14). Post-prototype directions are collected in `docs/IDEAS.md`;
 the concrete candidate queue is `docs/BACKLOG.md`.
 
 ### From prototype to game

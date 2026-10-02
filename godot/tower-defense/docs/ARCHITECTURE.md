@@ -13,7 +13,8 @@ scenes/Main.tscn
        │    ├─ floor/terrain/decor sprites (z −1) + decals (z −1)
        │    ├─ entry/exit markers + ambient emitters
        │    └─ _draw(): live route preview
-       ├─ tower/drone/projectile/fx sprites (created at runtime)
+       ├─ Fx (scripts/fx.gd)             ← combat FX + screen shake
+       ├─ tower/drone/projectile sprites (created at runtime)
        └─ Hud (CanvasLayer)
             ├─ Vignette (full-screen overlay)
             └─ HudRoot (scenes/Hud.tscn, scripts/hud.gd)   ← UI boundary
@@ -26,13 +27,14 @@ UI scripts (Control-based, no gameplay access)
   GameHud (scripts/hud.gd) · GameHudBar (scripts/hud_bar.gd)
 
 View classes (Node2D, presentation only, state pushed in)
-  BoardView (scripts/board_view.gd)
+  BoardView (scripts/board_view.gd) · Fx (scripts/fx.gd)
 ```
 
 Core classes never reference nodes, `origin`, `TILE` or textures. The scene
-controller owns units, towers and combat FX (sprites, tweens, audio); the
-`BoardView` owns the board (tiles, terrain, markers, decals, ambient, route
-preview) and the grid math; the HUD owns its panels and only sees pushed state.
+controller owns units and projectiles (sprites, tweens, audio); `Fx` owns the
+combat effects and the screen shake; `BoardView` owns the board (tiles,
+terrain, markers, decals, ambient, route preview) and the grid math; the HUD
+owns its panels and only sees pushed state.
 
 ## Core classes
 
@@ -68,7 +70,7 @@ only).
 
 ## Frame order (`game.gd _process`)
 
-0. `_update_shake` — trauma decay + camera offset (also runs after game over)
+0. `_fx.update` — trauma decay + camera offset (also runs after game over)
 1. `_update_spawner` — asks `WaveDirector` for the next spawn / break timeout
    (`tick_break`, `tick_spawn`); `_spawn_drone` scatters the entry cell and
    draws the assigned exit; empty queue + clear field → `begin_break()`
@@ -120,6 +122,8 @@ Gun.try_fire(dt) ──► _fire: tracer starts at muzzle (0.75 cells) + flash
 Projectile hit ──► _resolve_hit
             kill: Economy.on_kill() · explosion · SFX "kill" · scorch decal
             else: hit flash + impact spark · SFX "hit" · debris decal
+Fx ──► muzzle/impact/explosion/ember bursts + barrel recoil (world space)
+            taken from the same call sites; Fx.update decays the shake trauma
 
 Left click ──► vent? _try_overcharge(cell): spend(20) · cooldown 6 s
                 ember burst · damage (15 in 2.5 cells) via _apply_damage
@@ -191,10 +195,10 @@ written into the telemetry log for replay/analysis (`tools/analyze_run.py`).
 Floor tiles, decor and decals are `Sprite2D` children of `Board`
 (`z_index = -1`); entry/exit markers and ambient emitters also live there.
 Towers, drones and projectiles are `Sprite2D` children of `Main` (default
-z 0) in creation order. HP bars use `z_index = 1` so they stay above all
-drones. The live path preview is drawn in `BoardView._draw()` (above
-floor/decor/decals, below units). The HUD is a `CanvasLayer` and therefore
-unaffected by world coordinates.
+z 0) in creation order; FX sprites are added under `Fx`. HP bars use
+`z_index = 1` so they stay above all drones. The live path preview is drawn
+in `BoardView._draw()` (above floor/decor/decals, below units). The HUD is a
+`CanvasLayer` and therefore unaffected by world coordinates.
 
 Floor tiles, cosmetic decor and battle decals use `z_index = -1`, so
 `BoardView._draw()` — the live route preview tracing each active drone's
@@ -228,6 +232,9 @@ panel → game-over overlay, in that draw order).
 
 ## Extension points
 
+- **New combat effect**: add a spawn method to `Fx` (world-space positions)
+  and call it from the event site in `game.gd`; shake intensities stay
+  per-event constants in `game.gd`.
 - **New tower type**: `Gun` is parameter-free by design; either add a
   constructor/params or a subclass with different `RANGE`/`DAMAGE`/`INTERVAL`
   and a new sprite set. `_guns` maps cell → `Gun`, so multiple types only

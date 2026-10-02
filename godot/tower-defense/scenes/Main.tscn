@@ -1,7 +1,8 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/game.gd" id="1_game"]
 [ext_resource type="Script" path="res://scripts/board_view.gd" id="2_board"]
+[ext_resource type="Script" path="res://scripts/fx.gd" id="3_fx"]
 [ext_resource type="Texture2D" path="res://art/vignette.png" id="8_vignette"]
 [ext_resource type="PackedScene" path="res://scenes/Hud.tscn" id="9_hud"]
 
@@ -13,6 +14,9 @@ position = Vector2(640, 360)
 
 [node name="Board" type="Node2D" parent="."]
 script = ExtResource("2_board")
+
+[node name="Fx" type="Node2D" parent="."]
+script = ExtResource("3_fx")
 
 [node name="Hud" type="CanvasLayer" parent="."]
 

@@ -216,11 +216,19 @@ def gun_barrel():
     c = Canvas()
     c.rect(10, 22, 21, 27, C["gunmetal"])          # base flange
     c.rect(12, 19, 19, 23, C["rivet"])             # collar
-    c.rect(13, 5, 18, 21, C["gunmetal"])           # barrel
-    c.vline(14, 5, 20, lighten(C["gunmetal"], 0.28))
-    c.vline(18, 5, 20, darken(C["gunmetal"], 0.32))
-    c.rect(14, 2, 17, 5, C["cyan"])                # muzzle tip
-    c.rect(15, 1, 16, 3, C["white"])
+    c.rect(13, 4, 18, 21, C["gunmetal"])           # barrel
+    c.vline(14, 4, 20, lighten(C["gunmetal"], 0.28))
+    c.vline(18, 4, 20, darken(C["gunmetal"], 0.32))
+    c.rect(7, 6, 9, 17, C["gunmetal"])             # left prong
+    c.vline(9, 6, 17, C["cyan"])
+    c.rect(22, 6, 24, 17, C["gunmetal"])           # right prong
+    c.vline(22, 6, 17, C["cyan"])
+    c.rect(7, 5, 9, 6, C["cyan"])                  # prong tips (shorter
+    c.rect(22, 5, 24, 6, C["cyan"])                #  than the muzzle)
+    c.rect(10, 12, 12, 14, C["gunmetal"])          # claw-to-barrel struts
+    c.rect(19, 12, 21, 14, C["gunmetal"])
+    c.rect(14, 2, 17, 4, C["cyan"])                # muzzle
+    c.rect(15, 1, 16, 2, C["white"])
     c.set(12, 25, C["outline"])
     c.set(19, 25, C["outline"])
     c.bevel(0.15, 0.2)
@@ -230,11 +238,16 @@ def gun_barrel():
 
 def drone_normal(frame):
     c = Canvas()
-    bob = 1 if frame else 0
-    c.ellipse(16, 16 + bob, 10, 7, C["alien"])
-    c.rect(10, 12 + bob, 12, 15 + bob, C["red"])
-    c.rect(19, 12 + bob, 21, 15 + bob, C["red"])
-    c.dither(7, 19 + bob, 25, 22 + bob, C["alien_shade"])
+    step = 1 if frame else 0
+    # Three leg pairs; the gait alternates with the frame.
+    for i, y in enumerate((12, 17, 22)):
+        dy = step * (1 if i % 2 == 0 else -1)
+        c.rect(4, y + dy, 6, y + 2 + dy, C["alien_shade"])
+        c.rect(25, y - dy, 27, y + 2 - dy, C["alien_shade"])
+    c.ellipse(16, 17, 9, 6, C["alien"])            # abdomen
+    c.ellipse(16, 10, 5, 3, C["alien_shade"])      # head
+    c.rect(10, 13, 12, 15, C["red"])               # eyes
+    c.rect(19, 13, 21, 15, C["red"])
     c.bevel(0.3, 0.3)
     c.outline()
     return c
@@ -242,10 +255,12 @@ def drone_normal(frame):
 
 def drone_fast(frame):
     c = Canvas()
-    shrink = 1 if frame else 0
-    c.diamond(16, 16, 11 - shrink, 7 - shrink, C["acid"])
-    c.rect(11, 13, 13, 15, C["red"])
-    c.rect(19, 13, 21, 15, C["red"])
+    step = 1 if frame else 0
+    c.rect(3, 13, 6, 18 - step, darken(C["acid"], 0.25))     # fins
+    c.rect(25, 13 + step, 28, 18, darken(C["acid"], 0.25))
+    c.diamond(16, 16, 11 - step, 7, C["acid"])
+    c.rect(11, 12, 13, 14, C["red"])               # eyes
+    c.rect(19, 12, 21, 14, C["red"])
     c.bevel(0.32, 0.3)
     c.outline()
     return c
@@ -253,11 +268,13 @@ def drone_fast(frame):
 
 def drone_tank():
     c = Canvas()
-    c.ellipse(16, 16, 12, 8, C["tank"])
-    c.rect(7, 12, 24, 15, C["tank_dark"])
-    c.rect(9, 13, 12, 15, C["red"])
-    c.rect(19, 13, 22, 15, C["red"])
-    c.rect(4, 20, 27, 22, C["tank_dark"])
+    for y in (11, 17, 23):                          # thick armored legs
+        c.rect(3, y, 6, y + 2, C["tank_dark"])
+        c.rect(25, y, 28, y + 2, C["tank_dark"])
+    c.ellipse(16, 17, 11, 7, C["tank"])             # shell
+    c.ellipse(16, 10, 6, 3, C["tank_dark"])         # head plate
+    c.rect(9, 15, 12, 17, C["red"])                 # eyes
+    c.rect(19, 15, 22, 17, C["red"])
     c.bevel(0.25, 0.28)
     c.outline()
     return c

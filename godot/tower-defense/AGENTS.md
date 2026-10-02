@@ -92,9 +92,9 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
   (build/sell/wave/leak/run_end), no per-frame logging, flushed on game over
   and on window close. Analysis: `tools/analyze_run.py` (stdlib) — per-run
   wave tables + aggregate; scans `telemetry_local/`, then the Godot user dir.
-- **Art (T11)**: XT steel/lab look (see `art/STYLEGUIDE.md`): dark blue-grey
-  metal tiles, blue player turrets with cyan muzzle, white/acid-green alien
-  drones with red eyes, shape+color coding (round/fast-dart/wide-tank),
+- **Art (T11/T14)**: XT steel/lab look (see `art/STYLEGUIDE.md`): dark
+  blue-grey metal tiles, plasma-cannon turrets (side prongs, blue mount, cyan
+  core), bug-style drones (head + legs, red eyes; white/acid/grey-blue coded),
   textured floors, hazard-strip containment base. UI font VT323 (OFL,
   `fonts/`) via `gui/theme/custom_font`, HUD panels dark blue/steel, gold
   money. 32×32 (fx 16×16) with the Nearest filter from `project.godot`; the
@@ -146,7 +146,10 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
   generator, displayed 1:1 (`ART_SCALE` 1). T13.5 (Refactor): board rendering
   (floor/terrain/markers/decals/ambient/routes) + grid math moved into
   `scripts/board_view.gd`; the scene pushes routes and vent state in.
-  Suite: 68 tests / 510 asserts green.
+  Suite: 68 tests / 510 asserts green. T14: plasma-cannon turret + bug-style
+  drones (generator redraw) and combat FX extracted into `scripts/fx.gd`
+  (shake, muzzle/impact/explosion, ember bursts, recoil). Suite: 68 tests /
+  510 asserts green.
 - Vision (2026-10-02): `docs/VISION.md` — pillars P1–P3 (workbench, living
   foundry, curiosity), values, anti-pillars; calibrations + next prototype
   questions (epilog twist, pressure curve, decal readability, meta, time
