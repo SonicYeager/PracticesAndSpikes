@@ -25,9 +25,17 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
 ## Fixed decisions (Vision V1, 2026-09-21)
 
 - **Grid**: variable map size (default 20×12, TILE 32 = 16px art at 2×).
-- **Maze**: free building; any build that disconnects spawn↔base is rejected
-  with instant refund. Spawn/base tiles never buildable.
-- **Pathfinding**: `AStarGrid2D`, 4-directional (`DIAGONAL_MODE_NEVER`).
+- **Maze**: free building; any build that leaves an entry without a
+  reachable exit is rejected with instant refund (multi-source BFS).
+  Entry/exit tiles never buildable; sealed exits are inert.
+- **Entries/exits** (T08): whole sides by default (`ENTRY_SIDES`/`EXIT_SIDES`
+  in `game.gd`, `Side` enum — more sides later, segments are a future
+  detail). Drones spawn scattered along the entries and draw a seeded random
+  exit per spawn; re-path goes to the assigned exit, with a nearest-exit
+  fallback when it is cut off. Exits are escape zones (reaching one = leak),
+  no home core.
+- **Pathfinding**: `AStarGrid2D`, 4-directional (`DIAGONAL_MODE_NEVER`),
+  plus a multi-source BFS (`Pathfinder.reachable_from`) for the build rule.
 - **Economy**: money IS health. Kill +6, leak −10, gun 25, sell refund 12.
   Game over strictly below zero (`money < 0`, not `<= 0`).
 - **Towers**: placement only — no in-match leveling. Gun first, only tower.
@@ -96,9 +104,12 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
   deterministic sines, decays during game over), vignette overlay
   (`vignette.png` via `make_placeholders.py`), barrel recoil, muzzle/impact
   pops. Suite: 34 tests / 111 asserts green. T07: docs pass — roadmap
-  closed, `docs/IDEAS.md` collects post-prototype directions.
-- Prototype complete (T01–T07). Open: seed flow, real skill-tree UI,
-  multi-entry/exit sides (see `docs/IDEAS.md`).
+  closed, `docs/IDEAS.md` collects post-prototype directions. T08:
+  whole-side entries/exits, seeded scatter spawn, assigned exit + fallback,
+  per-entry reachability validation, route preview fix (floor z-index +
+  redraw). Suite: 40 tests / 145 asserts green.
+- Open: seed flow, real skill-tree UI, segments/more entry/exit sides,
+  telemetry enrichment (see `docs/IDEAS.md`).
 
 ## Commands
 

@@ -43,7 +43,8 @@ breit = Tank. Nie nur über Farbe unterscheiden.
   640×360 Alpha-Gradient, linear gefiltert).
 - Spawn vs. Basis: runder grüner Portal-Ring (`spawn`) gegen eckigen Bunker
   mit Ember-Reaktor (`base`) — Form UND Farbe unterscheiden sich; beide
-  pulsieren im Code (Scale), damit sie nie verwechselt werden.
+  pulsieren im Code (Scale), damit sie nie verwechselt werden. T08: markieren
+  jetzt jede Entry- bzw. Exit-Zelle der jeweiligen Seite.
 - HUD-Icons 16×16, 2× skaliert: `hud_coin` (Geld), `hud_wave` (Chevron),
   `hud_space` (Leertaste), `hud_mouse_left`/`hud_mouse_right` (jeweils die
   aktive Taste orange); Gun-Icon nutzt `gun_base`.
@@ -63,8 +64,8 @@ breit = Tank. Nie nur über Farbe unterscheiden.
 | `drone_0/1` | 16×16 | Standard-Drohne, 2-Frame-Bob |
 | `drone_fast_0/1` | 16×16 | Schnelle Drohne (Pfeilform), rotiert entlang des Pfads |
 | `drone_tank` | 16×16 | Tank-Drohne (breit), ein Frame |
-| `spawn` | 16×16 | Spawn-Portal (grüner Ring, pulsiert) |
-| `base` | 16×16 | Basis-Bunker mit Ember-Reaktor (pulsiert) |
+| `spawn` | 16×16 | Spawn-Portal (pulsiert, jede Entry-Zelle) |
+| `base` | 16×16 | Basis-Bunker mit Ember-Reaktor (pulsiert, jede Exit-Zelle) |
 | `projectile` | 8×8 | Tracer, rotiert zur Flugrichtung |
 | `muzzle` | 8×8 | Mündungsblitz (0.05 s, Pop + ±Rotation) |
 | `impact` | 8×8 | Trefferblitz (0.12 s, Pop von 0.7×) |

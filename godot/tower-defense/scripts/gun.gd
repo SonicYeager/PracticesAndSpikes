@@ -2,7 +2,7 @@ class_name Gun
 extends RefCounted
 ## Placement-only tower: fixed range, damage and cadence.
 ## Grid-space position (cell units); targets are Drones. Priority is the
-## target closest to the base, so leaks get shot first.
+## target closest to its own exit, so imminent leaks get shot first.
 
 const RANGE := 3.5
 const DAMAGE := 8.0
@@ -29,7 +29,7 @@ func acquire(targets: Array) -> Drone:
 			continue
 		if not in_range(d):
 			continue
-		var distance := d.distance_to_base()
+		var distance := d.distance_to_exit()
 		if distance < best_distance:
 			best_distance = distance
 			best = d

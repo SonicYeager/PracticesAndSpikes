@@ -12,13 +12,21 @@ func test_spawns_at_path_start() -> void:
 	assert_true(d.alive)
 
 
-func test_walks_to_base_and_leaks() -> void:
+func test_walks_to_exit_and_leaks() -> void:
 	var d := Drone.new("normal", PATH, 20.0, 1.0)
 	assert_false(d.advance(1.5), "Still walking after reaching waypoint 1")
 	assert_eq(d.position, Vector2(1.5, 0.5))
-	assert_true(d.advance(1.0), "Reaching the base is a leak")
+	assert_true(d.advance(1.0), "Reaching the exit is a leak")
 	assert_true(d.finished)
 	assert_eq(d.position, Vector2(2.5, 0.5))
+
+
+func test_exit_cell_and_distance_to_exit() -> void:
+	var d := Drone.new("normal", PATH, 20.0, 1.0)
+	assert_eq(d.exit_cell(), Vector2i(2, 0))
+	assert_almost_eq(d.distance_to_exit(), 2.0, 0.001)
+	d.advance(1.0)
+	assert_almost_eq(d.distance_to_exit(), 1.0, 0.001)
 
 
 func test_kind_modifiers() -> void:
@@ -48,10 +56,10 @@ func test_facing_follows_path_direction() -> void:
 	assert_eq(d.facing(), Vector2(0, 1))
 
 
-func test_reroute_onto_base_cell_is_finished() -> void:
+func test_reroute_onto_exit_cell_is_finished() -> void:
 	var d := Drone.new("normal", PATH, 20.0, 1.0)
 	d.reroute([Vector2i(2, 0)])
-	assert_true(d.finished, "A path that is only the base cell counts as leaked")
+	assert_true(d.finished, "A path that is only the exit cell counts as leaked")
 	assert_false(d.advance(1.0))
 
 

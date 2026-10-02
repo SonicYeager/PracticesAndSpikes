@@ -35,3 +35,16 @@ func test_variable_sizes() -> void:
 			p.has_path(Vector2i.ZERO, s - Vector2i(1, 1)),
 			"Open grid %s must connect corners" % str(s)
 		)
+
+
+func test_reachable_from_multiple_sources() -> void:
+	var p := Pathfinder.new()
+	p.setup(Vector2i(5, 5))
+	for y in 5:
+		p.set_solid(Vector2i(2, y), true)
+	var right := p.reachable_from([Vector2i(4, 2)])
+	assert_true(right.has(Vector2i(4, 0)))
+	assert_false(right.has(Vector2i(0, 2)), "Wall blocks the left side")
+	var both := p.reachable_from([Vector2i(0, 0), Vector2i(4, 4)])
+	assert_true(both.has(Vector2i(1, 1)))
+	assert_true(both.has(Vector2i(3, 3)))

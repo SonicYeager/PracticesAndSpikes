@@ -66,9 +66,11 @@ seed  = game_seed + n * 7919
 ```
 
 Spawn pacing: one drone every 0.7 s (`SPAWN_INTERVAL`), order normals → fast
-→ tanks. Between waves: once the spawn queue and the field are empty, a
-`BREAK_SECONDS` (5 s) intermission runs with a HUD countdown, then the next
-wave auto-starts; Space skips the wait. Wave 1 is started manually.
+→ tanks. Each spawn scatters along the entry side and draws a random exit
+(seeded per spawn, see the scene pacing table). Between waves: once the
+spawn queue and the field are empty, a `BREAK_SECONDS` (5 s) intermission
+runs with a HUD countdown, then the next wave auto-starts; Space skips the
+wait. Wave 1 is started manually.
 
 Composition for the current fixed seed (`GAME_SEED = 1`), verified
 by running `WaveGen` directly:
@@ -94,6 +96,7 @@ The tanks/fast split changes with the seed; count/hp/speed do not.
 | `TILE` | 32 | px per cell (16 px art at 2×) |
 | `GAME_SEED` | 1 | fixed; the seed flow is still open |
 | `SPAWN_INTERVAL` | 0.7 s | between two drones of a wave |
+| `SCATTER_SEED_MUL` / `SCATTER_WAVE_MUL` | 1000003 / 104729 | scatter seed: `GAME_SEED * MUL + wave * MUL2 + index` (entry + exit) |
 | `BREAK_SECONDS` | 5.0 s | intermission between waves (Space skips it) |
 | `SHAKE_DECAY` / `SHAKE_MAX_OFFSET` | 1.6 /s · 9 px | trauma decay / max camera offset |
 | `SHAKE_KILL` / `SHAKE_LEAK` / `SHAKE_GAME_OVER` | 0.12 / 0.3 / 0.7 | trauma per event |

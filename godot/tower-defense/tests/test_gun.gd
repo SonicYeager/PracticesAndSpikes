@@ -1,5 +1,5 @@
 extends GutTest
-## Gun targeting + cadence: fixed range, nearest-to-base priority.
+## Gun targeting + cadence: fixed range, nearest-to-its-exit priority.
 
 const PATH: Array[Vector2i] = [
 	Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0), Vector2i(3, 0), Vector2i(4, 0),
@@ -31,7 +31,7 @@ func test_fires_and_respects_cooldown() -> void:
 	assert_eq(gun.try_fire(0.3, [near]), near, "Fires again after the interval")
 
 
-func test_prefers_target_closest_to_base() -> void:
+func test_prefers_target_closest_to_its_exit() -> void:
 	var gun := Gun.new(Vector2(5.5, 0.5))
 	var behind := _drone_at(3)
 	var ahead := _drone_at(4)

@@ -24,11 +24,11 @@ controller owns every sprite, tween, audio player and HUD label.
 
 | Class | File | Responsibility |
 |---|---|---|
-| `Maze` | `scripts/maze.gd` | Buildable grid (`built: cell → tower_type`), spawn/base reservation, `can_build()` via hypothetical block + connectivity check, `build()`, `sell()` |
-| `Pathfinder` | `scripts/pathfinder.gd` | `AStarGrid2D` wrapper; `DIAGONAL_MODE_NEVER`, solid points, `find_path()` returns cell ids, `has_path()` |
+| `Maze` | `scripts/maze.gd` | Buildable grid (`built: cell → tower_type`), entry/exit reservation, `can_build()` via hypothetical block + multi-source BFS (every entry keeps an exit), `build()`, `sell()` |
+| `Pathfinder` | `scripts/pathfinder.gd` | `AStarGrid2D` wrapper; `DIAGONAL_MODE_NEVER`, solid points, `find_path()` returns cell ids, `has_path()`, `reachable_from()` multi-source BFS |
 | `Economy` | `scripts/economy.gd` | Money-as-health: `on_kill()`, `on_leak()`, `spend()`, `is_game_over()` (strictly `< 0`) |
 | `WaveGen` | `scripts/wave.gd` | Static `composition(n, seed)` → `{wave, count, hp, speed, tanks, fast}` |
-| `Drone` | `scripts/drone.gd` | Grid-space walker: `advance(dt)` (returns `true` on leak), `take_damage()`, `reroute()`, `facing()`, `distance_to_base()`, `KIND_MODS` |
+| `Drone` | `scripts/drone.gd` | Grid-space walker: `advance(dt)` (returns `true` on leak), `take_damage()`, `reroute()`, `facing()`, `exit_cell()`, `distance_to_exit()`, `KIND_MODS` |
 | `Gun` | `scripts/gun.gd` | Range/cadence/targeting; `acquire()` picks the drone closest to base, `try_fire(dt, targets)` returns the target when a shot is due |
 | `Projectile` | `scripts/projectile.gd` | Homing tracer; `advance(dt)` returns `true` on hit, fizzles when the target dies or leaks |
 | `Telemetry` | `scripts/telemetry.gd` | Buffers JSON events, `flush(path)` writes JSONL |
@@ -55,6 +55,7 @@ only).
 0. `_update_shake` — trauma decay + camera offset (also runs after game over)
 1. `_update_spawner` — runs the `BREAK_SECONDS` countdown (auto-starts the
    next wave), pops one drone from the queue every `SPAWN_INTERVAL`
+   (`_spawn_drone` scatters the entry cell and draws the assigned exit)
 2. `_update_drones` — advance along the path, handle leaks
 3. `_update_guns` — acquire target, aim barrel, fire (muzzle tracer + flash)
 4. `_update_projectiles` — advance, resolve hits (damage/kill)
@@ -79,11 +80,12 @@ Wave cleared ──► _break_timer = BREAK_SECONDS      (HUD countdown)
             timeout or Space ──► _start_wave(n + 1)   (auto-chain)
 
 spawner ──► _spawn_drone(kind)
-            path = Pathfinder.find_path(spawn, base)   (snapshot)
+            entry + assigned exit drawn from the seeded scatter RNG
+            path = Pathfinder.find_path(entry, exit)        (snapshot)
             Drone.spawn(kind, cells, hp, speed) + sprite + HP bar
 
 Drone.advance(dt) == true ──► _on_leak
-            Economy.on_leak() · telemetry "leak" · SFX "leak"
+            Economy.on_leak() · telemetry "leak" (+ exit cell) · SFX "leak"
             money < 0 ──► _end_run (game-over screen, "gameover" SFX, log flush)
 
 R / restart button (game over) ──► _restart: reload_current_scene()
@@ -96,17 +98,22 @@ Projectile hit ──► _resolve_hit
 Left click ──► spend(25) → reject? refund + SFX "denied"
                         → build: Gun + tower sprite + telemetry "build" + SFX "build"
 Right click ─► Maze.sell → refund 12 + telemetry "sell" + SFX "sell"
-Both        ──► _reroute_drones(): every drone re-paths from its current cell
+Both        ──► _reroute_drones(): each drone re-paths to its assigned exit,
+                or to the nearest reachable exit when that one is cut off
+            ──► queue_redraw(): the route preview follows the new maze
 ```
 
 ## Invariants
 
-- Spawn↔base is always connected: `Maze.can_build()` blocks a cell
-  hypothetically and checks `Pathfinder.has_path()` before committing.
+- Every entry always reaches at least one exit: `Maze.can_build()` blocks a
+  cell hypothetically and checks the multi-source BFS from all exits.
+  Sealed exits are inert; creative splits (left→top, right→bottom) are fine.
 - A tower can never be built on the cell a drone currently occupies
   (`_drone_on_cell()`); therefore a reroute never starts from a solid cell.
-- A drone always has a non-empty path. `reroute()` keeps the position (no
-  teleport) and treats a path that is only the base cell as a leak.
+- A drone's path always ends at its assigned exit. `reroute()` keeps the
+  position (no teleport) and treats a path that is only the exit cell as a
+  leak; if the assigned exit is cut off, the scene falls back to the nearest
+  reachable exit (assignment holds only while valid).
 - A drone that reaches the base leaks exactly once and is removed immediately
   (kills likewise), so `_drones` never contains dead or leaked drones.
 - Game over is strictly `money < 0`, checked only after a leak.
@@ -120,10 +127,13 @@ Both        ──► _reroute_drones(): every drone re-paths from its current c
 
 ## Determinism
 
-Gameplay RNG exists in exactly one place: `WaveGen`, seeded with
-`game_seed + n * 7919`. Everything else is derived:
+Gameplay RNG exists in exactly two places, both seeded: `WaveGen`
+composition (`game_seed + n * 7919`) and the per-spawn scatter
+(`GAME_SEED * 1000003 + wave * 104729 + spawn index`, entry cell + exit).
+Everything else is derived:
 
 - spawn order: normals, then fast, then tanks (fixed)
+- spawn scatter: per-spawn RNG, deterministic given the run seed
 - floor variety: `(x * 7 + y * 13) % 3` (stable pattern)
 - explosion frame alternation: `_fx_counter`
 - animation phases: spawn index (`_drone_phase`), not RNG
@@ -141,10 +151,12 @@ stay above all drones. The live path preview is drawn in `Main._draw()`
 (behind all children). The HUD is a `CanvasLayer` and therefore unaffected by
 world coordinates.
 
-A `Camera2D` centered on the viewport carries the screen shake; CanvasLayer
-content is not affected by it, so the HUD stays fixed. The vignette is the
-first child of the HUD layer (world → vignette → panel → game-over overlay,
-in that draw order).
+Floor tiles use `z_index = -1`, so `Main._draw()` — the live route preview
+tracing each active drone's assigned path — stays visible above the floor
+and below towers/drones. A `Camera2D` centered on the viewport carries the
+screen shake; CanvasLayer content is not affected by it, so the HUD stays
+fixed. The vignette is the first child of the HUD layer (world → vignette →
+panel → game-over overlay, in that draw order).
 
 ## Testing
 
@@ -153,10 +165,11 @@ in that draw order).
   `test_gun`, `test_projectile`).
 - Scene: `tests/test_game_scene.gd` instantiates `Main.tscn` and steps
   `_process(1.0 / 60.0)` manually, so assertions are frame-rate independent;
-  it covers spawn → walk → shoot → kill, the payout, break → auto-chain,
-  the Space skip, the game-over screen incl. telemetry flush and
-  restart-button wiring, and the camera shake offset/decay (writes only
-  `user://`, then deletes the file).
+  it covers spawn → walk → shoot → kill with scattered entries, the payout,
+  break → auto-chain, the Space skip, scatter determinism, the nearest-exit
+  fallback, the game-over screen incl. telemetry flush and restart-button
+  wiring, and the camera shake offset/decay (writes only `user://`, then
+  deletes the file).
 - Gotcha: GUT's GUI panel covers the right half of the window, so
   screenshots taken from a GUT run are cropped. For visual QA use a
   temporary `SceneTree` script (`godot --path . -s tools/x.gd`,
@@ -172,5 +185,9 @@ in that draw order).
   to `game.gd` `DRONE_TEX`; `WaveGen` decides counts.
 - **New wave shape**: `WaveGen.composition()` is the single source; keep it
   seeded and deterministic and update `tests/test_wave.gd`.
+- **More entry/exit sides**: `ENTRY_SIDES` / `EXIT_SIDES` in `game.gd` (the
+  `Side` enum) are deduplicated into cell lists. Segments (side + cell
+  range) are a future config detail — validation and the nearest-exit
+  fallback already handle non-contiguous exits.
 - **Balance changes**: constants are documented in `docs/BALANCE.md`; run the
   suite after touching them (`test_wave`/`test_economy` pin several values).

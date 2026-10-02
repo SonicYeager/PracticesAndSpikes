@@ -9,7 +9,7 @@ telemetry for data-driven balancing.
 
 - Stack: Godot 4.7.2, GDScript (no .NET flow)
 - Entrypoint: `scenes/Main.tscn` (open/import the folder in the Godot editor)
-- Status: prototype complete (T01–T07) — see *Controls* and *Roadmap*
+- Status: prototype complete + sides feature (T01–T08) — see *Controls* and *Roadmap*
 
 ## Controls
 
@@ -21,14 +21,16 @@ telemetry for data-driven balancing.
 | R (or the button) | Restart after game over |
 
 Rules: money **is** health — kills earn +6, leaks cost −10, game over strictly
-below zero. Builds that would disconnect spawn↔base (or land on a tile a
-drone currently occupies) are rejected. Drones re-route when the maze changes.
+below zero. Builds that would leave an entry without a reachable exit (or
+land on a tile a drone currently occupies) are rejected. Drones re-route when
+the maze changes.
 After a wave is cleared, a 5 s break runs (`BREAK_SECONDS`); the next wave
 then auto-starts. Game over shows a run summary and restarts the scene.
 
 ## Features (current)
 
-- Variable grid (20×12, TILE 32), free maze building, live path preview.
+- Variable grid (20×12, TILE 32), free maze building, live route preview of
+  active drones.
 - 4-directional AStarGrid2D pathfinding, no corner slipping.
 - Deterministic endless waves: `WaveGen.composition(n, seed)`, no unseeded
   RNG anywhere in gameplay — same seed + same builds = same run.
@@ -41,6 +43,9 @@ then auto-starts. Game over shows a run summary and restarts the scene.
   animation, explosions, HUD icon panel, pulsing spawn portal/base bunker.
 - Polish (T06): trauma-based screen shake (Camera2D, deterministic sines),
   vignette overlay, barrel recoil, muzzle/impact pops.
+- Sides (T08): enemies enter scattered along the left side and each draws a
+  seeded random exit on the right side; reaching an exit is a leak. Builds
+  must keep every entry connected to at least one exit.
 - Local telemetry: build/sell/wave/leak/run_end events →
   `user://run_<seed>.jsonl` (analysis: `tools/analyze_run.py`).
 - Meta stub: one persistent bonus (`SkillStub` → `user://skill_stub.cfg`).
@@ -62,10 +67,11 @@ GODOT_DISABLE_LEAK_CHECKS=1 godot --headless --path . \
   -s res://addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
 ```
 
-GUT 9.6.1 is vendored under `addons/gut/`. The suite (34 tests / 111 asserts)
+GUT 9.6.1 is vendored under `addons/gut/`. The suite (40 tests / 145 asserts)
 covers every core class plus one scene integration smoke test that steps the
-real `Main.tscn` (spawn → walk → shoot → kill, break → auto-chain, game over
-+ log flush, restart wiring, camera shake decay).
+real `Main.tscn` (spawn → walk → shoot → kill with scattered entries, break →
+auto-chain, game over + log flush, restart wiring, camera shake decay,
+scatter determinism, nearest-exit fallback).
 
 ## Project structure
 
@@ -135,5 +141,6 @@ The parser has stdlib regression tests: `python tools/test_analyze_run.py`.
 | T05 | Telemetry analysis script (Python) | done |
 | T06 | Remaining polish (screen shake, vignette, …) | done |
 | T07 | Docs pass | done |
+| T08 | Multi-entry/exit sides, scatter spawn, nearest-exit fallback | done |
 
 All slices done. Post-prototype directions are collected in `docs/IDEAS.md`.

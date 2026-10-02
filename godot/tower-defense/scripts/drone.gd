@@ -1,8 +1,9 @@
 class_name Drone
 extends RefCounted
-## Grid-space walker: follows a cell path at cells/second and leaks at the
-## end. Position is in cell units (e.g. (2.5, 3.5) = center of cell (2, 3)),
-## so movement stays independent of scene origin and tile size.
+## Grid-space walker: follows a cell path at cells/second and leaks when it
+## reaches its exit (the last path cell). Position is in cell units
+## (e.g. (2.5, 3.5) = center of cell (2, 3)), so movement stays independent
+## of scene origin and tile size.
 
 const KIND_MODS := {
 	"normal": {"hp": 1.0, "speed": 1.0},
@@ -84,6 +85,10 @@ func reroute(new_path: Array[Vector2i]) -> void:
 		finished = true
 
 
+func exit_cell() -> Vector2i:
+	return path[path.size() - 1]
+
+
 func facing() -> Vector2:
 	if path_index < path.size():
 		var direction := center_of(path[path_index]) - position
@@ -92,5 +97,5 @@ func facing() -> Vector2:
 	return Vector2.RIGHT
 
 
-func distance_to_base() -> float:
+func distance_to_exit() -> float:
 	return position.distance_to(center_of(path[path.size() - 1]))

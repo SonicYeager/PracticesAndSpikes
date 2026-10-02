@@ -6,8 +6,8 @@ Captured so future sessions start from the maintainer's intent, not guesses.
 
 ## Multi-entry / multi-exit sides (maze pressure)
 
-*Source: maintainer, 2026-10-02. Design decisions taken the same day — ready
-to be built as the next slice.*
+*Source: maintainer, 2026-10-02. Design decided and implemented as T08 the
+same day (see the git log); kept here as the design record.*
 
 Today: one spawn cell (left edge) → one base cell (right edge). Target: a
 **whole side** releases enemies scattered along it, and enemies want to reach
@@ -27,8 +27,9 @@ routes instead of just walling the direct line.
   drone draws its entry cell (scatter along the side) and its assigned exit.
 - Re-path walks to the **assigned exit**; if a build cuts that exit off, the
   drone falls back to the **nearest reachable exit** (assignment holds only
-  while valid). If no exit is reachable at all (rare pocket case), the drone
-  keeps its old path — documented edge case.
+  while valid). If no exit is reachable at all (rare pocket case), a re-path
+  keeps the old path and a spawn is dropped — both prevented by validation
+  in the default config.
 - Build validation: **every entry reaches at least one exit** (multi-source
   BFS from all exits). No single-component rule — creative splits (left→top,
   right→bottom) are allowed; a fully sealed exit is inert.

@@ -4,16 +4,26 @@ extends Node2D
 ## homing tracers, kills earn / leaks cost. T04: waves auto-chain after a
 ## BREAK_SECONDS intermission (Space skips it), game over shows a full-screen
 ## summary with restart (R or button). T06: trauma screen shake (Camera2D),
-## vignette overlay, barrel recoil, muzzle/impact polish.
+## vignette overlay, barrel recoil, muzzle/impact polish. T08: whole-side
+## entries/exits, seeded scatter spawn, assigned exit per drone with a
+## nearest-exit fallback.
 
 ## Wave phase: exactly one state is active at a time.
 enum Phase { IDLE, RUNNING, BREAK, GAME_OVER }
 
+## Map edges used as entry/exit zones (T08). The lists stay generic — more
+## sides later, segments are a future config detail.
+enum Side { LEFT, RIGHT, TOP, BOTTOM }
+
 const TILE := 32
+const ENTRY_SIDES: Array = [Side.LEFT]
+const EXIT_SIDES: Array = [Side.RIGHT]
 const MAP_SIZE := Vector2i(20, 12)
 const SELL_REFUND := Economy.GUN_COST / 2
 const ART_SCALE := Vector2(2, 2)
 const GAME_SEED := 1
+const SCATTER_SEED_MUL := 1000003
+const SCATTER_WAVE_MUL := 104729
 const SPAWN_INTERVAL := 0.7
 const BREAK_SECONDS := 5.0
 const SHAKE_DECAY := 1.6         # trauma lost per second
@@ -90,8 +100,8 @@ var _projectiles: Array[Projectile] = []
 var _projectile_sprites: Dictionary = {}
 var _sfx: Dictionary = {}
 var _bar_tex: ImageTexture
-var _spawn_node: Sprite2D
-var _base_node: Sprite2D
+var _entry_nodes: Array[Sprite2D] = []
+var _exit_nodes: Array[Sprite2D] = []
 var _spawn_counter := 0
 var _wave := 0
 var _wave_comp: Dictionary = {}
@@ -116,9 +126,7 @@ var _fx_counter := 0
 
 
 func _ready() -> void:
-	var spawn := Vector2i(0, MAP_SIZE.y / 2)
-	var base := Vector2i(MAP_SIZE.x - 1, MAP_SIZE.y / 2)
-	maze = Maze.new(MAP_SIZE, spawn, base)
+	maze = Maze.new(MAP_SIZE, _sides_to_cells(ENTRY_SIDES), _sides_to_cells(EXIT_SIDES))
 	economy = Economy.new(100)
 	telemetry = Telemetry.new(GAME_SEED)
 	origin = (Vector2(get_viewport_rect().size) - Vector2(MAP_SIZE) * TILE) * 0.5
@@ -128,8 +136,8 @@ func _ready() -> void:
 	_make_bar_texture()
 	_setup_audio()
 	_draw_floor()
-	_spawn_node = _draw_marker(spawn, SPAWN_TEX)
-	_base_node = _draw_marker(base, BASE_TEX)
+	_entry_nodes = _draw_markers(maze.entries, SPAWN_TEX)
+	_exit_nodes = _draw_markers(maze.exits, BASE_TEX)
 	_update_hud()
 	queue_redraw()
 
@@ -172,6 +180,7 @@ func _unhandled_input(event: InputEvent) -> void:
 					_show_tower(cell)
 					telemetry.event("build", {"cell": [cell.x, cell.y]})
 					_reroute_drones()
+					queue_redraw()
 					_play("build")
 				else:
 					economy.earn(Economy.GUN_COST)
@@ -185,6 +194,7 @@ func _unhandled_input(event: InputEvent) -> void:
 				economy.earn(SELL_REFUND)
 				telemetry.event("sell", {"cell": [cell.x, cell.y]})
 				_reroute_drones()
+				queue_redraw()
 				_play("sell")
 		_update_hud()
 	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_SPACE:
@@ -234,7 +244,21 @@ func _update_spawner(delta: float) -> void:
 
 
 func _spawn_drone(kind: String) -> void:
-	var cells := _cells_from_path(maze.pathfinder.find_path(maze.spawn_cell, maze.base_cell))
+	# Seeded scatter: entry cell and assigned exit are deterministic per run.
+	# The index advances per spawn attempt, so the stream never depends on
+	# pathfinding success.
+	var index := _spawn_counter
+	_spawn_counter += 1
+	var rng := RandomNumberGenerator.new()
+	rng.seed = GAME_SEED * SCATTER_SEED_MUL + _wave * SCATTER_WAVE_MUL + index
+	var entry: Vector2i = maze.entries[rng.randi_range(0, maze.entries.size() - 1)]
+	var exit: Vector2i = maze.exits[rng.randi_range(0, maze.exits.size() - 1)]
+	var cells := _cells_from_path(maze.pathfinder.find_path(entry, exit))
+	if cells.is_empty():
+		# Sealed exit (possible with future segments): take the nearest one.
+		exit = _nearest_exit(entry)
+		if exit != Vector2i(-1, -1):
+			cells = _cells_from_path(maze.pathfinder.find_path(entry, exit))
 	if cells.is_empty():
 		return
 	var speed: float = float(_wave_comp["speed"]) / TILE
@@ -257,8 +281,8 @@ func _spawn_drone(kind: String) -> void:
 	add_child(bar_bg)
 	add_child(bar_fill)
 	_drone_bars[d] = {"bg": bar_bg, "fill": bar_fill}
-	_drone_phase[d] = float(_spawn_counter) * 0.9
-	_spawn_counter += 1
+	_drone_phase[d] = float(index) * 0.9
+	queue_redraw()
 
 
 func _update_drones(delta: float) -> void:
@@ -273,7 +297,8 @@ func _update_drones(delta: float) -> void:
 
 func _on_leak(d: Drone) -> void:
 	economy.on_leak()
-	telemetry.event("leak", {"wave": _wave, "money": economy.money})
+	var exit := d.exit_cell()
+	telemetry.event("leak", {"wave": _wave, "money": economy.money, "exit": [exit.x, exit.y]})
 	_play("leak")
 	_add_shake(SHAKE_LEAK)
 	_remove_drone(d)
@@ -346,6 +371,7 @@ func _resolve_hit(p: Projectile) -> void:
 
 func _remove_drone(d: Drone) -> void:
 	_drones.erase(d)
+	queue_redraw()
 	var sprite := _drone_sprites.get(d) as Node
 	if sprite != null:
 		sprite.queue_free()
@@ -418,10 +444,10 @@ func _sync_sprites(delta: float) -> void:
 		var direction := p.target.position - p.position
 		if direction.length() > 0.001:
 			sprite.rotation = direction.angle()
-	if _spawn_node != null:
-		_spawn_node.scale = ART_SCALE * (1.0 + 0.05 * sin(_anim_time * 3.2))
-	if _base_node != null:
-		_base_node.scale = ART_SCALE * (1.0 + 0.03 * sin(_anim_time * 4.0))
+	for i in _entry_nodes.size():
+		_entry_nodes[i].scale = ART_SCALE * (1.0 + 0.05 * sin(_anim_time * 3.2 + i * 0.8))
+	for i in _exit_nodes.size():
+		_exit_nodes[i].scale = ART_SCALE * (1.0 + 0.03 * sin(_anim_time * 4.0 + i * 0.8))
 
 
 func _update_hp_bar(d: Drone, world: Vector2) -> void:
@@ -551,7 +577,26 @@ func _drone_on_cell(cell: Vector2i) -> bool:
 
 func _reroute_drones() -> void:
 	for d in _drones:
-		d.reroute(_cells_from_path(maze.pathfinder.find_path(d.cell(), maze.base_cell)))
+		var cells := _cells_from_path(maze.pathfinder.find_path(d.cell(), d.exit_cell()))
+		if cells.is_empty():
+			# Assigned exit cut off: fall back to the nearest reachable exit.
+			var alt := _nearest_exit(d.cell())
+			if alt != Vector2i(-1, -1):
+				cells = _cells_from_path(maze.pathfinder.find_path(d.cell(), alt))
+		if not cells.is_empty():
+			d.reroute(cells)
+
+
+func _nearest_exit(from: Vector2i) -> Vector2i:
+	# Shortest path wins; ties keep the first exit in maze.exits order (stable).
+	var best := Vector2i(-1, -1)
+	var best_length := INF
+	for exit in maze.exits:
+		var path := maze.pathfinder.find_path(from, exit)
+		if not path.is_empty() and path.size() < best_length:
+			best_length = path.size()
+			best = exit
+	return best
 
 
 func _cells_from_path(path: PackedVector2Array) -> Array[Vector2i]:
@@ -581,6 +626,8 @@ func _draw_floor() -> void:
 			tile.texture = FLOOR_TEX[(x * 7 + y * 13) % FLOOR_TEX.size()]
 			tile.position = _cell_center(Vector2i(x, y))
 			tile.scale = ART_SCALE
+			# Bottom layer: keeps the path preview (Main._draw) visible above it.
+			tile.z_index = -1
 			add_child(tile)
 
 
@@ -591,6 +638,42 @@ func _draw_marker(cell: Vector2i, tex: Texture2D) -> Sprite2D:
 	marker.scale = ART_SCALE
 	add_child(marker)
 	return marker
+
+
+func _draw_markers(cells: Array[Vector2i], tex: Texture2D) -> Array[Sprite2D]:
+	var nodes: Array[Sprite2D] = []
+	for cell in cells:
+		nodes.append(_draw_marker(cell, tex))
+	return nodes
+
+
+func _sides_to_cells(sides: Array) -> Array[Vector2i]:
+	var cells: Array[Vector2i] = []
+	var seen := {}
+	for side in sides:
+		for cell in _side_cells(side):
+			if not seen.has(cell):
+				seen[cell] = true
+				cells.append(cell)
+	return cells
+
+
+func _side_cells(side: int) -> Array[Vector2i]:
+	var cells: Array[Vector2i] = []
+	match side:
+		Side.LEFT:
+			for y in MAP_SIZE.y:
+				cells.append(Vector2i(0, y))
+		Side.RIGHT:
+			for y in MAP_SIZE.y:
+				cells.append(Vector2i(MAP_SIZE.x - 1, y))
+		Side.TOP:
+			for x in MAP_SIZE.x:
+				cells.append(Vector2i(x, 0))
+		Side.BOTTOM:
+			for x in MAP_SIZE.x:
+				cells.append(Vector2i(x, MAP_SIZE.y - 1))
+	return cells
 
 
 func _show_tower(cell: Vector2i) -> void:
@@ -642,7 +725,7 @@ func _update_hud() -> void:
 func _draw() -> void:
 	if maze == null:
 		return
-	# Live path preview; floor/towers/markers are sprites now.
-	var path := maze.pathfinder.find_path(maze.spawn_cell, maze.base_cell)
-	for p in path:
-		draw_circle(_cell_center(Vector2i(p)), 2.0, Color(0.90, 0.90, 0.40, 0.70))
+	# Live routes: each drone's assigned path, dimmed so towers stay readable.
+	for d in _drones:
+		for p in d.path:
+			draw_circle(_cell_center(p), 2.0, Color(0.90, 0.90, 0.40, 0.30))

@@ -21,23 +21,45 @@ func test_wave_spawns_walks_and_gun_kills() -> void:
 	for i in 240:
 		game._process(STEP)
 	assert_eq(game._drones.size(), 4, "Wave 1 spawns its four drones")
-	assert_gt(game._drones[0].position.x, 0.5, "Drones walk the path")
+	var moving := 0
+	for d in game._drones:
+		if d.position != Drone.center_of(d.path[0]):
+			moving += 1
+	assert_gt(moving, 0, "Drones walk the path")
 
-	var cell := Vector2i(9, 5)
-	game.economy.earn(Economy.GUN_COST)
-	assert_true(game.economy.spend(Economy.GUN_COST))
-	assert_true(game.maze.build(cell))
-	game._guns[cell] = Gun.new(Drone.center_of(cell))
-	game._show_tower(cell)
+	# Three guns cover every row of the mid-column; scatter spawns must cross it.
+	for cell in [Vector2i(9, 2), Vector2i(9, 5), Vector2i(9, 8)]:
+		game.economy.earn(Economy.GUN_COST)
+		assert_true(game.economy.spend(Economy.GUN_COST))
+		assert_true(game.maze.build(cell))
+		game._guns[cell] = Gun.new(Drone.center_of(cell))
+		game._show_tower(cell)
 
+	var tracked: Array = game._drones.duplicate()
 	var kills := 0
-	for i in 600:
+	var leaks := 0
+	for i in 2400:
 		game._process(STEP)
-		kills = 4 - game._drones.size()
+		kills = 0
+		leaks = 0
+		for d in tracked:
+			if d.finished:
+				leaks += 1
+			elif not d.alive:
+				kills += 1
 		if kills >= 2:
 			break
-	assert_gt(kills, 1, "Gun kills at least two drones in transit")
-	assert_eq(game.economy.money, 100 + kills * Economy.KILL_REWARD, "Kills pay out")
+	assert_gt(kills, 1, "Guns kill at least two drones in transit")
+	assert_eq(
+		kills + leaks + game._drones.size(),
+		tracked.size(),
+		"Drones are killed, leaked or still alive"
+	)
+	assert_eq(
+		game.economy.money,
+		100 + kills * Economy.KILL_REWARD - leaks * Economy.LEAK_COST,
+		"Kills pay out, leaks cost"
+	)
 
 
 func test_wave_end_starts_break_then_auto_chains() -> void:
@@ -75,11 +97,11 @@ func test_space_skips_break() -> void:
 func test_double_leak_same_frame_records_single_run_end() -> void:
 	var game = load("res://scenes/Main.tscn").instantiate()
 	add_child_autofree(game)
-	var base_only: Array[Vector2i] = [game.maze.base_cell]
-	# Two drones with a base-only path leak in the same frame; the first one
+	var exit_only: Array[Vector2i] = [game.maze.exits[0]]
+	# Two drones with an exit-only path leak in the same frame; the first one
 	# ends the run, the second must not re-trigger _end_run.
-	game._drones.append(Drone.spawn("normal", base_only, 20.0, 1.0))
-	game._drones.append(Drone.spawn("normal", base_only, 20.0, 1.0))
+	game._drones.append(Drone.spawn("normal", exit_only, 20.0, 1.0))
+	game._drones.append(Drone.spawn("normal", exit_only, 20.0, 1.0))
 	game.economy.money = -1
 	game._process(STEP)
 	assert_eq(game._phase, game.Phase.GAME_OVER, "First leak ends the run")
@@ -133,4 +155,45 @@ func test_shake_offsets_and_decays() -> void:
 	assert_lt(game._camera.offset.length(), 0.001, "Shake decays during game over")
 	DirAccess.remove_absolute(
 		ProjectSettings.globalize_path("user://run_%d.jsonl" % game.GAME_SEED)
+	)
+
+
+func test_scatter_spawn_is_deterministic() -> void:
+	var first = load("res://scenes/Main.tscn").instantiate()
+	add_child_autofree(first)
+	var second = load("res://scenes/Main.tscn").instantiate()
+	add_child_autofree(second)
+	for game in [first, second]:
+		game._start_wave(1)
+		for i in 240:
+			game._process(STEP)
+	assert_eq(first._drones.size(), 4)
+	var rows := {}
+	for i in 4:
+		assert_eq(first._drones[i].path, second._drones[i].path, "Same seed → same scatter")
+		rows[first._drones[i].path[0].y] = true
+	assert_gt(rows.size(), 1, "Spawns scatter across the entry side")
+
+
+func test_fallback_to_nearest_exit_when_target_cut() -> void:
+	var game = load("res://scenes/Main.tscn").instantiate()
+	add_child_autofree(game)
+	# A drone whose (arbitrary) assigned target gets walled off must re-route
+	# to a reachable exit instead.
+	var entry := Vector2i(0, 5)
+	var target := Vector2i(10, 6)
+	var cells: Array[Vector2i] = []
+	for p in game.maze.pathfinder.find_path(entry, target):
+		cells.append(Vector2i(p))
+	game._drones.append(Drone.spawn("normal", cells, 20.0, 1.0))
+	assert_eq(game._drones[0].exit_cell(), target)
+	for cell in [Vector2i(9, 6), Vector2i(11, 6), Vector2i(10, 5), Vector2i(10, 7)]:
+		assert_true(game.maze.build(cell), "Sealing cell %s is allowed" % str(cell))
+	game._reroute_drones()
+	var d: Drone = game._drones[0]
+	assert_ne(d.exit_cell(), target, "Cut-off target is replaced")
+	assert_true(game.maze.exits.has(d.exit_cell()), "New target is a real exit")
+	assert_false(
+		game.maze.pathfinder.find_path(d.cell(), d.exit_cell()).is_empty(),
+		"Fallback path exists"
 	)
