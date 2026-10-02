@@ -50,14 +50,15 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
   T04: waves auto-chain — after a wave is cleared, a `BREAK_SECONDS` (5 s)
   intermission runs with a HUD countdown; Space skips it. Wave 1 stays
   manual (build phase). Restart reuses the fixed seed until the seed flow
-  lands (T05).
+  lands (still open).
 - **Game over** (T04): dimmed full-screen overlay with run summary (wave,
   money); restart via R or the button = `get_tree().reload_current_scene()`.
 - **Meta**: skill tree is a stub (`SkillStub`, one dummy bonus,
   `user://skill_stub.cfg`). Real tree UI later, never in-match.
 - **Telemetry**: local JSONL writer (`Telemetry`), event-based only
   (build/sell/wave/leak/run_end), no per-frame logging, flushed on game over
-  and on window close. Python analysis script still open (T05).
+  and on window close. Analysis: `tools/analyze_run.py` (stdlib) — per-run
+  wave tables + aggregate; scans `telemetry_local/`, then the Godot user dir.
 - **Art**: Ember Foundry (see `art/STYLEGUIDE.md`): warm near-black ground,
   orange blocky gun, green drones with red eye, shape+color coding
   (round/fast-dart/wide-tank), textured floors. 16×16 (fx 8×8), Nearest
@@ -80,9 +81,12 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
   Suite: 30 tests / 91 asserts green (incl. a scene integration smoke test).
   T04: break countdown + auto-chaining (Space skips), game-over overlay
   (run summary, restart via scene reload, button wired in `Main.tscn`).
-  Suite: 32 tests / 101 asserts green.
-- Next: T05 telemetry analysis (Python), T06 rest (screen shake, vignette,
-  muzzle/impact polish), T07 docs.
+  Phase enum refactor (IDLE/RUNNING/BREAK/GAME_OVER). Suite: 33 tests / 104
+  asserts green. T05: `tools/analyze_run.py` — per-wave leak/kill/money/
+  build tables + aggregate, discovery of `telemetry_local/` then the user
+  dir, 10 stdlib regression tests (`tools/test_analyze_run.py`); verified
+  against a real wave-7 game-over run.
+- Next: T06 rest (screen shake, vignette, muzzle/impact polish), T07 docs.
 
 ## Commands
 
@@ -94,6 +98,7 @@ Project has no CI; run from the project dir:
 - Tests: `godot --headless --path . -s res://addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit`
   (+ `GODOT_DISABLE_LEAK_CHECKS=1` so exit code reflects tests, not leaks)
 - Assets: `python tools/make_placeholders.py` (art), `python tools/make_sounds.py` (SFX)
+- Analysis: `python tools/analyze_run.py [file ...]` (run logs → per-wave tables); parser tests: `python tools/test_analyze_run.py`
 
 ## Conventions
 

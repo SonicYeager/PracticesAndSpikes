@@ -129,7 +129,7 @@ Gameplay RNG exists in exactly one place: `WaveGen`, seeded with
 
 Same seed + same build/sell sequence ⇒ identical run. `GAME_SEED` is
 currently fixed to `1` in `game.gd`; the run seed is written into the
-telemetry log for replay/analysis (T05).
+telemetry log for replay/analysis (`tools/analyze_run.py`).
 
 ## Rendering & z-order
 

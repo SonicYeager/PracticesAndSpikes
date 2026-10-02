@@ -1,8 +1,8 @@
 class_name Telemetry
 extends RefCounted
 ## Minimal run logger: collects JSON events, flushes once as JSONL.
-## No per-frame logging — wave/build/leak events only. Analysis lives
-## in a Python script (T05); this class is the writer side.
+## No per-frame logging — wave/build/leak events only. Analysis lives in
+## tools/analyze_run.py; this class is the writer side.
 
 var lines: Array[String] = []
 

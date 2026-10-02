@@ -92,7 +92,7 @@ The tanks/fast split changes with the seed; count/hp/speed do not.
 |---|---|---|
 | `MAP_SIZE` | 20×12 | cells |
 | `TILE` | 32 | px per cell (16 px art at 2×) |
-| `GAME_SEED` | 1 | fixed until the seed flow lands (T05) |
+| `GAME_SEED` | 1 | fixed; the seed flow is still open |
 | `SPAWN_INTERVAL` | 0.7 s | between two drones of a wave |
 | `BREAK_SECONDS` | 5.0 s | intermission between waves (Space skips it) |
 | `DRONE_FRAME_TIME` | 0.15 s | 2-frame bob |
@@ -106,6 +106,6 @@ The tanks/fast split changes with the seed; count/hp/speed do not.
 1. Change the constant in its class (keep `docs/BALANCE.md` in sync).
 2. Run the suite — `test_economy` and `test_wave` pin several values on
    purpose; update the tests if the change is intended.
-3. Play a few waves, then check the telemetry log
-   (`user://run_<seed>.jsonl`) for leak/build/wave events. The Python
-   analysis script that turns this into curves is T05.
+3. Play a few waves, then run `python tools/analyze_run.py` for per-wave
+   leak/kill/money tables (it scans `telemetry_local/`, then the Godot user
+   dir; copy `user://run_<seed>.jsonl` into `telemetry_local/` to keep it).
