@@ -23,6 +23,10 @@ window/size/viewport_height=720
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 
+[gui]
+
+theme/custom_font="res://fonts/VT323-Regular.ttf"
+
 [rendering]
 
 textures/canvas_textures/default_texture_filter=0

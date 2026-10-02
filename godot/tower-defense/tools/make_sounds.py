@@ -85,15 +85,19 @@ def write_wav(path, samples):
 def build_sounds():
     rng = random.Random(7)
     return {
-        # Quiet zap: fires often, must not get annoying.
+        # Quiet dry zap: fires often, must not get annoying (XT-pass: drier).
         "shoot": normalize(mix(
-            sweep(880, 260, 0.09, 0.5, "square", decay=30.0, noise_mix=0.25, rng=rng),
+            sweep(880, 260, 0.09, 0.5, "square", decay=30.0, noise_mix=0.12, rng=rng),
             noise(0.04, 0.15, 70.0, rng),
         ), 0.7),
-        "hit": normalize(noise(0.06, 0.6, 45.0, rng), 0.6),
+        # Short low thunk (XT-pass): dry impact, not a hiss.
+        "hit": normalize(
+            sweep(200, 90, 0.06, 0.6, "square", decay=35.0, noise_mix=0.15, rng=rng), 0.6
+        ),
+        # Splat/crunch (XT-pass): more noise, deeper drop.
         "kill": normalize(mix(
-            noise(0.35, 0.7, 11.0, rng),
-            sweep(160, 60, 0.30, 0.5, "sine", decay=9.0),
+            noise(0.35, 0.85, 13.0, rng),
+            sweep(150, 45, 0.30, 0.5, "sine", decay=7.0),
         ), 0.85),
         "leak": normalize(mix(
             sweep(320, 150, 0.35, 0.6, "square", decay=5.0),
@@ -108,7 +112,7 @@ def build_sounds():
             sweep(880, 880, 0.05, 0.4, "square", decay=16.0),
             sweep(1320, 1320, 0.09, 0.4, "square", decay=12.0),
         ), 0.75),
-        "denied": normalize(sweep(150, 120, 0.14, 0.6, "square", decay=10.0), 0.6),
+        "denied": normalize(sweep(130, 95, 0.14, 0.6, "square", decay=8.0), 0.6),
         "wave": normalize(seq(
             sweep(330, 330, 0.16, 0.5, "saw", decay=6.0),
             sweep(440, 440, 0.22, 0.5, "saw", decay=5.0),

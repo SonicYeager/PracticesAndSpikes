@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
-"""Generate Ember Foundry placeholder sprites as 16x16 (or 8x8) PNGs.
+"""Generate Xeno-Tactic-inspired placeholder sprites as 16x16 (or 8x8) PNGs.
 
 Stdlib only (zlib + struct), no Pillow. Each sprite is ASCII art:
 one char per pixel, mapped through PAL. Edit the art, rerun, done.
+
+Palette/look: Xeno Tactic reference (see ../art/STYLEGUIDE.md "Zielbild") —
+dark steel lab tiles, blue player turrets, white/green alien bugs, warm
+pixel effects. Study reference only: nothing is copied from the original.
 
 Usage: python3 make_placeholders.py   (writes ../art/*.png)
 """
@@ -14,121 +18,125 @@ import zlib
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.normpath(os.path.join(HERE, "..", "art"))
 
-# Ember Foundry palette (see ../art/STYLEGUIDE.md)
+# XT palette (see ../art/STYLEGUIDE.md)
 PAL = {
-    ".": None,  # transparent
-    "K": (0x24, 0x16, 0x10),  # outline, near-black warm
-    "F": (0x1D, 0x16, 0x13),  # floor base
-    "f": (0x22, 0x1A, 0x15),  # floor alt
-    "R": (0x4A, 0x3A, 0x2C),  # rivet
-    "S": (0x2E, 0x23, 0x1C),  # scratch / dark patch
-    "O": (0xFF, 0xA0, 0x2E),  # gun body orange
-    "D": (0xB3, 0x5C, 0x14),  # gun shade
-    "H": (0xFF, 0xD1, 0x66),  # highlight / hot
-    "M": (0x4A, 0x40, 0x38),  # gunmetal
-    "T": (0xFF, 0x5A, 0x2E),  # hot tip / explosion
-    "G": (0x7D, 0xDF, 0x64),  # drone green
-    "g": (0x3F, 0x91, 0x42),  # drone shade
-    "Y": (0xD7, 0xFF, 0x5E),  # fast drone lime
-    "N": (0x2E, 0x9E, 0x6B),  # tank teal-green
-    "n": (0x1E, 0x5F, 0x44),  # tank shade
-    "E": (0xFF, 0x3B, 0x30),  # enemy eye red
-    "V": (0x35, 0xD0, 0x7F),  # spawn vent glow
-    "C": (0xFF, 0x78, 0x47),  # base core ember
-    "P": (0xFF, 0xE0, 0x8A),  # projectile / muzzle
-    "W": (0xFF, 0xFF, 0xFF),  # white hot core
+    ".": None,                  # transparent
+    "K": (0x0B, 0x10, 0x16),    # outline, near-black blue
+    "F": (0x1B, 0x22, 0x2C),    # floor base, dark steel
+    "f": (0x21, 0x29, 0x34),    # floor alt
+    "R": (0x4A, 0x56, 0x66),    # rivet / light steel
+    "S": (0x2A, 0x33, 0x40),    # scratch / dark panel
+    "B": (0x2F, 0x3B, 0x4A),    # panel blue (props)
+    "O": (0x5A, 0x8F, 0xC8),    # player blue
+    "D": (0x33, 0x5E, 0x8C),    # player blue shade
+    "M": (0x7A, 0x86, 0x96),    # gunmetal light
+    "H": (0x9F, 0xD8, 0xFF),    # cyan highlight
+    "T": (0xFF, 0x8A, 0x2E),    # fire orange
+    "C": (0xFF, 0xB4, 0x4A),    # ember
+    "G": (0xD8, 0xDE, 0xE6),    # alien white
+    "g": (0x9A, 0xA4, 0xB0),    # alien shade
+    "Y": (0x8E, 0xE0, 0x4A),    # acid green
+    "N": (0x5A, 0x66, 0x72),    # tank gray-blue
+    "n": (0x3A, 0x44, 0x50),    # tank shade
+    "E": (0xFF, 0x3B, 0x30),    # eye red / hazard red
+    "V": (0x54, 0xE0, 0x8A),    # breach green
+    "P": (0x9F, 0xD8, 0xFF),    # projectile cyan
+    "W": (0xFF, 0xFF, 0xFF),    # white hot core
+    "U": (0xFF, 0xD7, 0x5E),    # gold
+    "u": (0xB8, 0x8A, 0x2E),    # gold shade
+    "Z": (0xE8, 0xE4, 0xDA),    # hazard white
 }
 
 FLOOR_0 = [
-    "FFFFFFFFFFFFFFFF",
-    "FFFFFFFFFFFFFFFF",
-    "FFFFFFFFFFFFFFFF",
-    "FFFFFFFFFFFFFFFF",
-    "FFFFFFFFFFFFFFFF",
-    "FFFFFFFFFFFFFFFF",
-    "FFFFFFFFFFFFFFFF",
-    "FFFFFFFFFFFFFFFF",
-    "FFFFFFFFFFFFFFFF",
-    "FFFFFFFFFFFFFFFF",
-    "FFFFFFFFFFFFFFFF",
-    "FFFFFFFFFFFFFFFF",
-    "FFFFFFFFFFFFFFFF",
-    "FFFFFFFFFFFFFFFF",
-    "FFFFFFFFFFFFFFFF",
-    "ffffffffffffffff",
+    "FFFFFFFFFFFFFFFS",
+    "FFFFFFFFFFFFFFFS",
+    "FFFFFFFFFFFFFFFS",
+    "FFFFFFFFFFFFFFFS",
+    "FFFFFFFFFFFFFFFS",
+    "FFFFFFFFFFFFFFFS",
+    "FFFFFFFFFFFFFFFS",
+    "FFFFFFFFFFFFFFFS",
+    "FFFFFFFFFFFFFFFS",
+    "FFFFFFFFFFFFFFFS",
+    "FFFFFFFFFFFFFFFS",
+    "FFFFFFFFFFFFFFFS",
+    "FFFFFFFFFFFFFFFS",
+    "FFFFFFFFFFFFFFFS",
+    "FFFFFFFFFFFFFFFS",
+    "SSSSSSSSSSSSSSSS",
 ]
 
 FLOOR_1 = [
-    "FFFFFFFFFFFFFFFF",
-    "FFFFFFFFFFFFFFFF",
-    "FFRFFFFFFFFFFRFF",
-    "FFFFFFFFFFFFFFFF",
-    "FFFFFFFFFFFFFFFF",
-    "FFFFFFFFFFFFFFFF",
-    "FFFFFFFFFFFFFFFF",
-    "FFFFFFFFFFFFFFFF",
-    "FFFFFFFFFFFFFFFF",
-    "FFFFFFFFFFFFFFFF",
-    "FFFFFFFFFFFFFFFF",
-    "FFFFFFFFFFFFFFFF",
-    "FFFFFFFFFFFFFFFF",
-    "FFRFFFFFFFFFFRFF",
-    "FFFFFFFFFFFFFFFF",
-    "ffffffffffffffff",
+    "FFFFFFFFFFFFFFFS",
+    "FFFFFFFFFFFFFFFS",
+    "FFRFFFFFFFFFFRFS",
+    "FFFFFFFFFFFFFFFS",
+    "FFFFFFFFFFFFFFFS",
+    "FFFFFFFFFFFFFFFS",
+    "FFFFFFFFFFFFFFFS",
+    "FFFFFFFFFFFFFFFS",
+    "FFFFFFFFFFFFFFFS",
+    "FFFFFFFFFFFFFFFS",
+    "FFFFFFFFFFFFFFFS",
+    "FFFFFFFFFFFFFFFS",
+    "FFFFFFFFFFFFFFFS",
+    "FFRFFFFFFFFFFRFS",
+    "FFFFFFFFFFFFFFFS",
+    "SSSSSSSSSSSSSSSS",
 ]
 
 FLOOR_2 = [
-    "FFFFFFFFFFFFFFFF",
-    "FFSSSSFFFFFFFFFF",
-    "FFSSSSSFFFFFFFFF",
-    "FFFSSSSFFFFFFFFF",
-    "FFFFSSFFFFFFFFFF",
-    "FFFFFFFFFFFFSFFF",
-    "FFFFFFFFFFFSFFFF",
-    "FFFFFFFFFFSFFFFF",
-    "FFFFFFFFFSFFFFFF",
-    "FFFFFFFFFFFFFFFF",
-    "FFFFFFFFFFFFFFFF",
-    "FFFFFFFFFFFFFFFF",
-    "FFFFFFFFFFFFFFFF",
-    "FFFFFFFFFFFFFFFF",
-    "FFFFFFFFFFFFFFFF",
-    "ffffffffffffffff",
+    "FFFFFFFFFFFFFFFS",
+    "FFSSSSFFFFFFFFFS",
+    "FFSSSSSFFFFFFFFS",
+    "FFFSSSSFFFFFFFFS",
+    "FFFFSSFFFFFFFFFS",
+    "FFFFFFFFFFFFSFFS",
+    "FFFFFFFFFFFSFFFS",
+    "FFFFFFFFFFSFFFFS",
+    "FFFFFFFFFSFFFFFS",
+    "FFFFFFFFFFFFFFFS",
+    "FFFFFFFFFFFFFFFS",
+    "FFFFFFFFFFFFFFFS",
+    "FFFFFFFFFFFFFFFS",
+    "FFFFFFFFFFFFFFFS",
+    "FFFFFFFFFFFFFFFS",
+    "SSSSSSSSSSSSSSSS",
 ]
 
 GUN_BASE = [
     "................",
     "................",
     "................",
-    "................",
-    "..KKKKKKKKKKKK..",
-    "..KHHHHHHHHHHK..",
-    "..KHOOOOOOOOOH..",
-    "..KOOOOMMMOOOK..",
-    "..KOOOOMMMOOOK..",
-    "..KOOOOOOOOOOK..",
-    "..KOOOKKKKOOOK..",
-    "..KOOOKKKKOOOK..",
-    "..KDDDDDDDDDDK..",
-    "..KDDDDDDDDDDK..",
-    "..KKKKKKKKKKKK..",
+    "....KKKKKKKK....",
+    "..KKMMMMMMMMKK..",
+    "..KMMRRRRRRMMK..",
+    "..KMSSSSSSSSMK..",
+    "..KMSSOOOOOSMK..",
+    "..KMSSOHHOSSMK..",
+    "..KMSSOHHOSSMK..",
+    "..KMSSOOOOOSMK..",
+    "..KMSSSSSSSSMK..",
+    "..KMMRRRRRRMMK..",
+    "..KKMMMMMMMMKK..",
+    "....KKKKKKKK....",
     "................",
 ]
 
 # Barrel points up; pivot ~ (8, 12) via Sprite2D offset (T03).
 GUN_BARREL = [
     ".....KKKK.......",
-    ".....KTTK.......",
-    ".....KTTK.......",
-    ".....KMMK.......",
-    ".....KMMK.......",
-    ".....KMMK.......",
-    ".....KMMK.......",
-    ".....KMMK.......",
-    ".....KMMK.......",
-    ".....KMMK.......",
-    ".....KMMK.......",
-    ".....KMMK.......",
+    ".....KHHK.......",
+    ".....KHHK.......",
+    ".....KMKK.......",
+    ".....KMKK.......",
+    ".....KMKK.......",
+    ".....KMKK.......",
+    ".....KMKK.......",
+    ".....KMKK.......",
+    ".....KMKK.......",
+    ".....KMKK.......",
+    ".....KMKK.......",
     ".....KKKK.......",
     "................",
     "................",
@@ -230,54 +238,54 @@ TANK = [
     "................",
 ]
 
-# Round green portal: reads as "enemies come from here".
+# Dark breach with a green rim: "they come from here".
 SPAWN = [
     "................",
     "................",
     ".....KKKKKK.....",
     "...KKVVVVVVKK...",
-    "..KVVVVVVVVVVK..",
     "..KVVKKKKKKVVK..",
-    ".KVVKFFFFFFKVVK.",
-    ".KVVKFFVVFFKVVK.",
-    ".KVVKFFVVFFKVVK.",
-    ".KVVKFFFFFFKVVK.",
+    "..KVKKKKKKKKVK..",
+    ".KVVKKKKKKKKVVK.",
+    ".KVKKKKKKKKKKVK.",
+    ".KVKKKKKKKKKKVK.",
+    ".KVVKKKKKKKKVVK.",
+    "..KVKKKKKKKKVK..",
     "..KVVKKKKKKVVK..",
-    "..KVVVVVVVVVVK..",
     "...KKVVVVVVKK...",
     ".....KKKKKK.....",
     "................",
     "................",
 ]
 
-# Angular bunker with an ember reactor core: reads as "home".
+# Containment door with hazard stripes: "they want to get out".
 BASE = [
     "................",
     "................",
     "..KKKKKKKKKKKK..",
-    ".KMROOOOOOOORMK.",
-    ".KMOOOOOOOOOOMK.",
-    ".KMOKKKKKKKKOMK.",
-    ".KMOKCCCCCCOKMK.",
-    ".KMOKCHHHHCOKMK.",
-    ".KMOKCHWWHCOKMK.",
-    ".KMOKCHWWHCOKMK.",
-    ".KMOKCHHHHCOKMK.",
-    ".KMOKCCCCCCOKMK.",
-    ".KMOKKKKKKKKOMK.",
-    ".KMOOOOOOOOOOMK.",
-    ".KMROOOOOOOORMK.",
+    "..KMMMMMMMMMMK..",
+    "..KMEEZZEEZZMK..",
+    "..KMZZEEZZEEMK..",
+    "..KMEEZZEEZZMK..",
+    "..KMZZEEZZEEMK..",
+    "..KMEEZZEEZZMK..",
+    "..KMMMMMMMMMMK..",
+    "..KMRRRRRRRRMK..",
+    "..KMMMMMMMMMMK..",
     "..KKKKKKKKKKKK..",
+    "................",
+    "................",
+    "................",
 ]
 
 IMPACT = [
     "........",
-    "...PP...",
-    "..PHHP..",
-    ".PHWWHP.",
-    ".PHWWHP.",
-    "..PHHP..",
-    "...PP...",
+    "...TT...",
+    "..TCCT..",
+    ".TCWWCT.",
+    ".TCWWCT.",
+    "..TCCT..",
+    "...TT...",
     "........",
 ]
 
@@ -285,16 +293,16 @@ HUD_COIN = [
     "................",
     "................",
     ".....KKKKKK.....",
-    "...KKHHHHHHKK...",
-    "..KWHHHHHHHHHK..",
-    "..KWHHHHHHHHHK..",
-    ".KHHHDDDDDDHHHK.",
-    ".KHHDDDDDDDDHHK.",
-    ".KHHDDDDDDDDHHK.",
-    ".KHHHDDDDDDHHHK.",
-    "..KHHHHHHHHHHK..",
-    "..KHHHHHHHHHHK..",
-    "...KKHHHHHHKK...",
+    "...KKUUUUUUKK...",
+    "..KWUUUUUUUUUK..",
+    "..KWUUUUUUUUUK..",
+    ".KUUUuuuuuuUUUK.",
+    ".KUUuuuuuuuuUUK.",
+    ".KUUuuuuuuuuUUK.",
+    ".KUUUuuuuuuUUUK.",
+    "..KUUUUUUUUUUK..",
+    "..KUUUUUUUUUUK..",
+    "...KKUUUUUUKK...",
     ".....KKKKKK.....",
     "................",
     "................",
@@ -307,13 +315,13 @@ HUD_WAVE = [
     "................",
     "..K........K....",
     "..KK......KK....",
-    "..KGK....KGK....",
-    "..KGGK..KGGK....",
-    "..KGGGKKGGGK....",
-    "..KGGGGGGGGK....",
-    "..KGGGKKGGGK....",
-    "..KGGK..KGGK....",
-    "..KGK....KGK....",
+    "..KHK....KHK....",
+    "..KHHK..KHHK....",
+    "..KHHHKKHHHK....",
+    "..KHHHHHHHHK....",
+    "..KHHHKKHHHK....",
+    "..KHHK..KHHK....",
+    "..KHK....KHK....",
     "..KK......KK....",
     "..K........K....",
     "................",
@@ -331,7 +339,7 @@ HUD_SPACE = [
     ".KMMKKKKKKKKMMK.",
     ".KMMMMMMMMMMMMK.",
     ".KMMMMMMMMMMMMK.",
-    ".KDDDDDDDDDDDDK.",
+    ".KSSSSSSSSSSSSK.",
     "..KKKKKKKKKKKK..",
     "................",
     "................",
@@ -377,21 +385,21 @@ HUD_MOUSE_RIGHT = [
     "................",
 ]
 
-# T09 terrain: blocking clusters + cosmetic decor + battle decals.
+# T09 terrain: blocking clusters + cosmetic decor + battle decals (lab look).
 ROCK = [
     "................",
     "................",
-    "....KKKK........",
-    "...KSSSSK.......",
-    "..KSSSSSSK..KK..",
-    "..KSSRSSSK.KSSK.",
-    "..KSSSSSSKKSSSK.",
-    "...KSSSSSSSSSSK.",
-    "...KSSSSSSSSSK..",
-    "..KSSSSSSSSSK...",
-    "..KSSSSSSSSK....",
-    "...KSSSSSSK.....",
-    "....KKKKKK......",
+    "..KKKKKKKKKKKK..",
+    "..KMMMMMMMMMMK..",
+    "..KMSSSSSSSSMK..",
+    "..KMSBBBBBBBMK..",
+    "..KMSBBBBBBBMK..",
+    "..KMSBBBBBBBMK..",
+    "..KMSSSSSSSSMK..",
+    "..KMSSSSSSSSMK..",
+    "..KMMMMMMMMMMK..",
+    "..KRRRRRRRRRRK..",
+    "..KKKKKKKKKKKK..",
     "................",
     "................",
     "................",
@@ -530,13 +538,14 @@ DEBRIS = [
     "................",
 ]
 
+# Neutral white dot: tinted per emitter (embers, sparks, smoke).
 EMBER = [
-    "...PP...",
-    "..PWWP..",
-    ".PWWWWP.",
-    ".PWWWWP.",
-    "..PWWP..",
-    "...PP...",
+    "...WW...",
+    "..WWWW..",
+    ".WWWWWW.",
+    ".WWWWWW.",
+    "..WWWW..",
+    "...WW...",
     "........",
     "........",
 ]
@@ -556,11 +565,11 @@ MUZZLE = [
     "H..HH..H",
     "...HH...",
     "...HH...",
+    "...HH...",
     "HHHHHHHH",
     "...HH...",
     "...HH...",
-    "H..HH..H",
-    "........",
+    "...HH...",
 ]
 
 EXPLOSION_0 = [
@@ -568,13 +577,13 @@ EXPLOSION_0 = [
     "................",
     "................",
     ".....TTTTT......",
-    "...TTTOOOOTTT...",
-    "..TTOOHHHHOOTT..",
-    "..TOHHHHHHHOTT..",
-    "..TOHHHWWHHOTT..",
-    "..TOHHHWWHHOTT..",
-    "..TOHHHHHHHOTT..",
-    "...TTOOHHOOTT...",
+    "...TTTCCCTTT....",
+    "..TTCCCWWCCTT...",
+    "..TCCWWWWWCCT...",
+    "..TCWWWWWWWCT...",
+    "..TCWWWWWWWCT...",
+    "..TCCWWWWWCCT...",
+    "...TTCCCWWTT....",
     ".....TTTTT......",
     "................",
     "................",
@@ -585,15 +594,15 @@ EXPLOSION_0 = [
 EXPLOSION_1 = [
     "................",
     "................",
-    "......H.H.......",
-    "...H.HWHWH.H....",
-    "....HW WWWH......".replace(" ", ""),
-    "..H.WWWWWWW.H...",
+    "......C.C.......",
+    "...C.CWCWC.C....",
+    "....CWWWWWC.....",
+    "..C.WWWWWWW.C...",
     "....WWWWWWW.....",
-    "..H.WWWWWWW.H...",
-    "....HW WWWH......".replace(" ", ""),
-    "...H.HWHWH.H....",
-    "......H.H.......",
+    "..C.WWWWWWW.C...",
+    "....CWWWWWC.....",
+    "...C.CWCWC.C....",
+    "......C.C.......",
     "................",
     "................",
     "................",
@@ -674,7 +683,7 @@ def write_png(path, art):
     write_png_raw(path, w, h, raw)
 
 
-# Vignette: warm near-black alpha ramp towards the corners (screen overlay).
+# Vignette: near-black blue alpha ramp towards the corners (screen overlay).
 VIGNETTE_W, VIGNETTE_H = 640, 360
 VIGNETTE_INNER = 0.45  # normalized distance where darkening starts
 VIGNETTE_OUTER = 1.15  # normalized distance at full opacity
