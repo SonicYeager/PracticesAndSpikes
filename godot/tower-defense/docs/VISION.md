@@ -138,6 +138,6 @@ mit 20–100 Wellen, vier Schwierigkeitsgrade, Tower-Upgrades; Ground-Türme
   Neon-Cyan-Akzente (Titel), Rot/Weiß-Hazard-Streifen.
 - **Sound:** Flash-Ära = funktionale, kurze Blips/Alarme, kein Score —
   unser Synth-SFX-Ansatz trifft das; Ziel ist „lesbar und knapp".
-- Die konkrete Umsetzung (Palette, Sprites, UI, Sounds) macht der
-  **XT-Pass** (T11); `art/STYLEGUIDE.md` und `docs/AUDIO.md` tragen die
-  Zielbild-Abschnitte.
+- Umsetzung: **XT-Pass (T11, 2026-10-02)** ist durch — Palette, Sprites, UI
+  und Sounds folgen dem Zielbild; `art/STYLEGUIDE.md` und `docs/AUDIO.md`
+  tragen die Ist-Stand-Abschnitte.

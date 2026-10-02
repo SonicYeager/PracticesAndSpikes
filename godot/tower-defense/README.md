@@ -9,7 +9,7 @@ telemetry for data-driven balancing.
 
 - Stack: Godot 4.7.2, GDScript (no .NET flow)
 - Entrypoint: `scenes/Main.tscn` (open/import the folder in the Godot editor)
-- Status: prototype complete + sides + dirty world + pulse (T01–T10) — see *Controls* and *Roadmap*
+- Status: prototype complete + sides + dirty world + pulse + XT look (T01–T11) — see *Controls* and *Roadmap*
 
 ## Controls
 
@@ -53,6 +53,9 @@ then auto-starts. Game over shows a run summary and restarts the scene.
 - Pulse (T10): per-wave events from wave 3 (Ansturm/Schwarm/Blackout/
   Kopfgeld) telegraphed in the HUD, vent overcharge as money sink with an
   ember burst, decal per-cell cap keeps kill zones readable.
+- XT-Pass (T11): Xeno-Tactic look — dark blue-grey steel lab tiles, blue
+  player turrets, white/acid-green alien drones, VT323 UI font (OFL,
+  `fonts/`), drier SFX; reference study gitignored in `reference/xt/`.
 - Local telemetry: build/sell/wave/leak/run_end events →
   `user://run_<seed>.jsonl` (analysis: `tools/analyze_run.py`).
 - Meta stub: one persistent bonus (`SkillStub` → `user://skill_stub.cfg`).
@@ -136,7 +139,7 @@ The parser has stdlib regression tests: `python tools/test_analyze_run.py`.
 | `docs/BALANCE.md` | Every tunable constant + derived numbers + tuning workflow |
 | `docs/AUDIO.md` | Sound list, synthesis recipes, volume tuning, replacing SFX |
 | `docs/VISION.md` | Workshop result: pillars, values, anti-pillars (north star) |
-| `art/STYLEGUIDE.md` | Ember Foundry palette, sprite specs + inventory |
+| `art/STYLEGUIDE.md` | XT steel/lab palette, sprite specs + inventory |
 | `docs/IDEAS.md` | Post-prototype directions (multi-entry/exit sides, open items) |
 
 ## Roadmap
@@ -154,5 +157,6 @@ The parser has stdlib regression tests: `python tools/test_analyze_run.py`.
 | T08 | Multi-entry/exit sides, scatter spawn, nearest-exit fallback | done |
 | T09 | Dirty World: run seed, terrain blockers/decor, decals, ambient | done |
 | T10 | Pulse: wave events, vent overcharge, decal per-cell cap | done |
+| T11 | XT pass: steel/lab look, VT323 UI font, drier SFX | done |
 
-All slices done. Post-prototype directions are collected in `docs/IDEAS.md`.
+All slices done (T01–T11). Post-prototype directions are collected in `docs/IDEAS.md`.
