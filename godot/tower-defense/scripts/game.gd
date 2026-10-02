@@ -7,7 +7,9 @@ extends Node2D
 ## vignette overlay, barrel recoil, muzzle/impact polish. T08: whole-side
 ## entries/exits, seeded scatter spawn, assigned exit per drone with a
 ## nearest-exit fallback. T09: random run seed (logged, overridable), seeded
-## terrain blockers + decor, battle decals, ambient emitters.
+## terrain blockers + decor, battle decals, ambient emitters. T12: HUD
+## framework (scenes/Hud.tscn + scripts/hud.gd) with status, build/sell
+## panel, segmented wave bar and game-over overlay.
 
 ## Wave phase: exactly one state is active at a time.
 enum Phase { IDLE, RUNNING, BREAK, GAME_OVER }
@@ -143,6 +145,8 @@ var _entry_nodes: Array[Sprite2D] = []
 var _exit_nodes: Array[Sprite2D] = []
 var _spawn_counter := 0
 var _wave := 0
+var _wave_total := 0
+var _sell_mode := false
 var _wave_comp: Dictionary = {}
 var _spawn_queue: Array[String] = []
 var _spawn_timer := 0.0
@@ -154,14 +158,7 @@ var _anim_time := 0.0
 var _fx_counter := 0
 
 @onready var _camera: Camera2D = $Camera
-@onready var _money_label: Label = $Hud/Panel/Rows/Row1/Money
-@onready var _gun_cost_label: Label = $Hud/Panel/Rows/Row1/GunCost
-@onready var _wave_label: Label = $Hud/Panel/Rows/Row2/Wave
-@onready var _space_icon: TextureRect = $Hud/Panel/Rows/Row2/Space
-@onready var _wave_icon: TextureRect = $Hud/Panel/Rows/Row2/WaveIcon
-@onready var _game_over_screen: Control = $Hud/GameOver
-@onready var _game_over_stats: Label = $Hud/GameOver/Center/Stats
-@onready var _restart_button: Button = $Hud/GameOver/Center/Restart
+@onready var _hud: GameHud = $Hud/HudRoot
 
 
 func _ready() -> void:
@@ -175,7 +172,9 @@ func _ready() -> void:
 	origin = (Vector2(get_viewport_rect().size) - Vector2(MAP_SIZE) * TILE) * 0.5
 	_camera.position = Vector2(get_viewport_rect().size) * 0.5
 	_camera.make_current()
-	_game_over_screen.hide()
+	_hud.wave_pressed.connect(_on_wave_pressed)
+	_hud.sell_toggled.connect(_on_sell_toggled)
+	_hud.restart_pressed.connect(_restart)
 	_make_bar_texture()
 	_setup_audio()
 	_draw_floor()
@@ -224,7 +223,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		# Camera-aware: maps to the cell under the cursor even while shaking.
 		var cell := _to_cell(get_global_mouse_position())
 		if event.button_index == MOUSE_BUTTON_LEFT:
-			if _vents.has(cell):
+			if _sell_mode:
+				_try_sell(cell)
+			elif _vents.has(cell):
 				# Only during a wave: otherwise there are no drones to hit.
 				if _phase != Phase.RUNNING or not _try_overcharge(cell):
 					_play("denied")
@@ -244,19 +245,34 @@ func _unhandled_input(event: InputEvent) -> void:
 			else:
 				_play("denied")
 		elif event.button_index == MOUSE_BUTTON_RIGHT:
-			if maze.sell(cell):
-				_guns.erase(cell)
-				_hide_tower(cell)
-				economy.earn(SELL_REFUND)
-				telemetry.event("sell", {"cell": [cell.x, cell.y]})
-				_reroute_drones()
-				queue_redraw()
-				_play("sell")
+			_try_sell(cell)
 		_update_hud()
 	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_SPACE:
 		if _phase == Phase.IDLE or _phase == Phase.BREAK:
 			# IDLE: start wave 1; BREAK: skip the intermission.
 			_start_wave(_wave + 1)
+
+
+func _try_sell(cell: Vector2i) -> bool:
+	if not maze.sell(cell):
+		return false
+	_guns.erase(cell)
+	_hide_tower(cell)
+	economy.earn(SELL_REFUND)
+	telemetry.event("sell", {"cell": [cell.x, cell.y]})
+	_reroute_drones()
+	queue_redraw()
+	_play("sell")
+	return true
+
+
+func _on_wave_pressed() -> void:
+	if _phase == Phase.IDLE or _phase == Phase.BREAK:
+		_start_wave(_wave + 1)
+
+
+func _on_sell_toggled(active: bool) -> void:
+	_sell_mode = active
 
 
 func _start_wave(n: int) -> void:
@@ -274,6 +290,7 @@ func _start_wave(n: int) -> void:
 		_spawn_queue.append("fast")
 	for i in int(_wave_comp["tanks"]):
 		_spawn_queue.append("tank")
+	_wave_total = _spawn_queue.size()
 	telemetry.event("wave", {
 		"wave": n,
 		"count": _wave_comp["count"],
@@ -534,8 +551,7 @@ func _end_run() -> void:
 	if _phase == Phase.GAME_OVER:
 		return
 	_phase = Phase.GAME_OVER
-	_game_over_stats.text = "Welle %d — Geld %d" % [_wave, economy.money]
-	_game_over_screen.show()
+	_hud.show_game_over(_wave, economy.money)
 	_play("gameover")
 	_add_shake(SHAKE_GAME_OVER)
 	telemetry.event("run_end", {"wave": _wave, "money": economy.money})
@@ -989,38 +1005,42 @@ func _hide_tower(cell: Vector2i) -> void:
 
 
 func _update_hud() -> void:
-	_money_label.text = str(economy.money)
-	_gun_cost_label.text = str(Economy.GUN_COST)
+	var modifier_id := ""
 	match _phase:
 		Phase.RUNNING:
-			_space_icon.hide()
-			_wave_icon.show()
-			_wave_label.text = "Welle %d: %d unterwegs, %d in Warteschlange%s" % [
-				_wave,
-				_drones.size(),
-				_spawn_queue.size(),
-				_modifier_label(str(_wave_comp.get("modifier", ""))),
-			]
+			modifier_id = str(_wave_comp.get("modifier", ""))
 		Phase.BREAK:
-			_space_icon.show()
-			_wave_icon.hide()
-			_wave_label.text = "Welle %d in %.1f s%s" % [
-				_wave + 1,
-				_break_timer,
-				_modifier_label(_break_modifier),
-			]
+			modifier_id = _break_modifier
+	_hud.update_state({
+		"money": economy.money,
+		"gun_cost": Economy.GUN_COST,
+		"wave": _wave,
+		"phase": _phase_name(),
+		"alive": _drones.size(),
+		"queued": _spawn_queue.size(),
+		"total": _wave_total,
+		"break_left": _break_timer,
+		"modifier_id": modifier_id,
+		"modifier_label": _modifier_text(modifier_id),
+	})
+
+
+func _phase_name() -> String:
+	match _phase:
 		Phase.IDLE:
-			_space_icon.show()
-			_wave_icon.hide()
-			_wave_label.text = "Welle %d starten" % (_wave + 1)
+			return "idle"
+		Phase.RUNNING:
+			return "running"
+		Phase.BREAK:
+			return "break"
 		_:
-			pass  # GAME_OVER: the overlay covers the HUD
+			return "game_over"
 
 
-func _modifier_label(modifier: String) -> String:
+func _modifier_text(modifier: String) -> String:
 	if modifier == "":
 		return ""
-	return " · " + str(MODIFIER_LABELS.get(modifier, modifier))
+	return str(MODIFIER_LABELS.get(modifier, modifier))
 
 
 func _draw() -> void:

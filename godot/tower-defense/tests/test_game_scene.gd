@@ -134,11 +134,11 @@ func test_game_over_shows_screen_and_flushes_telemetry() -> void:
 	game.economy.money = -1
 	game._end_run()
 	assert_eq(game._phase, game.Phase.GAME_OVER)
-	assert_true(game._game_over_screen.visible, "Game-over screen is shown")
-	assert_true(game._game_over_stats.text.contains("Geld"), "Summary shows the run stats")
+	assert_true(game._hud.is_game_over_visible(), "Game-over screen is shown")
+	assert_true(game._hud.game_over_text().contains("GELD"), "Summary shows the run stats")
 	assert_true(
-		game._restart_button.pressed.is_connected(game._restart),
-		"Restart button is wired to _restart"
+		game._hud.restart_pressed.is_connected(game._restart),
+		"Restart intent is wired to _restart"
 	)
 	var path := _telemetry_path(game)
 	assert_true(FileAccess.file_exists(path), "Run log is flushed")

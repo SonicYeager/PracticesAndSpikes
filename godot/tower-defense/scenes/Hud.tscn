@@ -1,0 +1,335 @@
+[gd_scene load_steps=15 format=3]
+
+[ext_resource type="Script" path="res://scripts/hud.gd" id="1_hud"]
+[ext_resource type="Script" path="res://scripts/hud_bar.gd" id="2_bar"]
+[ext_resource type="Texture2D" path="res://art/hud_coin.png" id="3_coin"]
+[ext_resource type="Texture2D" path="res://art/gun_base.png" id="4_gun"]
+[ext_resource type="Texture2D" path="res://art/hud_space.png" id="5_space"]
+[ext_resource type="Texture2D" path="res://art/hud_mouse_right.png" id="6_rmb"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_panel"]
+bg_color = Color(0.0784314, 0.105882, 0.141176, 0.94)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.290196, 0.337255, 0.4, 1)
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+shadow_color = Color(0, 0, 0, 0.35)
+shadow_size = 3
+shadow_offset = Vector2(0, 2)
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_chip"]
+bg_color = Color(0.133333, 0.184314, 0.243137, 0.9)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.435294, 0.705882, 0.85098, 0.5)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+content_margin_left = 8.0
+content_margin_top = 2.0
+content_margin_right = 8.0
+content_margin_bottom = 2.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_slot"]
+bg_color = Color(0.0627451, 0.0862745, 0.113725, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.184314, 0.231373, 0.290196, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+content_margin_left = 8.0
+content_margin_top = 4.0
+content_margin_right = 8.0
+content_margin_bottom = 4.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_btn_normal"]
+bg_color = Color(0.105882, 0.141176, 0.188235, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.290196, 0.337255, 0.4, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+content_margin_left = 10.0
+content_margin_top = 4.0
+content_margin_right = 10.0
+content_margin_bottom = 4.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_btn_hover"]
+bg_color = Color(0.133333, 0.184314, 0.243137, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.435294, 0.705882, 0.85098, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+content_margin_left = 10.0
+content_margin_top = 4.0
+content_margin_right = 10.0
+content_margin_bottom = 4.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_btn_pressed"]
+bg_color = Color(0.0588235, 0.0823529, 0.109804, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.435294, 0.705882, 0.85098, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+content_margin_left = 10.0
+content_margin_top = 4.0
+content_margin_right = 10.0
+content_margin_bottom = 4.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_btn_disabled"]
+bg_color = Color(0.0862745, 0.105882, 0.133333, 0.6)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.2, 0.24, 0.29, 0.6)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+content_margin_left = 10.0
+content_margin_top = 4.0
+content_margin_right = 10.0
+content_margin_bottom = 4.0
+
+[sub_resource type="StyleBoxEmpty" id="StyleBox_btn_focus"]
+
+[node name="Hud" type="Control"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_hud")
+
+[node name="Status" type="PanelContainer" parent="."]
+offset_left = 12.0
+offset_top = 10.0
+theme_override_styles/panel = SubResource("StyleBox_panel")
+mouse_filter = 2
+
+[node name="Row" type="HBoxContainer" parent="Status"]
+theme_override_constants/separation = 10
+
+[node name="Coin" type="TextureRect" parent="Status/Row"]
+custom_minimum_size = Vector2(32, 32)
+mouse_filter = 2
+texture = ExtResource("3_coin")
+stretch_mode = 5
+
+[node name="Money" type="Label" parent="Status/Row"]
+theme_override_colors/font_color = Color(1, 0.843137, 0.368627, 1)
+theme_override_font_sizes/font_size = 28
+text = "100"
+vertical_alignment = 1
+
+[node name="Sep" type="VSeparator" parent="Status/Row"]
+mouse_filter = 2
+
+[node name="Wave" type="Label" parent="Status/Row"]
+theme_override_font_sizes/font_size = 22
+text = "WELLE 1"
+vertical_alignment = 1
+
+[node name="Chip" type="PanelContainer" parent="Status/Row"]
+visible = false
+theme_override_styles/panel = SubResource("StyleBox_chip")
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="Status/Row/Chip"]
+theme_override_colors/font_color = Color(0.623529, 0.847059, 1, 1)
+theme_override_font_sizes/font_size = 15
+text = "SCHWARM"
+vertical_alignment = 1
+
+[node name="Build" type="PanelContainer" parent="."]
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -340.0
+offset_top = 10.0
+offset_right = -12.0
+grow_horizontal = 0
+theme_override_styles/panel = SubResource("StyleBox_panel")
+mouse_filter = 2
+
+[node name="Box" type="VBoxContainer" parent="Build"]
+theme_override_constants/separation = 8
+
+[node name="Actions" type="HBoxContainer" parent="Build/Box"]
+theme_override_constants/separation = 10
+
+[node name="Slot" type="PanelContainer" parent="Build/Box/Actions"]
+theme_override_styles/panel = SubResource("StyleBox_slot")
+mouse_filter = 2
+
+[node name="SlotRow" type="HBoxContainer" parent="Build/Box/Actions/Slot"]
+theme_override_constants/separation = 8
+
+[node name="Gun" type="TextureRect" parent="Build/Box/Actions/Slot/SlotRow"]
+custom_minimum_size = Vector2(32, 32)
+mouse_filter = 2
+texture = ExtResource("4_gun")
+stretch_mode = 5
+
+[node name="Caption" type="Label" parent="Build/Box/Actions/Slot/SlotRow"]
+theme_override_colors/font_color = Color(0.623529, 0.847059, 1, 1)
+theme_override_font_sizes/font_size = 14
+text = "TURM"
+vertical_alignment = 1
+
+[node name="Cost" type="Label" parent="Build/Box/Actions/Slot/SlotRow"]
+theme_override_colors/font_color = Color(1, 0.843137, 0.368627, 1)
+theme_override_font_sizes/font_size = 22
+text = "25"
+vertical_alignment = 1
+
+[node name="Sell" type="Button" parent="Build/Box/Actions"]
+focus_mode = 0
+toggle_mode = true
+theme_override_colors/font_color = Color(0.847059, 0.870588, 0.901961, 1)
+theme_override_colors/font_hover_color = Color(0.623529, 0.847059, 1, 1)
+theme_override_colors/font_pressed_color = Color(1, 0.843137, 0.368627, 1)
+theme_override_colors/font_disabled_color = Color(0.501961, 0.54902, 0.6, 0.6)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/focus = SubResource("StyleBox_btn_focus")
+theme_override_styles/normal = SubResource("StyleBox_btn_normal")
+theme_override_styles/hover = SubResource("StyleBox_btn_hover")
+theme_override_styles/pressed = SubResource("StyleBox_btn_pressed")
+theme_override_styles/disabled = SubResource("StyleBox_btn_disabled")
+icon = ExtResource("6_rmb")
+icon_max_width = 20
+text = "VERKAUFEN"
+
+[node name="Hints" type="Label" parent="Build/Box"]
+theme_override_colors/font_color = Color(0.501961, 0.54902, 0.6, 1)
+theme_override_font_sizes/font_size = 14
+text = "LMB BAUEN · RMB VERKAUFEN · SPACE WELLE"
+horizontal_alignment = 2
+
+[node name="WavePanel" type="PanelContainer" parent="."]
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -430.0
+offset_top = -64.0
+offset_right = 430.0
+offset_bottom = -12.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleBox_panel")
+mouse_filter = 2
+
+[node name="Row" type="HBoxContainer" parent="WavePanel"]
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="WaveText" type="Label" parent="WavePanel/Row"]
+theme_override_font_sizes/font_size = 18
+text = "BEREIT ZUM START"
+vertical_alignment = 1
+
+[node name="Bar" type="Control" parent="WavePanel/Row"]
+custom_minimum_size = Vector2(240, 16)
+mouse_filter = 2
+script = ExtResource("2_bar")
+
+[node name="WaveButton" type="Button" parent="WavePanel/Row"]
+focus_mode = 0
+theme_override_colors/font_color = Color(0.847059, 0.870588, 0.901961, 1)
+theme_override_colors/font_hover_color = Color(0.623529, 0.847059, 1, 1)
+theme_override_colors/font_pressed_color = Color(0.623529, 0.847059, 1, 1)
+theme_override_colors/font_disabled_color = Color(0.501961, 0.54902, 0.6, 0.6)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/focus = SubResource("StyleBox_btn_focus")
+theme_override_styles/normal = SubResource("StyleBox_btn_normal")
+theme_override_styles/hover = SubResource("StyleBox_btn_hover")
+theme_override_styles/pressed = SubResource("StyleBox_btn_pressed")
+theme_override_styles/disabled = SubResource("StyleBox_btn_disabled")
+icon = ExtResource("5_space")
+icon_max_width = 20
+text = "WELLE 1 STARTEN"
+
+[node name="GameOver" type="Control" parent="."]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Dim" type="ColorRect" parent="GameOver"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.0352941, 0.0431373, 0.0588235, 0.8)
+mouse_filter = 2
+
+[node name="Center" type="VBoxContainer" parent="GameOver"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -260.0
+offset_top = -110.0
+offset_right = 260.0
+offset_bottom = 110.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 14
+alignment = 1
+
+[node name="Title" type="Label" parent="GameOver/Center"]
+theme_override_colors/font_color = Color(0.623529, 0.847059, 1, 1)
+theme_override_font_sizes/font_size = 48
+text = "GAME OVER"
+horizontal_alignment = 1
+
+[node name="Stats" type="Label" parent="GameOver/Center"]
+theme_override_font_sizes/font_size = 24
+text = "WELLE 0 — GELD 0"
+horizontal_alignment = 1
+
+[node name="Restart" type="Button" parent="GameOver/Center"]
+focus_mode = 0
+theme_override_colors/font_color = Color(0.847059, 0.870588, 0.901961, 1)
+theme_override_colors/font_hover_color = Color(0.623529, 0.847059, 1, 1)
+theme_override_colors/font_pressed_color = Color(0.623529, 0.847059, 1, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/focus = SubResource("StyleBox_btn_focus")
+theme_override_styles/normal = SubResource("StyleBox_btn_normal")
+theme_override_styles/hover = SubResource("StyleBox_btn_hover")
+theme_override_styles/pressed = SubResource("StyleBox_btn_pressed")
+theme_override_styles/disabled = SubResource("StyleBox_btn_disabled")
+text = "NEUSTART (R)"
