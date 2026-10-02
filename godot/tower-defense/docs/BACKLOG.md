@@ -21,10 +21,6 @@ followed by indented `Vision:` (pillar/prototype question + roadmap milestone), 
 
 ## Open
 
-- [ ] **tower-defense-telemetry-enrichment** · priority: medium · effort: medium · area: logic — Add `kill` events (cell, kind, wave), a per-wave summary (kills/leaks/money start→end), `send`/`time_control` events, and a provenance marker in `run_start` (`source`, `harness` true/false); extend `tools/analyze_run.py`; move the legacy harness logs to `telemetry_local/legacy/`.
-  - Vision: pressure-curve data basis (VISION Q2); roadmap M1.
-  - Kill: after the data lands, no new actionable analyzer read is possible with it.
-  - Surfaces: `scripts/telemetry.gd`, `scripts/game.gd`, `tools/analyze_run.py`, `tools/test_analyze_run.py`, `docs/ARCHITECTURE.md`, `docs/BALANCE.md`.
 - [ ] **tower-defense-wall-piece** · priority: medium · effort: low · area: logic — Cheap wall blocker (no attack) as the second buildable role; build/economy logic + placeholder sprite + tests.
   - Vision: P1 (workbench); roadmap M1 (tower breadth first).
   - Kill: the wall adds no new decision (just a cheaper gun stand-in).
@@ -52,7 +48,7 @@ followed by indented `Vision:` (pillar/prototype question + roadmap milestone), 
 
 ## Done
 
-(none yet)
+- [x] **tower-defense-telemetry-enrichment** · priority: medium · effort: medium · area: logic — Add `kill` events (cell, kind, wave), a per-wave summary (kills/leaks/money start→end), `send`/`time_control` events, and a provenance marker in `run_start` (`source`, `harness` true/false); extend `tools/analyze_run.py`; move the legacy harness logs to `telemetry_local/legacy/` — done 2026-10-02 (`time_control` emission deferred to the TimeControl slice; the analyzer already accepts it).
 
 ## Notes
 

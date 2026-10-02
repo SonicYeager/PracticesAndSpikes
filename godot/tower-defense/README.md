@@ -63,8 +63,10 @@ then auto-starts. Game over shows a run summary and restarts the scene.
 - T14: plasma-cannon turret (side prongs, cyan core) and bug-style drones
   (head + legs, 2-frame gait); combat FX (shake, muzzle/impact/explosion,
   ember bursts, recoil) live in `scripts/fx.gd`.
-- Local telemetry: build/sell/wave/leak/run_end events →
-  `user://run_<seed>.jsonl` (analysis: `tools/analyze_run.py`).
+- Local telemetry: build/sell/wave/leak/kill/send events + per-wave summaries
+  (`wave_end`) → `user://run_<seed>.jsonl` (analysis:
+  `tools/analyze_run.py`); `run_start` carries provenance (`source`,
+  `harness`) so harness runs stay distinguishable from human ones.
 - Meta stub: one persistent bonus (`SkillStub` → `user://skill_stub.cfg`).
 
 ## Getting started
@@ -131,12 +133,19 @@ python tools/make_sounds.py         # audio/*.wav (22050 Hz mono)
 ## Telemetry analysis
 
 `tools/analyze_run.py` (stdlib only) reads the run logs and prints per-wave
-leak/kill/money/build tables plus an aggregate across runs:
+kill/leak/money/build tables plus an aggregate across runs:
 
 ```bash
 python tools/analyze_run.py                      # scans telemetry_local/, then the Godot user dir
 python tools/analyze_run.py path/to/run_1.jsonl  # or explicit files / directories
+python tools/analyze_run.py telemetry_local/legacy   # pre-provenance runs live here
 ```
+
+Kills are exact — from `kill` events and `wave_end` summaries, not a
+`count − leaks` estimate — the money column shows each wave's `start→end`, and
+a `kill zones` line names the top kill cells. Legacy logs without the newer
+events keep the old derivation, and a non-local `source` shows as a
+`[harness]` marker in the header.
 
 Keep runs by copying `user://run_<seed>.jsonl` into `telemetry_local/`
 (gitignored) — every run writes its own file (random seed per run).

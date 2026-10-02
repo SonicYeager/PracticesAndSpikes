@@ -88,6 +88,10 @@ const DEBRIS_TEX := preload("res://art/debris.png")
 
 ## Seed override: -1 = random run seed, >= 0 pins it (tests/editor/replay).
 @export var seed_override := -1
+
+## Run provenance: "local" for normal sessions; the balance harness sets
+## "harness" (logged in run_start, drives the analyzer's provenance marker).
+@export var run_source := "local"
 var game_seed := 1
 
 var maze: Maze
@@ -109,6 +113,9 @@ var _bar_tex: ImageTexture
 var _spawn_counter := 0
 var _sell_mode := false
 var _director: WaveDirector
+var _wave_kills := 0
+var _wave_leaks := 0
+var _wave_money_start := 0
 var _anim_time := 0.0
 
 @onready var _camera: Camera2D = $Camera
@@ -124,7 +131,7 @@ func _ready() -> void:
 	var terrain := TerrainGen.generate(MAP_SIZE, entries, exits, game_seed)
 	maze = Maze.new(MAP_SIZE, entries, exits, terrain["blockers"])
 	economy = Economy.new(100)
-	telemetry = Telemetry.new(game_seed)
+	telemetry = Telemetry.new(game_seed, run_source)
 	_director = WaveDirector.new(game_seed)
 	_camera.position = Vector2(get_viewport_rect().size) * 0.5
 	_camera.make_current()
@@ -201,9 +208,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			_try_sell(cell)
 		_update_hud()
 	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_SPACE:
-		if _director.phase == WaveDirector.Phase.IDLE or _director.phase == WaveDirector.Phase.BREAK:
-			# IDLE: start wave 1; BREAK: skip the intermission.
-			_start_wave(_director.wave + 1)
+		# IDLE: start wave 1; BREAK: skip the intermission (same path as the button).
+		_on_wave_pressed()
 
 
 func _try_sell(cell: Vector2i) -> bool:
@@ -223,6 +229,7 @@ func _on_wave_pressed() -> void:
 		_director.phase == WaveDirector.Phase.IDLE
 		or _director.phase == WaveDirector.Phase.BREAK
 	):
+		telemetry.event("send", {"wave": _director.wave + 1})
 		_start_wave(_director.wave + 1)
 
 
@@ -232,6 +239,9 @@ func _on_sell_toggled(active: bool) -> void:
 
 func _start_wave(n: int) -> void:
 	_director.start(n)
+	_wave_kills = 0
+	_wave_leaks = 0
+	_wave_money_start = economy.money
 	_apply_wave_knobs()
 	telemetry.event("wave", {
 		"wave": n,
@@ -256,6 +266,13 @@ func _update_spawner(delta: float) -> void:
 	if _director.phase != WaveDirector.Phase.RUNNING:
 		return
 	if _director.queue.is_empty() and _drones.is_empty():
+		telemetry.event("wave_end", {
+			"wave": _director.wave,
+			"kills": _wave_kills,
+			"leaks": _wave_leaks,
+			"money_start": _wave_money_start,
+			"money_end": economy.money,
+		})
 		_director.begin_break()
 		_update_hud()
 		return
@@ -317,6 +334,7 @@ func _update_drones(delta: float) -> void:
 
 func _on_leak(d: Drone) -> void:
 	economy.on_leak()
+	_wave_leaks += 1
 	var exit := d.exit_cell()
 	telemetry.event("leak", {"wave": _director.wave, "money": economy.money, "exit": [exit.x, exit.y]})
 	_play("leak")
@@ -384,6 +402,12 @@ func _apply_damage(target: Drone, amount: float) -> bool:
 	## Shared kill/hit consequences; returns true when the drone died.
 	if target.take_damage(amount):
 		economy.on_kill(_director.kill_reward)
+		_wave_kills += 1
+		telemetry.event("kill", {
+			"wave": _director.wave,
+			"cell": [target.cell().x, target.cell().y],
+			"kind": target.kind,
+		})
 		_fx.explosion(_board.grid_to_world(target.position))
 		_board.add_decal(SCORCH_TEX, target.position)
 		_play("kill")

@@ -4,17 +4,20 @@
 Reads the JSONL files written by scripts/telemetry.gd (`user://run_<seed>.jsonl`)
 and prints a per-run report plus an aggregate across runs.
 
-Events: run_start {seed} · wave {wave,count,hp} · build {cell} · sell {cell}
-        · leak {wave,money} · run_end {wave,money}
+Events: run_start {seed,source,harness} · wave {wave,count,hp} · build {cell}
+        · sell {cell} · kill {wave,cell,kind} · wave_end {wave,kills,leaks,
+        money_start,money_end} · leak {wave,money} · send {wave} · time_control
+        · run_end {wave,money}
 
 Derived numbers:
-  kills      = count - leaks for every wave that was fully cleared (a later
-               wave started); the final wave stays "-" because the run ended
-               mid-wave and surviving drones are not telemetered.
+  kills      = exact per wave: wave_end.kills once the wave was cleared, else the
+               kill-event count (still true for a final wave cut off by game
+               over). Legacy logs without either fall back to count - leaks on
+               cleared waves; the legacy final wave stays "-".
   build/sell = activity while that wave was the current one (its run plus the
                following break); pre-wave-1 building is shown separately.
-  money@leak = balance right after the wave's last leak (leak events carry the
-               balance; kills/builds after that are not included).
+  money      = wave_end money_start -> money_end when present; legacy logs show
+               the balance at the wave's last leak instead (leak events carry it).
 
 Usage:
   python3 analyze_run.py [file.jsonl | dir ...]
@@ -75,10 +78,40 @@ def as_int(value):
         return None
 
 
+def valid_cell(value):
+    """True for a [x, y] pair of numbers (the kill-event cell shape)."""
+    return (
+        isinstance(value, (list, tuple))
+        and len(value) == 2
+        and as_int(value[0]) is not None
+        and as_int(value[1]) is not None
+    )
+
+
+def wave_kills(run, n):
+    """Exact kills when known; legacy count - leaks as the fallback."""
+    summary = run["wave_ends"].get(n)
+    if summary and summary["kills"] is not None:
+        return summary["kills"]
+    if n in run["kills_by_wave"]:
+        return run["kills_by_wave"][n]
+    cleared = run["order"] and n != run["order"][-1]
+    if cleared and n in run["waves"]:
+        return max(run["waves"][n]["count"] - len(run["leaks"].get(n, [])), 0)
+    return None
+
+
 def load_run(path):
     run = {
         "path": path,
         "seed": None,
+        "source": None,       # run provenance ("local" / "harness", newer logs)
+        "harness": None,      # bool flag from run_start
+        "sends": 0,           # player-initiated wave starts (send events)
+        "time_controls": 0,   # pause/speed events (emitted by the TimeControl slice)
+        "wave_ends": {},      # wave -> {kills, leaks, money_start, money_end}
+        "kills_by_wave": {},  # wave -> kill-event count
+        "kill_cells": {},     # (x, y) -> kill count
         "waves": {},          # wave -> {"count": int, "hp": number|None}
         "order": [],          # wave numbers in event order
         "leaks": {},          # wave -> [money, ...] (one entry per leak)
@@ -110,6 +143,8 @@ def load_run(path):
             if kind == "run_start":
                 run["run_starts"] += 1
                 run["seed"] = event.get("seed")
+                run["source"] = event.get("source")
+                run["harness"] = event.get("harness")
             elif kind == "wave":
                 n = as_int(event.get("wave"))
                 count = as_int(event.get("count"))
@@ -132,6 +167,34 @@ def load_run(path):
                     run["bad_lines"] += 1
                     continue
                 run["leaks"].setdefault(n, []).append(event.get("money"))
+            elif kind == "kill":
+                n = as_int(event.get("wave"))
+                cell = event.get("cell")
+                if n is None or not valid_cell(cell):
+                    run["bad_lines"] += 1
+                    continue
+                run["kills_by_wave"][n] = run["kills_by_wave"].get(n, 0) + 1
+                key = (as_int(cell[0]), as_int(cell[1]))
+                run["kill_cells"][key] = run["kill_cells"].get(key, 0) + 1
+            elif kind == "wave_end":
+                n = as_int(event.get("wave"))
+                if n is None:
+                    run["bad_lines"] += 1
+                    continue
+                run["wave_ends"][n] = {
+                    "kills": as_int(event.get("kills")),
+                    "leaks": as_int(event.get("leaks")),
+                    "money_start": event.get("money_start"),
+                    "money_end": event.get("money_end"),
+                }
+            elif kind == "send":
+                if as_int(event.get("wave")) is None:
+                    run["bad_lines"] += 1
+                    continue
+                run["sends"] += 1
+            elif kind == "time_control":
+                # Emitted by the future TimeControl slice; accepted, not scored yet.
+                run["time_controls"] += 1
             elif kind == "run_end":
                 run["run_ends"] += 1
                 run["run_end"] = {
@@ -163,8 +226,20 @@ def report_run(run):
     else:
         result = "INCOMPLETE (no run_end - window closed?)"
     total_leaks = sum(len(m) for m in run["leaks"].values())
-    lines.append("%s - seed %s - %s" % (name, seed, result))
-    lines.append("  builds %d, sells %d, leaks %d" % (run["builds"], run["sells"], total_leaks))
+    provenance = " [%s]" % run["source"] if run["source"] and run["source"] != "local" else ""
+    sends = " - sends %d" % run["sends"] if run["sends"] else ""
+    lines.append("%s - seed %s%s - %s%s" % (name, seed, provenance, result, sends))
+    kill_values = [wave_kills(run, n) for n in run["order"]]
+    if any(value is not None for value in kill_values):
+        total_kills = sum(value for value in kill_values if value is not None)
+        lines.append(
+            "  builds %d, sells %d, leaks %d, kills %d"
+            % (run["builds"], run["sells"], total_leaks, total_kills)
+        )
+    else:
+        lines.append(
+            "  builds %d, sells %d, leaks %d" % (run["builds"], run["sells"], total_leaks)
+        )
 
     if run["run_starts"] != 1:
         lines.append("  WARNING: %d run_start events (expected 1)" % run["run_starts"])
@@ -184,22 +259,27 @@ def report_run(run):
     if pre_builds or pre_sells:
         lines.append("  before wave 1: builds %d, sells %d" % (pre_builds, pre_sells))
 
-    lines.append("  wave  count  hp       leaks  kills  money@leak  build  sell")
-    for index, n in enumerate(run["order"]):
+    lines.append("  wave  count  hp       kills  leaks  money        build  sell")
+    for n in run["order"]:
         wave = run["waves"][n]
         leaks = len(run["leaks"].get(n, []))
-        resolved = index < len(run["order"]) - 1
-        kills = str(max(wave["count"] - leaks, 0)) if resolved else "-"
-        money = run["leaks"][n][-1] if run["leaks"].get(n) else None
+        summary = run["wave_ends"].get(n)
+        if summary:
+            money = "%s→%s" % (
+                fmt_number(summary["money_start"]),
+                fmt_number(summary["money_end"]),
+            )
+        else:
+            money = fmt_number(run["leaks"][n][-1] if run["leaks"].get(n) else None)
         lines.append(
-            "  %-5d %-6d %-8s %-6d %-6s %-11s %-6d %d"
+            "  %-5d %-6d %-8s %-6s %-6d %-12s %-6d %d"
             % (
                 n,
                 wave["count"],
                 fmt_number(wave["hp"]),
+                fmt_number(wave_kills(run, n)),
                 leaks,
-                kills,
-                fmt_number(money),
+                money,
                 run["builds_during"].get(n, 0),
                 run["sells_during"].get(n, 0),
             )
@@ -210,6 +290,13 @@ def report_run(run):
         leaks = len(run["leaks"].get(n, []))
         bars.append("W%d %d %s" % (n, leaks, "#" * min(leaks, 30)))
     lines.append("  leaks per wave: " + "   ".join(bars))
+
+    if run["kill_cells"]:
+        top = sorted(run["kill_cells"].items(), key=lambda item: (-item[1], item[0]))[:5]
+        lines.append(
+            "  kill zones: "
+            + "  ".join("(%d,%d):%d" % (cell[0], cell[1], count) for cell, count in top)
+        )
     return lines
 
 
@@ -225,12 +312,9 @@ def report_aggregate(runs):
             cleared = [run for run in subset if n != run["order"][-1]]
             count = sum(run["waves"][n]["count"] for run in subset) / len(subset)
             leaks = sum(len(run["leaks"].get(n, [])) for run in subset) / len(subset)
-            kills = (
-                sum(max(run["waves"][n]["count"] - len(run["leaks"].get(n, [])), 0) for run in cleared)
-                / len(cleared)
-                if cleared
-                else None
-            )
+            known = [wave_kills(run, n) for run in subset]
+            known = [value for value in known if value is not None]
+            kills = sum(known) / len(known) if known else None
             lines.append(
                 "  %-5d %-5d %-8d %-10.1f %-10.1f %s"
                 % (

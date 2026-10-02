@@ -87,7 +87,7 @@ class LoadRunTest(unittest.TestCase):
         )
         text = "\n".join(ar.report_run(run))
         self.assertIn("game over at wave 2 (money -2)", text)
-        self.assertIn("money@leak", text)
+        self.assertIn("hp       kills", text)
         self.assertIn("leaks per wave: W1 0    W2 1 #", text)
 
     def test_aggregate_smoke(self):
@@ -95,6 +95,72 @@ class LoadRunTest(unittest.TestCase):
         text = "\n".join(ar.report_aggregate([run]))
         self.assertIn("Aggregate (1 run)", text)
         self.assertIn("runs ended: 1/1", text)
+
+    def test_kill_and_wave_end_parsed(self):
+        run = self.load(
+            '{"t":"wave","wave":1,"count":4,"hp":20.0}\n'
+            '{"t":"kill","wave":1,"cell":[3,4],"kind":"fast"}\n'
+            '{"t":"kill","wave":1,"cell":[3,4],"kind":"normal"}\n'
+            '{"t":"leak","wave":1,"money":96}\n'
+            '{"t":"leak","wave":1,"money":92}\n'
+            '{"t":"wave_end","wave":1,"kills":2,"leaks":2,"money_start":100,"money_end":112}\n'
+            '{"t":"wave","wave":2,"count":6,"hp":23.0}\n'
+        )
+        self.assertEqual(run["kills_by_wave"], {1: 2})
+        self.assertEqual(run["wave_ends"][1]["kills"], 2)
+        text = "\n".join(ar.report_run(run))
+        self.assertIn("100→112", text)
+        self.assertIn("leaks 2, kills 2", text)
+        self.assertIn("kill zones: (3,4):2", text)
+
+    def test_kill_events_give_kills_without_summary(self):
+        run = self.load(
+            '{"t":"wave","wave":1,"count":4}\n'
+            '{"t":"kill","wave":1,"cell":[1,1],"kind":"tank"}\n'
+            '{"t":"kill","wave":1,"cell":[2,2],"kind":"normal"}\n'
+            '{"t":"kill","wave":1,"cell":[1,1],"kind":"normal"}\n'
+        )
+        self.assertEqual(ar.wave_kills(run, 1), 3)
+
+    def test_provenance_and_sends_rendered(self):
+        run = self.load(
+            '{"t":"run_start","seed":7,"source":"harness","harness":true}\n'
+            '{"t":"send","wave":1}\n'
+            '{"t":"send","wave":2}\n'
+            '{"t":"wave","wave":1,"count":4}\n'
+            '{"t":"run_end","wave":1,"money":-1}\n'
+        )
+        text = "\n".join(ar.report_run(run))
+        self.assertIn("[harness]", text)
+        self.assertIn("sends 2", text)
+
+    def test_time_control_is_known(self):
+        run = self.load(
+            '{"t":"wave","wave":1,"count":4}\n'
+            '{"t":"time_control","action":"pause"}\n'
+            '{"t":"time_control","action":"resume"}\n'
+        )
+        self.assertEqual(run["time_controls"], 2)
+        self.assertEqual(run["unknown"], {})
+
+    def test_bad_kill_and_wave_end_counted(self):
+        run = self.load(
+            '{"t":"kill","wave":null,"cell":[1,1]}\n'
+            '{"t":"kill","wave":1,"cell":"nope"}\n'
+            '{"t":"kill","wave":1,"cell":[1]}\n'
+            '{"t":"wave_end","wave":null,"kills":1}\n'
+            '{"t":"send","wave":null}\n'
+        )
+        self.assertEqual(run["bad_lines"], 5)
+
+    def test_legacy_kills_still_derived(self):
+        run = self.load(
+            '{"t":"wave","wave":1,"count":4}\n'
+            '{"t":"wave","wave":2,"count":6}\n'
+            '{"t":"leak","wave":1,"money":90}\n'
+        )
+        self.assertEqual(ar.wave_kills(run, 1), 3)
+        self.assertIsNone(ar.wave_kills(run, 2))
 
 
 if __name__ == "__main__":

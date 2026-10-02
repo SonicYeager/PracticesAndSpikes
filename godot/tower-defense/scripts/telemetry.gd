@@ -1,14 +1,16 @@
 class_name Telemetry
 extends RefCounted
 ## Minimal run logger: collects JSON events, flushes once as JSONL.
-## No per-frame logging — wave/build/leak events only. Analysis lives in
+## No per-frame logging — wave/build/leak/kill/send events only. Analysis lives in
 ## tools/analyze_run.py; this class is the writer side.
+## `source` tags the run's provenance (`"local"` default; the balance harness
+## passes `"harness"` — logged as `harness: true`).
 
 var lines: Array[String] = []
 
 
-func _init(game_seed: int = 0) -> void:
-	event("run_start", {"seed": game_seed})
+func _init(game_seed: int = 0, source := "local") -> void:
+	event("run_start", {"seed": game_seed, "source": source, "harness": source != "local"})
 
 
 func event(type: String, data: Dictionary = {}) -> void:

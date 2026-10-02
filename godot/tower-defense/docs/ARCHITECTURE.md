@@ -49,7 +49,7 @@ owns its panels and only sees pushed state.
 | `Drone` | `scripts/drone.gd` | Grid-space walker: `advance(dt)` (returns `true` on leak), `take_damage()`, `reroute()`, `facing()`, `exit_cell()`, `distance_to_exit()`, `KIND_MODS` |
 | `Gun` | `scripts/gun.gd` | Range/cadence/targeting (`range_bonus` hook for wave modifiers); `acquire()` picks the drone closest to its exit, `try_fire(dt, targets)` returns the target when a shot is due |
 | `Projectile` | `scripts/projectile.gd` | Homing tracer; `advance(dt)` returns `true` on hit, fizzles when the target dies or leaks |
-| `Telemetry` | `scripts/telemetry.gd` | Buffers JSON events, `flush(path)` writes JSONL |
+| `Telemetry` | `scripts/telemetry.gd` | Buffers JSON events (wave/build/leak/kill/send + `wave_end` summaries), `flush(path)` writes JSONL; `run_start` carries `source`/`harness` provenance |
 | `SkillStub` | `scripts/skill_stub.gd` | Meta stub: one bonus persisted via `ConfigFile` |
 
 ## Coordinates
@@ -92,13 +92,13 @@ are freed together with it in `_remove_drone()` / `_remove_projectile()`.
 ## Event flows
 
 ```
-Space ──► _start_wave(n)
+Space/HUD button ──► _on_wave_pressed: telemetry "send" · _start_wave(n)
             WaveDirector.start(n): WaveGen.composition → modifier knobs
             (rush/swarm/blackout/bounty; knobs reset every wave)
             queue = normals… + fast… + tanks…      (fixed order)
             scene: gun range ← director · telemetry "wave" · SFX "wave"
 
-Wave cleared ──► WaveDirector.begin_break()        (HUD countdown)
+Wave cleared ──► telemetry "wave_end" · WaveDirector.begin_break()  (HUD countdown)
             timeout (tick_break) or Space ──► _start_wave(n + 1)   (auto-chain)
 
 spawner ──► _spawn_drone(kind)
@@ -120,7 +120,7 @@ HUD state       ◄─ GameHud.update_state({money, wave, phase, alive, queued,
 
 Gun.try_fire(dt) ──► _fire: tracer starts at muzzle (0.75 cells) + flash
 Projectile hit ──► _resolve_hit
-            kill: Economy.on_kill() · explosion · SFX "kill" · scorch decal
+            kill: Economy.on_kill() · explosion · SFX "kill" · scorch decal · telemetry "kill"
             else: hit flash + impact spark · SFX "hit" · debris decal
 Fx ──► muzzle/impact/explosion/ember bursts + barrel recoil (world space)
             taken from the same call sites; Fx.update decays the shake trauma
@@ -161,6 +161,8 @@ Both        ──► _reroute_drones(): each drone re-paths to its assigned exi
 - After game over `_process` stops (frozen world); the only accepted input
   is restart.
 - Money changes only through `Economy`; the HUD reads it, never writes it.
+- Telemetry is write-only: events never feed back into the simulation;
+  `run_source` only tags the log (harness vs human provenance).
 - Wave-modifier knobs (`_spawn_interval`, `_range_bonus`, `_kill_reward`)
   reset at every `_start_wave`; only `swarm` mutates the composition itself.
 - Battle decals are capped per cell (`DECAL_CELL_CAP`) and globally

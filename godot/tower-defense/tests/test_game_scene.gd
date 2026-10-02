@@ -245,6 +245,8 @@ func test_seed_override_pins_the_run_seed() -> void:
 	var game = _make_game(7)
 	assert_eq(game.game_seed, 7, "seed_override pins game_seed")
 	assert_true(game.telemetry.lines[0].contains("\"seed\":7"), "Run start logs the seed")
+	assert_true(game.telemetry.lines[0].contains("\"source\":\"local\""), "Run start tags the source")
+	assert_true(game.telemetry.lines[0].contains("\"harness\":false"), "Local runs are not harness runs")
 
 
 func test_decal_cap_evicts_oldest() -> void:
@@ -307,6 +309,50 @@ func test_wave_event_logs_the_modifier() -> void:
 			found = true
 			assert_true(line.contains("\"modifier\""), "Wave event carries the modifier")
 	assert_true(found, "Wave event was logged")
+
+
+func test_kill_wave_summary_and_send_events() -> void:
+	var game = _make_game()
+	game._on_wave_pressed()
+	# Drain the spawn queue, then kill one drone and leak the rest.
+	while not game._director.queue.is_empty():
+		game._process(STEP)
+	var victim: Drone = game._drones[0]
+	game._apply_damage(victim, 999.0)
+	for d in game._drones.duplicate():
+		game._on_leak(d)
+	game._process(STEP)
+	var kill_line := ""
+	var wave_end_line := ""
+	for line in game.telemetry.lines:
+		if line.contains("\"t\":\"kill\""):
+			kill_line = line
+		if line.contains("\"t\":\"wave_end\""):
+			wave_end_line = line
+	assert_true(kill_line.contains("\"kind\""), "Kill event carries the drone kind")
+	assert_true(kill_line.contains("\"cell\""), "Kill event carries the cell")
+	assert_true(wave_end_line.contains("\"kills\":1"), "One kill counted in the wave summary")
+	assert_true(wave_end_line.contains("\"leaks\":3"), "Three leaks counted in the wave summary")
+	assert_true(wave_end_line.contains("\"money_start\":100"), "Money at wave start is frozen")
+	assert_true(wave_end_line.contains("\"money_end\":76"), "Kill +6, three leaks -30")
+	# The break auto-starts wave 2 without another send event.
+	for i in ceili(WaveDirector.BREAK_SECONDS / STEP) + 2:
+		game._process(STEP)
+	assert_eq(game._director.wave, 2, "Wave 2 auto-started")
+	var sends := 0
+	for line in game.telemetry.lines:
+		if line.contains("\"t\":\"send\""):
+			sends += 1
+	assert_eq(sends, 1, "Only the player start sends; the auto-chain does not")
+
+
+func test_harness_run_provenance() -> void:
+	var game = load("res://scenes/Main.tscn").instantiate()
+	game.seed_override = 1
+	game.run_source = "harness"
+	add_child_autofree(game)
+	assert_true(game.telemetry.lines[0].contains("\"source\":\"harness\""), "Harness source logged")
+	assert_true(game.telemetry.lines[0].contains("\"harness\":true"), "Harness flag logged")
 
 
 func test_start_wave_applies_the_seeded_modifier() -> void:
