@@ -17,6 +17,8 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
   determinism, test strategy, extension points.
 - `docs/BALANCE.md` — every tunable constant + derived numbers + tuning flow.
 - `docs/AUDIO.md` — sound list, synth recipes, volumes, replacing SFX.
+- `docs/VISION.md` — workshop result: pillars, values, anti-pillars — the
+  north star for every slice (check ideas against P1–P3 first).
 - `docs/IDEAS.md` — post-prototype directions (candidates, not committed scope).
 - `art/STYLEGUIDE.md` — Ember Foundry palette, sprite specs + inventory.
 - This file — decisions, slice status, commands, gotchas (keep it lean; put
@@ -120,7 +122,12 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
   `seed_override`, `TerrainGen` blockers/decor (greedy, never sealing),
   battle decals (scorch/skid/debris, cap 300), ambient emitters.
   Suite: 49 tests / 384 asserts green.
-- Open: skill tree UI, segments/more entry/exit sides, telemetry enrichment
+- Vision (2026-10-02): `docs/VISION.md` — pillars P1–P3 (workbench, living
+  foundry, curiosity), values, anti-pillars; calibrations + next prototype
+  questions (epilog twist, pressure curve, decal readability, meta, time
+  control).
+- Open: epilog twist prototype, pressure curve, decal readability, meta
+  calibration, segments/more entry/exit sides, telemetry enrichment
   (see `docs/IDEAS.md`).
 
 ## Commands

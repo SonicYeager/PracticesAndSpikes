@@ -130,6 +130,7 @@ The parser has stdlib regression tests: `python tools/test_analyze_run.py`.
 | `docs/ARCHITECTURE.md` | Classes, frame order, coordinates, invariants, determinism, tests |
 | `docs/BALANCE.md` | Every tunable constant + derived numbers + tuning workflow |
 | `docs/AUDIO.md` | Sound list, synthesis recipes, volume tuning, replacing SFX |
+| `docs/VISION.md` | Workshop result: pillars, values, anti-pillars (north star) |
 | `art/STYLEGUIDE.md` | Ember Foundry palette, sprite specs + inventory |
 | `docs/IDEAS.md` | Post-prototype directions (multi-entry/exit sides, open items) |
 
