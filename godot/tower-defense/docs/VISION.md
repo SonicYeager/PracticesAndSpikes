@@ -82,10 +82,20 @@ Modifier, Überraschungen pro Run. Ruhig mit Puls, nie Reflexdruck.
    der ursprüngliche Befund war teils ein Schnellspul-Harness-Artefakt.*
 4. **Meta-Kalibrierung**: was genau zwischen Vielfalt und Progression?
 5. **Total Time Control** (P3): Pause/Speed als „ruhig mit Puls"-Werkzeug?
+6. **Loop-Erhalt nach dem Zubauen** (P1/P3, Playtest 2026-10-02): Ist das Maze
+   optimal gebaut, endet die Entscheidung — das Diorama wird Zuschauen (Run des
+   Maintainers: 73 Türme, Wellen 1–27 ohne Leak, danach nur Druck ohne
+   Entscheidung). Welche **wiederkehrende** Entscheidung hält den Loop, ohne
+   Content-Tretmühle? Kandidaten: wellen-getriebene Terrain-Disruptionen
+   (Krater/Felsen/neue Front, mit Refund + Telegraphing), Commander-Fähigkeiten,
+   Turm-Upgrades. Kill: drei Wellen ohne neue Re-Umplanung → Ansatz verwerfen.
 
 **Reihenfolge (Entscheidung 2026-10-02)**: Der Run-Frame (endliche Mission +
 Time Control, M1) kommt vor dem Epilog-Twist (M3) — Twists brauchen erst ein
-Ende, das sich lohnt. Verortung: README „From prototype to game".
+Ende, das sich lohnt. Verortung: README „From prototype to game". *Nachtrag
+(Playtest 2026-10-02): Der Loop-Erhalt (Frage 6) ist die wichtigste offene
+Richtungsentscheidung nach M1; Kandidaten in `docs/IDEAS.md`, Analyse unter
+`context/tasks/tower-defense-map-boredom/`.*
 
 ## Anwendung
 

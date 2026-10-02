@@ -70,6 +70,28 @@ Each needs a slice decision; vision check noted.*
   code study showed XT's air answers were broad, not "only DCA" — the
   two-counter standard stays.)
 
+## Loop-Erhalt nach dem Zubauen (Playtest 2026-10-02)
+
+Befund: Ist das Maze optimal gebaut, endet die Entscheidung — mehr Content
+(Gegner/Türme) vergrößert nur die Anfangswahl, nicht den laufenden Loop.
+
+Kandidaten für *wiederkehrende* Entscheidungen (Analyse:
+`context/tasks/tower-defense-map-boredom/`):
+
+- **Wellen-getriebene Terrain-Disruptionen**: Krater zerstören Türme (mit
+  Refund), Felsen wachsen, eine neue Entry-Front öffnet sich — das Maze muss
+  neu gelöst werden (P1). Geseedet, an die Wave-Modifier andockbar,
+  Telegraphing im Break.
+- **Commander-Fähigkeiten** (Cooldowns): Repair/EMP/Rally o. ä. als
+  Mikro-Entscheidungen im Puls, ohne Türme zu versetzen (P2/P3).
+- **Turm-Upgrades** als laufende Geld-Senke (M2; braucht ADR zur
+  „placement only"-Regel) — macht Optimieren dauerhaft, invalidiert das Layout
+  aber nicht.
+- **Vorerst verworfen**: Flieger/Immunpfade — Anti-Pillar „alles hängt an der
+  Luftabwehr".
+
+Nicht Teil dieser Liste: weitere Gegner-/Turm-Varianten ohne Loop-Mechanik.
+
 ## Known open items (from the prototype docs)
 
 - ~~**Seed flow**~~: done (T09) — random run seed, logged as
