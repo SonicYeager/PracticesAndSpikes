@@ -10,15 +10,21 @@ unit-testable without rendering (see *Testing*).
 scenes/Main.tscn
   └─ Main (Node2D, scripts/game.gd)      ← scene controller
        ├─ floor/marker/tower/drone/... sprites (created at runtime)
-       └─ Hud (CanvasLayer): icon panel, game-over screen (dim + summary)
+       └─ Hud (CanvasLayer)
+            ├─ Vignette (full-screen overlay)
+            └─ HudRoot (scenes/Hud.tscn, scripts/hud.gd)   ← UI boundary
 
 scripts/*.gd (class_name RefCounted)     ← core logic, no scene access
   Maze · Pathfinder · Economy · WaveGen · Drone · Gun · Projectile
   Telemetry · SkillStub
+
+UI scripts (Control-based, no gameplay access)
+  GameHud (scripts/hud.gd) · GameHudBar (scripts/hud_bar.gd)
 ```
 
 Core classes never reference nodes, `origin`, `TILE` or textures. The scene
-controller owns every sprite, tween, audio player and HUD label.
+controller owns every world sprite, tween and audio player; the HUD owns its
+own panels/labels and only sees the state pushed by `game.gd`.
 
 ## Core classes
 
@@ -61,7 +67,8 @@ only).
 3. `_update_guns` — acquire target, aim barrel, fire (muzzle tracer + flash)
 4. `_update_projectiles` — advance, resolve hits (damage/kill)
 5. `_sync_sprites` — positions, walk animation, hit flash, HP bars, pulses
-6. `_update_hud` — money, wave state, icon swap
+6. `_update_hud` — pushes money/wave/progress state into `GameHud.update_state`
+   (labels, bar, chip, button states)
 
 Removing objects is always done with a backwards index loop
 (`for i in range(size - 1, -1, -1)`) because handlers can remove the current
@@ -92,6 +99,11 @@ Drone.advance(dt) == true ──► _on_leak
             money < 0 ──► _end_run (game-over screen, "gameover" SFX, log flush)
 
 R / restart button (game over) ──► _restart: reload_current_scene()
+HUD wave button ─► _on_wave_pressed (IDLE/BREAK only) → _start_wave(n + 1)
+HUD sell toggle ─► _sell_mode: LMB sells towers (RMB always sells)
+HUD state       ◄─ GameHud.update_state({money, wave, phase, alive, queued,
+                    total, break_left, modifier_id, modifier_label})
+                    phase: "idle" | "running" | "break" | "game_over"
 
 Gun.try_fire(dt) ──► _fire: tracer starts at muzzle (0.75 cells) + flash
 Projectile hit ──► _resolve_hit
@@ -183,6 +195,9 @@ panel → game-over overlay, in that draw order).
 - Core classes: pure GUT tests in `tests/test_*.gd`, no scene needed
   (`test_maze`, `test_path`, `test_economy`, `test_wave`, `test_drone`,
   `test_gun`, `test_projectile`, `test_terrain_gen`).
+- HUD: `tests/test_hud.gd` instantiates `Hud.tscn` and drives the state API
+  and intents (labels, chip, button gating, sell toggle, game-over overlay,
+  bar freeze on game over) without the game scene.
 - Scene: `tests/test_game_scene.gd` instantiates `Main.tscn` (with
   `seed_override` pinned) and steps `_process(1.0 / 60.0)` manually, so
   assertions are frame-rate independent; it covers spawn → walk → shoot →
@@ -201,7 +216,8 @@ panel → game-over overlay, in that draw order).
 - **New tower type**: `Gun` is parameter-free by design; either add a
   constructor/params or a subclass with different `RANGE`/`DAMAGE`/`INTERVAL`
   and a new sprite set. `_guns` maps cell → `Gun`, so multiple types only
-  need a type field.
+  need a type field. The HUD build slot is the future per-type selector
+  (currently one gun).
 - **New drone kind**: add multipliers to `Drone.KIND_MODS` and a frame array
   to `game.gd` `DRONE_TEX`; `WaveGen` decides counts.
 - **New wave shape**: `WaveGen.composition()` is the single source; keep it

@@ -9,7 +9,7 @@ telemetry for data-driven balancing.
 
 - Stack: Godot 4.7.2, GDScript (no .NET flow)
 - Entrypoint: `scenes/Main.tscn` (open/import the folder in the Godot editor)
-- Status: prototype complete + sides + dirty world + pulse + XT look (T01–T11) — see *Controls* and *Roadmap*
+- Status: prototype complete + sides + dirty world + pulse + XT look + HUD (T01–T12) — see *Controls* and *Roadmap*
 
 ## Controls
 
@@ -17,8 +17,8 @@ telemetry for data-driven balancing.
 |---|---|
 | Left click | Build a gun (25) — rejected builds refund instantly |
 | Left click on a vent | Overcharge (20): ember burst, 15 dmg in 2.5 cells, 6 s cooldown |
-| Right click | Sell a gun (refund 12) |
-| Space | Start wave 1 / skip the break between waves |
+| Right click | Sell a gun (refund 12); the HUD VERKAUFEN toggle sells via left click while active |
+| Space (or the wave button) | Start wave 1 / skip the break between waves |
 | R (or the button) | Restart after game over |
 
 Rules: money **is** health — kills earn +6, leaks cost −10, game over strictly
@@ -56,6 +56,10 @@ then auto-starts. Game over shows a run summary and restarts the scene.
 - XT-Pass (T11): Xeno-Tactic look — dark blue-grey steel lab tiles, blue
   player turrets, white/acid-green alien drones, VT323 UI font (OFL,
   `fonts/`), drier SFX; reference study gitignored in `reference/xt/`.
+- HUD (T12): XT-style panels — status (gold, wave, modifier chip), build/sell
+  panel, segmented wave bar with a clickable SEND NEXT WAVE button; restyled
+  game-over overlay. Owned by `scenes/Hud.tscn` + `scripts/hud.gd`; `game.gd`
+  pushes state into it.
 - Local telemetry: build/sell/wave/leak/run_end events →
   `user://run_<seed>.jsonl` (analysis: `tools/analyze_run.py`).
 - Meta stub: one persistent bonus (`SkillStub` → `user://skill_stub.cfg`).
@@ -88,7 +92,10 @@ modifiers, decal caps).
 
 | Path | Purpose |
 |---|---|
-| `scenes/Main.tscn` | Single scene: game node + HUD (icon panel, game-over label) |
+| `scenes/Main.tscn` | Root scene: game node, camera, vignette + HUD instance |
+| `scenes/Hud.tscn` | HUD layout: status, build/sell panel, wave bar, game-over overlay |
+| `scripts/hud.gd` | HUD state API + intents (wave/sell/restart signals), chip colors |
+| `scripts/hud_bar.gd` | Segmented wave-progress bar |
 | `scripts/game.gd` | Scene controller: input, spawning, sprites, effects, audio, HUD |
 | `scripts/maze.gd` | Buildable grid + connectivity validation (`Maze`) |
 | `scripts/pathfinder.gd` | AStarGrid2D wrapper, 4-directional (`Pathfinder`) |
@@ -159,6 +166,7 @@ The parser has stdlib regression tests: `python tools/test_analyze_run.py`.
 | T09 | Dirty World: run seed, terrain blockers/decor, decals, ambient | done |
 | T10 | Pulse: wave events, vent overcharge, decal per-cell cap | done |
 | T11 | XT pass: steel/lab look, VT323 UI font, drier SFX | done |
+| T12 | HUD framework: status/build panels, wave bar, game-over restyle | done |
 
-All slices done (T01–T11). Post-prototype directions are collected in `docs/IDEAS.md`;
+All slices done (T01–T12). Post-prototype directions are collected in `docs/IDEAS.md`;
 the concrete candidate queue for the next slices is `docs/BACKLOG.md`.

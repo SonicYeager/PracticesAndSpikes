@@ -68,6 +68,19 @@ breit = Tank. Nie nur über Farbe unterscheiden.
   bzw. Rotation entlang des Pfads (fast), Flash-Frames (Muzzle/Impact/
   Explosion), HP-Balken als 1px-Textur-Sprites (kein Asset).
 
+## UI/HUD (T12)
+
+- Panels: dunkler Stahl `#141b24` (~94 % Deckkraft), 2 px Rahmen `#4a5666`,
+  Hover-Rahmen Cyan `#6fb4d9`; 2 px Ecken, weicher Schatten — Vorbild ist der
+  XT-HELP-Screen (dunkle Panels + Cyan-Linien).
+- Schrift: VT323, ALL CAPS; Gold `#ffd75e` (Geld), Cyan `#9fd8ff`
+  (Titel/Buttons), Text `#d8dee6`, gedimmt `#808991`.
+- Wave-Bar: 24 Segmente, Acid-Grün `#8ee04a` auf Slot `#1b2530`, 2 px Lücke.
+- Modifier-Chip färbt Text + Rahmen je Event (Ansturm orange, Schwarm grün,
+  Blackout cyan, Kopfgeld gold).
+- HUD-Icons: `hud_coin`, `gun_base`, `hud_space`, `hud_mouse_*`, `hud_wave`
+  (16×16, 2× im HUD) — beim 32×32-Pass (T13) mitziehen.
+
 ## Referenz-Anker (Xeno Tactic)
 
 Ursprungs-Inspiration (Flash-Maze-TD, Labor-Containment-Setting).

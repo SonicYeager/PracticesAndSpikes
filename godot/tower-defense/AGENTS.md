@@ -137,8 +137,10 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
   vent overcharge (money sink with ember burst + ready-glow), decal
   per-cell cap (2), overcharge SFX. Suite: 58 tests / 472 asserts green.
   T11 (XT-Pass): XT steel/lab look (palette, sprites, UI font VT323, drier
-  shoot/hit/kill/denied SFX), reference study gitignored. Suite: 58 tests /
-  472 asserts green.
+  shoot/hit/kill/denied SFX), reference study gitignored. T12 (HUD):
+  `scenes/Hud.tscn` + `scripts/hud.gd` (status/build panels, wave bar with
+  start button, sell toggle, game-over overlay); `game.gd` pushes state, the
+  HUD emits intents. Suite: 63 tests / 492 asserts green.
 - Vision (2026-10-02): `docs/VISION.md` — pillars P1–P3 (workbench, living
   foundry, curiosity), values, anti-pillars; calibrations + next prototype
   questions (epilog twist, pressure curve, decal readability, meta, time
