@@ -20,6 +20,8 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
 - `docs/VISION.md` — workshop result: pillars, values, anti-pillars — the
   north star for every slice (check ideas against P1–P3 first).
 - `docs/IDEAS.md` — post-prototype directions (candidates, not committed scope).
+- `docs/BACKLOG.md` — next slices: candidate queue for the workspace `/next` +
+  `/loop` pipeline (open/done, `area: logic|visual`, priorities).
 - `art/STYLEGUIDE.md` — XT steel/lab palette, sprite specs + inventory.
 - This file — decisions, slice status, commands, gotchas (keep it lean; put
   detail in the docs above instead of growing this list).
@@ -143,7 +145,7 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
   control).
 - Open: epilog twist prototype, meta calibration, time control, pressure
   tuning via telemetry, segments/more entry/exit sides, telemetry enrichment
-  (see `docs/IDEAS.md`).
+  (see `docs/IDEAS.md`; candidate queue with priorities: `docs/BACKLOG.md`).
 
 ## Commands
 

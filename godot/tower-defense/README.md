@@ -141,6 +141,7 @@ The parser has stdlib regression tests: `python tools/test_analyze_run.py`.
 | `docs/VISION.md` | Workshop result: pillars, values, anti-pillars (north star) |
 | `art/STYLEGUIDE.md` | XT steel/lab palette, sprite specs + inventory |
 | `docs/IDEAS.md` | Post-prototype directions (multi-entry/exit sides, open items) |
+| `docs/BACKLOG.md` | Next slices: candidate queue for `/next` + `/loop` (+ done log) |
 
 ## Roadmap
 
@@ -159,4 +160,5 @@ The parser has stdlib regression tests: `python tools/test_analyze_run.py`.
 | T10 | Pulse: wave events, vent overcharge, decal per-cell cap | done |
 | T11 | XT pass: steel/lab look, VT323 UI font, drier SFX | done |
 
-All slices done (T01–T11). Post-prototype directions are collected in `docs/IDEAS.md`.
+All slices done (T01–T11). Post-prototype directions are collected in `docs/IDEAS.md`;
+the concrete candidate queue for the next slices is `docs/BACKLOG.md`.
