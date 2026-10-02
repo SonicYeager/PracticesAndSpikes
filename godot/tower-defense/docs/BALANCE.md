@@ -12,6 +12,7 @@ the map to them.
 | Gun (range, damage, cadence) | `scripts/gun.gd` |
 | Drone kinds (hp/speed multipliers) | `scripts/drone.gd` (`KIND_MODS`) |
 | Wave scaling + composition | `scripts/wave.gd` (`WaveGen`) |
+| Wave pacing (spawn/break, modifier knobs) | `scripts/wave_director.gd` (`WaveDirector`) |
 | Scene pacing / layout | `scripts/game.gd` (top constants) |
 
 ## Economy (`economy.gd`)
@@ -70,7 +71,8 @@ Spawn pacing: one drone every 0.7 s (`SPAWN_INTERVAL`), order normals → fast
 (seeded per spawn, see the scene pacing table). Between waves: once the
 spawn queue and the field are empty, a `BREAK_SECONDS` (5 s) intermission
 runs with a HUD countdown, then the next wave auto-starts; Space skips the
-wait. Wave 1 is started manually.
+wait. Wave 1 is started manually. The state machine (queue, timers, knobs)
+lives in `WaveDirector`; the scene spawns and renders.
 
 Composition for seed 1 (reproducible via `seed_override = 1`), verified
 by running `WaveGen` directly:
@@ -105,6 +107,14 @@ in the `wave` telemetry event (effective post-swarm count; normals =
 count − fast − tanks). Overcharge (below) is the money sink that answers the
 modifiers.
 
+## Wave pacing (`WaveDirector`)
+
+| Constant | Value | Meaning |
+|---|---|---|
+| `SPAWN_INTERVAL` | 0.7 s | between two drones of a wave |
+| `BREAK_SECONDS` | 5.0 s | intermission between waves (Space skips it) |
+| modifier knobs | reset per wave | rush: interval ×0.6 · swarm: count ×1.5, hp ×0.7 · blackout: range −1 · bounty: reward +2 |
+
 ## Scene pacing (`game.gd`)
 
 | Constant | Value | Meaning |
@@ -112,14 +122,12 @@ modifiers.
 | `MAP_SIZE` | 20×12 | cells |
 | `TILE` | 32 | px per cell (16 px art at 2×) |
 | run seed | random per run | `_random_seed()`; logged as `run_start.seed`; `seed_override` >= 0 pins it (default -1) |
-| `SPAWN_INTERVAL` | 0.7 s | between two drones of a wave |
 | `SCATTER_SEED_MUL` / `SCATTER_WAVE_MUL` | 1000003 / 104729 | scatter seed: `game_seed * MUL + wave * MUL2 + index` (entry + exit) |
 | `BLOCKER_CLUSTERS` / `CLUSTER_MIN..MAX` | 7 / 1..3 | terrain clusters (`TerrainGen`) |
 | `DECOR_COUNT` | 26 | cosmetic decor cells |
 | `DECAL_CAP` / `DECAL_CELL_CAP` | 300 / 2 | battle decals per run (FIFO) / per cell |
 | `OVERCHARGE_COST` / `OVERCHARGE_COOLDOWN` | 20 / 6 s | vent overcharge cost and cooldown |
 | `OVERCHARGE_DAMAGE` / `OVERCHARGE_RADIUS` | 15 / 2.5 cells | vent burst damage and radius |
-| `BREAK_SECONDS` | 5.0 s | intermission between waves (Space skips it) |
 | `SHAKE_DECAY` / `SHAKE_MAX_OFFSET` | 1.6 /s · 9 px | trauma decay / max camera offset |
 | `SHAKE_KILL` / `SHAKE_LEAK` / `SHAKE_GAME_OVER` | 0.12 / 0.3 / 0.7 | trauma per event |
 | `RECOIL_PX` | 3.0 | barrel kick per shot (tween back, 0.08 s) |

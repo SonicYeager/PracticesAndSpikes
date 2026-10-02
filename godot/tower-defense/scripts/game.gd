@@ -9,10 +9,9 @@ extends Node2D
 ## nearest-exit fallback. T09: random run seed (logged, overridable), seeded
 ## terrain blockers + decor, battle decals, ambient emitters. T12: HUD
 ## framework (scenes/Hud.tscn + scripts/hud.gd) with status, build/sell
-## panel, segmented wave bar and game-over overlay.
-
-## Wave phase: exactly one state is active at a time.
-enum Phase { IDLE, RUNNING, BREAK, GAME_OVER }
+## panel, segmented wave bar and game-over overlay. T12.5: the wave flow
+## lives in `WaveDirector` (phase, queue, timers, modifier knobs); the scene
+## orchestrates and owns the visuals.
 
 ## Map edges used as entry/exit zones (T08). The lists stay generic — more
 ## sides later, segments are a future config detail.
@@ -38,8 +37,6 @@ const MODIFIER_LABELS := {
 	"blackout": "Blackout",
 	"bounty": "Kopfgeld",
 }
-const SPAWN_INTERVAL := 0.7
-const BREAK_SECONDS := 5.0
 const SHAKE_DECAY := 1.6         # trauma lost per second
 const SHAKE_MAX_OFFSET := 9.0    # px at full trauma
 const SHAKE_KILL := 0.12
@@ -125,10 +122,6 @@ var origin := Vector2.ZERO
 var _decals: Array[Sprite2D] = []
 var _decals_by_cell: Dictionary = {}
 var _vents: Dictionary = {}
-var _spawn_interval := SPAWN_INTERVAL
-var _range_bonus := 0.0
-var _kill_reward := Economy.KILL_REWARD
-var _break_modifier := ""
 
 var _tower_nodes: Dictionary = {}
 var _guns: Dictionary = {}
@@ -144,14 +137,8 @@ var _bar_tex: ImageTexture
 var _entry_nodes: Array[Sprite2D] = []
 var _exit_nodes: Array[Sprite2D] = []
 var _spawn_counter := 0
-var _wave := 0
-var _wave_total := 0
 var _sell_mode := false
-var _wave_comp: Dictionary = {}
-var _spawn_queue: Array[String] = []
-var _spawn_timer := 0.0
-var _phase: Phase = Phase.IDLE
-var _break_timer := 0.0  # remaining intermission seconds; only used in Phase.BREAK
+var _director: WaveDirector
 var _shake_trauma := 0.0
 var _jitter_phase := 0
 var _anim_time := 0.0
@@ -169,6 +156,7 @@ func _ready() -> void:
 	maze = Maze.new(MAP_SIZE, entries, exits, terrain["blockers"])
 	economy = Economy.new(100)
 	telemetry = Telemetry.new(game_seed)
+	_director = WaveDirector.new(game_seed)
 	origin = (Vector2(get_viewport_rect().size) - Vector2(MAP_SIZE) * TILE) * 0.5
 	_camera.position = Vector2(get_viewport_rect().size) * 0.5
 	_camera.make_current()
@@ -193,19 +181,19 @@ func _random_seed() -> int:
 
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_WM_CLOSE_REQUEST and telemetry != null and _phase != Phase.GAME_OVER:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST and telemetry != null and _director.phase != WaveDirector.Phase.GAME_OVER:
 		telemetry.flush(TELEMETRY_PATH % game_seed)
 
 
 func _process(delta: float) -> void:
 	_anim_time += delta
 	_update_shake(delta)
-	if _phase == Phase.GAME_OVER:
+	if _director.phase == WaveDirector.Phase.GAME_OVER:
 		# Frozen world; the shake still decays.
 		return
 	_update_spawner(delta)
 	_update_drones(delta)
-	if _phase == Phase.GAME_OVER:
+	if _director.phase == WaveDirector.Phase.GAME_OVER:
 		# A leak ended the run mid-frame: freeze the rest of the simulation.
 		return
 	_update_guns(delta)
@@ -215,7 +203,7 @@ func _process(delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _phase == Phase.GAME_OVER:
+	if _director.phase == WaveDirector.Phase.GAME_OVER:
 		if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_R:
 			_restart()
 		return
@@ -227,13 +215,13 @@ func _unhandled_input(event: InputEvent) -> void:
 				_try_sell(cell)
 			elif _vents.has(cell):
 				# Only during a wave: otherwise there are no drones to hit.
-				if _phase != Phase.RUNNING or not _try_overcharge(cell):
+				if _director.phase != WaveDirector.Phase.RUNNING or not _try_overcharge(cell):
 					_play("denied")
 			# Rejected builds (maze would disconnect, drone in the way) refund.
 			elif economy.spend(Economy.GUN_COST):
 				if not _drone_on_cell(cell) and maze.build(cell):
 					_guns[cell] = Gun.new(Drone.center_of(cell))
-					_guns[cell].range_bonus = _range_bonus
+					_guns[cell].range_bonus = _director.range_bonus
 					_show_tower(cell)
 					telemetry.event("build", {"cell": [cell.x, cell.y]})
 					_reroute_drones()
@@ -248,9 +236,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			_try_sell(cell)
 		_update_hud()
 	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_SPACE:
-		if _phase == Phase.IDLE or _phase == Phase.BREAK:
+		if _director.phase == WaveDirector.Phase.IDLE or _director.phase == WaveDirector.Phase.BREAK:
 			# IDLE: start wave 1; BREAK: skip the intermission.
-			_start_wave(_wave + 1)
+			_start_wave(_director.wave + 1)
 
 
 func _try_sell(cell: Vector2i) -> bool:
@@ -267,8 +255,11 @@ func _try_sell(cell: Vector2i) -> bool:
 
 
 func _on_wave_pressed() -> void:
-	if _phase == Phase.IDLE or _phase == Phase.BREAK:
-		_start_wave(_wave + 1)
+	if (
+		_director.phase == WaveDirector.Phase.IDLE
+		or _director.phase == WaveDirector.Phase.BREAK
+	):
+		_start_wave(_director.wave + 1)
 
 
 func _on_sell_toggled(active: bool) -> void:
@@ -276,72 +267,37 @@ func _on_sell_toggled(active: bool) -> void:
 
 
 func _start_wave(n: int) -> void:
-	_wave = n
-	_wave_comp = WaveGen.composition(n, game_seed)
-	_apply_modifier(str(_wave_comp["modifier"]))
-	_phase = Phase.RUNNING
-	_break_timer = 0.0
-	_spawn_timer = 0.0
-	_spawn_queue.clear()
-	var normals: int = int(_wave_comp["count"]) - int(_wave_comp["fast"]) - int(_wave_comp["tanks"])
-	for i in normals:
-		_spawn_queue.append("normal")
-	for i in int(_wave_comp["fast"]):
-		_spawn_queue.append("fast")
-	for i in int(_wave_comp["tanks"]):
-		_spawn_queue.append("tank")
-	_wave_total = _spawn_queue.size()
+	_director.start(n)
+	_apply_wave_knobs()
 	telemetry.event("wave", {
 		"wave": n,
-		"count": _wave_comp["count"],
-		"hp": _wave_comp["hp"],
-		"modifier": _wave_comp["modifier"],
+		"count": _director.composition["count"],
+		"hp": _director.composition["hp"],
+		"modifier": _director.composition["modifier"],
 	})
 	_play("wave")
 	_update_hud()
 
 
-func _apply_modifier(modifier: String) -> void:
-	## Resets the per-wave knobs, then applies the event (T10). Swarm mutates
-	## the composition itself (more, weaker drones); the rest are game knobs.
-	_spawn_interval = SPAWN_INTERVAL
-	_range_bonus = 0.0
-	_kill_reward = Economy.KILL_REWARD
-	match modifier:
-		"rush":
-			_spawn_interval *= 0.6
-		"swarm":
-			_wave_comp["count"] = roundi(float(_wave_comp["count"]) * 1.5)
-			_wave_comp["hp"] = float(_wave_comp["hp"]) * 0.7
-		"blackout":
-			_range_bonus = -1.0
-		"bounty":
-			_kill_reward += 2
+func _apply_wave_knobs() -> void:
+	## Pushes the director's per-wave knobs into the live guns (T10/T12.5).
 	for gun in _guns.values():
-		gun.range_bonus = _range_bonus
+		gun.range_bonus = _director.range_bonus
 
 
 func _update_spawner(delta: float) -> void:
-	if _phase == Phase.BREAK:
-		_break_timer = maxf(_break_timer - delta, 0.0)
-		if _break_timer == 0.0:
-			_start_wave(_wave + 1)
+	if _director.tick_break(delta):
+		_start_wave(_director.wave + 1)
 		return
-	if _phase != Phase.RUNNING:
+	if _director.phase != WaveDirector.Phase.RUNNING:
 		return
-	if _spawn_queue.is_empty():
-		if _drones.is_empty():
-			_phase = Phase.BREAK
-			_break_timer = BREAK_SECONDS
-			# Cached once: the HUD break preview reads it every frame.
-			_break_modifier = str(WaveGen.composition(_wave + 1, game_seed)["modifier"])
-			_update_hud()
+	if _director.queue.is_empty() and _drones.is_empty():
+		_director.begin_break()
+		_update_hud()
 		return
-	_spawn_timer -= delta
-	if _spawn_timer > 0.0:
-		return
-	_spawn_timer = _spawn_interval
-	_spawn_drone(_spawn_queue.pop_front())
+	var kind := _director.tick_spawn(delta)
+	if kind != "":
+		_spawn_drone(kind)
 
 
 func _spawn_drone(kind: String) -> void:
@@ -351,7 +307,7 @@ func _spawn_drone(kind: String) -> void:
 	var index := _spawn_counter
 	_spawn_counter += 1
 	var rng := RandomNumberGenerator.new()
-	rng.seed = game_seed * SCATTER_SEED_MUL + _wave * SCATTER_WAVE_MUL + index
+	rng.seed = game_seed * SCATTER_SEED_MUL + _director.wave * SCATTER_WAVE_MUL + index
 	var entry: Vector2i = maze.entries[rng.randi_range(0, maze.entries.size() - 1)]
 	var exit: Vector2i = maze.exits[rng.randi_range(0, maze.exits.size() - 1)]
 	var cells := _cells_from_path(maze.pathfinder.find_path(entry, exit))
@@ -362,8 +318,8 @@ func _spawn_drone(kind: String) -> void:
 			cells = _cells_from_path(maze.pathfinder.find_path(entry, exit))
 	if cells.is_empty():
 		return
-	var speed: float = float(_wave_comp["speed"]) / TILE
-	var d := Drone.spawn(kind, cells, _wave_comp["hp"], speed)
+	var speed: float = float(_director.composition["speed"]) / TILE
+	var d := Drone.spawn(kind, cells, _director.composition["hp"], speed)
 	_drones.append(d)
 	var sprite := Sprite2D.new()
 	sprite.texture = DRONE_TEX[kind][0]
@@ -392,14 +348,14 @@ func _update_drones(delta: float) -> void:
 		# Rerouting onto the base cell sets `finished` without `advance()`.
 		if d.advance(delta) or d.finished:
 			_on_leak(d)
-			if _phase == Phase.GAME_OVER:
+			if _director.phase == WaveDirector.Phase.GAME_OVER:
 				break
 
 
 func _on_leak(d: Drone) -> void:
 	economy.on_leak()
 	var exit := d.exit_cell()
-	telemetry.event("leak", {"wave": _wave, "money": economy.money, "exit": [exit.x, exit.y]})
+	telemetry.event("leak", {"wave": _director.wave, "money": economy.money, "exit": [exit.x, exit.y]})
 	_play("leak")
 	_add_shake(SHAKE_LEAK)
 	_add_decal(SKID_TEX, d.position)
@@ -464,7 +420,7 @@ func _resolve_hit(p: Projectile) -> void:
 func _apply_damage(target: Drone, amount: float) -> bool:
 	## Shared kill/hit consequences; returns true when the drone died.
 	if target.take_damage(amount):
-		economy.on_kill(_kill_reward)
+		economy.on_kill(_director.kill_reward)
 		_spawn_explosion(target.position)
 		_add_decal(SCORCH_TEX, target.position)
 		_play("kill")
@@ -548,13 +504,13 @@ func _remove_projectile(p: Projectile) -> void:
 
 
 func _end_run() -> void:
-	if _phase == Phase.GAME_OVER:
+	if _director.phase == WaveDirector.Phase.GAME_OVER:
 		return
-	_phase = Phase.GAME_OVER
-	_hud.show_game_over(_wave, economy.money)
+	_director.end_run()
+	_hud.show_game_over(_director.wave, economy.money)
 	_play("gameover")
 	_add_shake(SHAKE_GAME_OVER)
-	telemetry.event("run_end", {"wave": _wave, "money": economy.money})
+	telemetry.event("run_end", {"wave": _director.wave, "money": economy.money})
 	telemetry.flush(TELEMETRY_PATH % game_seed)
 	_update_hud()
 
@@ -1006,32 +962,32 @@ func _hide_tower(cell: Vector2i) -> void:
 
 func _update_hud() -> void:
 	var modifier_id := ""
-	match _phase:
-		Phase.RUNNING:
-			modifier_id = str(_wave_comp.get("modifier", ""))
-		Phase.BREAK:
-			modifier_id = _break_modifier
+	match _director.phase:
+		WaveDirector.Phase.RUNNING:
+			modifier_id = str(_director.composition.get("modifier", ""))
+		WaveDirector.Phase.BREAK:
+			modifier_id = _director.next_modifier
 	_hud.update_state({
 		"money": economy.money,
 		"gun_cost": Economy.GUN_COST,
-		"wave": _wave,
+		"wave": _director.wave,
 		"phase": _phase_name(),
 		"alive": _drones.size(),
-		"queued": _spawn_queue.size(),
-		"total": _wave_total,
-		"break_left": _break_timer,
+		"queued": _director.queue.size(),
+		"total": _director.total,
+		"break_left": _director.break_timer,
 		"modifier_id": modifier_id,
 		"modifier_label": _modifier_text(modifier_id),
 	})
 
 
 func _phase_name() -> String:
-	match _phase:
-		Phase.IDLE:
+	match _director.phase:
+		WaveDirector.Phase.IDLE:
 			return "idle"
-		Phase.RUNNING:
+		WaveDirector.Phase.RUNNING:
 			return "running"
-		Phase.BREAK:
+		WaveDirector.Phase.BREAK:
 			return "break"
 		_:
 			return "game_over"

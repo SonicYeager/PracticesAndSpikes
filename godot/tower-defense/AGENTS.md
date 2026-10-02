@@ -140,7 +140,9 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
   shoot/hit/kill/denied SFX), reference study gitignored. T12 (HUD):
   `scenes/Hud.tscn` + `scripts/hud.gd` (status/build panels, wave bar with
   start button, sell toggle, game-over overlay); `game.gd` pushes state, the
-  HUD emits intents. Suite: 63 tests / 492 asserts green.
+  HUD emits intents. T12.5 (Refactor): the wave flow (phase, queue, timers,
+  modifier knobs) lives in `scripts/wave_director.gd`; the scene orchestrates.
+  Suite: 68 tests / 510 asserts green.
 - Vision (2026-10-02): `docs/VISION.md` — pillars P1–P3 (workbench, living
   foundry, curiosity), values, anti-pillars; calibrations + next prototype
   questions (epilog twist, pressure curve, decal readability, meta, time

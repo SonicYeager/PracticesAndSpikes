@@ -16,7 +16,7 @@ func _make_game(seed_value: int = 1):
 func _spawn_all_and_clear(game) -> void:
 	# Drain the spawn queue, then leak every drone: the wave ends without
 	# combat so the chaining flow is tested in isolation.
-	while not game._spawn_queue.is_empty():
+	while not game._director.queue.is_empty():
 		game._process(STEP)
 	for d in game._drones.duplicate():
 		game._on_leak(d)
@@ -87,13 +87,13 @@ func test_wave_end_starts_break_then_auto_chains() -> void:
 	game._start_wave(1)
 	_spawn_all_and_clear(game)
 	game._process(STEP)
-	assert_eq(game._phase, game.Phase.BREAK, "Wave end starts the break")
-	assert_gt(game._break_timer, 0.0, "Break timer counts down")
+	assert_eq(game._director.phase, WaveDirector.Phase.BREAK, "Wave end starts the break")
+	assert_gt(game._director.break_timer, 0.0, "Break timer counts down")
 
-	for i in ceili(game.BREAK_SECONDS / STEP) + 2:
+	for i in ceili(WaveDirector.BREAK_SECONDS / STEP) + 2:
 		game._process(STEP)
-	assert_eq(game._wave, 2, "Next wave auto-starts after the break")
-	assert_eq(game._phase, game.Phase.RUNNING, "Wave 2 is running")
+	assert_eq(game._director.wave, 2, "Next wave auto-starts after the break")
+	assert_eq(game._director.phase, WaveDirector.Phase.RUNNING, "Wave 2 is running")
 
 
 func test_space_skips_break() -> void:
@@ -101,15 +101,15 @@ func test_space_skips_break() -> void:
 	game._start_wave(1)
 	_spawn_all_and_clear(game)
 	game._process(STEP)
-	assert_eq(game._phase, game.Phase.BREAK, "Break is running")
+	assert_eq(game._director.phase, WaveDirector.Phase.BREAK, "Break is running")
 
 	var ev := InputEventKey.new()
 	ev.keycode = KEY_SPACE
 	ev.pressed = true
 	game._unhandled_input(ev)
-	assert_eq(game._wave, 2, "Space starts the next wave during the break")
-	assert_eq(game._phase, game.Phase.RUNNING, "Wave 2 is running")
-	assert_eq(game._break_timer, 0.0, "Break is over")
+	assert_eq(game._director.wave, 2, "Space starts the next wave during the break")
+	assert_eq(game._director.phase, WaveDirector.Phase.RUNNING, "Wave 2 is running")
+	assert_eq(game._director.break_timer, 0.0, "Break is over")
 
 
 func test_double_leak_same_frame_records_single_run_end() -> void:
@@ -121,7 +121,7 @@ func test_double_leak_same_frame_records_single_run_end() -> void:
 	game._drones.append(Drone.spawn("normal", exit_only, 20.0, 1.0))
 	game.economy.money = -1
 	game._process(STEP)
-	assert_eq(game._phase, game.Phase.GAME_OVER, "First leak ends the run")
+	assert_eq(game._director.phase, WaveDirector.Phase.GAME_OVER, "First leak ends the run")
 	assert_eq(game._drones.size(), 1, "Leak processing stops at game over")
 	var path := _telemetry_path(game)
 	var content := FileAccess.get_file_as_string(path)
@@ -133,7 +133,7 @@ func test_game_over_shows_screen_and_flushes_telemetry() -> void:
 	var game = _make_game()
 	game.economy.money = -1
 	game._end_run()
-	assert_eq(game._phase, game.Phase.GAME_OVER)
+	assert_eq(game._director.phase, WaveDirector.Phase.GAME_OVER)
 	assert_true(game._hud.is_game_over_visible(), "Game-over screen is shown")
 	assert_true(game._hud.game_over_text().contains("GELD"), "Summary shows the run stats")
 	assert_true(
@@ -298,26 +298,6 @@ func test_overcharge_spends_and_damages_nearby_drones() -> void:
 	assert_false(game._try_overcharge(Vector2i(9, 9)), "Non-vent cells are ignored")
 
 
-func test_modifier_application_sets_knobs() -> void:
-	var game = _make_game()
-	game._wave_comp = WaveGen.composition(5, 1)
-	game._apply_modifier("rush")
-	assert_almost_eq(
-		game._spawn_interval, game.SPAWN_INTERVAL * 0.6, 0.001, "Rush tightens the spawn interval"
-	)
-	game._apply_modifier("blackout")
-	assert_almost_eq(game._range_bonus, -1.0, 0.001, "Blackout shrinks gun range")
-	game._apply_modifier("bounty")
-	assert_eq(game._kill_reward, Economy.KILL_REWARD + 2, "Bounty raises the kill reward")
-	game._wave_comp = {"count": 4, "hp": 20.0, "fast": 0, "tanks": 0, "modifier": "swarm"}
-	game._apply_modifier("swarm")
-	assert_eq(game._wave_comp["count"], 6, "Swarm adds drones")
-	assert_almost_eq(game._wave_comp["hp"], 14.0, 0.001, "Swarm weakens them")
-	game._apply_modifier("")
-	assert_almost_eq(game._spawn_interval, game.SPAWN_INTERVAL, 0.001, "Knobs reset per wave")
-	assert_eq(game._kill_reward, Economy.KILL_REWARD, "Kill reward resets per wave")
-
-
 func test_wave_event_logs_the_modifier() -> void:
 	var game = _make_game()
 	game._start_wave(1)
@@ -334,26 +314,31 @@ func test_start_wave_applies_the_seeded_modifier() -> void:
 	assert_eq(WaveGen.composition(7, 121)["modifier"], "rush")
 	rush._start_wave(7)
 	assert_almost_eq(
-		rush._spawn_interval, rush.SPAWN_INTERVAL * 0.6, 0.001, "Rush wave tightens pacing"
+		rush._director.spawn_interval,
+		WaveDirector.SPAWN_INTERVAL * 0.6,
+		0.001,
+		"Rush wave tightens pacing"
 	)
 	var blackout = _make_game(222)
 	assert_eq(WaveGen.composition(5, 222)["modifier"], "blackout")
 	blackout._start_wave(5)
-	assert_almost_eq(blackout._range_bonus, -1.0, 0.001, "Blackout wave shrinks range")
+	assert_almost_eq(blackout._director.range_bonus, -1.0, 0.001, "Blackout wave shrinks range")
 	var bounty = _make_game(121)
 	assert_eq(WaveGen.composition(3, 121)["modifier"], "bounty")
 	bounty._start_wave(3)
-	assert_eq(bounty._kill_reward, Economy.KILL_REWARD + 2, "Bounty wave pays more")
+	assert_eq(bounty._director.kill_reward, Economy.KILL_REWARD + 2, "Bounty wave pays more")
 
 
 func test_blackout_updates_existing_guns() -> void:
 	var game = _make_game()
 	game._guns[Vector2i(1, 1)] = Gun.new(Vector2(1.5, 1.5))
-	game._apply_modifier("blackout")
+	game._director.range_bonus = -1.0
+	game._apply_wave_knobs()
 	assert_almost_eq(
 		game._guns[Vector2i(1, 1)].range_bonus, -1.0, 0.001, "Existing guns get the modifier"
 	)
-	game._apply_modifier("")
+	game._director.range_bonus = 0.0
+	game._apply_wave_knobs()
 	assert_almost_eq(
 		game._guns[Vector2i(1, 1)].range_bonus, 0.0, 0.001, "And it resets next wave"
 	)

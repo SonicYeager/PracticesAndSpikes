@@ -96,7 +96,8 @@ modifiers, decal caps).
 | `scenes/Hud.tscn` | HUD layout: status, build/sell panel, wave bar, game-over overlay |
 | `scripts/hud.gd` | HUD state API + intents (wave/sell/restart signals), chip colors |
 | `scripts/hud_bar.gd` | Segmented wave-progress bar |
-| `scripts/game.gd` | Scene controller: input, spawning, sprites, effects, audio, HUD |
+| `scripts/game.gd` | Scene controller: input, orchestration, sprites, effects, audio, HUD push |
+| `scripts/wave_director.gd` | Wave flow state machine: phase, queue, timers, modifier knobs |
 | `scripts/maze.gd` | Buildable grid + connectivity validation (`Maze`) |
 | `scripts/pathfinder.gd` | AStarGrid2D wrapper, 4-directional (`Pathfinder`) |
 | `scripts/economy.gd` | Money-is-HP rules (`Economy`) |
@@ -167,6 +168,7 @@ The parser has stdlib regression tests: `python tools/test_analyze_run.py`.
 | T10 | Pulse: wave events, vent overcharge, decal per-cell cap | done |
 | T11 | XT pass: steel/lab look, VT323 UI font, drier SFX | done |
 | T12 | HUD framework: status/build panels, wave bar, game-over restyle | done |
+| T12.5 | Refactor: extract WaveDirector (wave state machine) | done |
 
-All slices done (T01–T12). Post-prototype directions are collected in `docs/IDEAS.md`;
+All slices done (T01–T12.5). Post-prototype directions are collected in `docs/IDEAS.md`;
 the concrete candidate queue for the next slices is `docs/BACKLOG.md`.

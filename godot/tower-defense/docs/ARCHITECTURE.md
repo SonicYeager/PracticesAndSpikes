@@ -15,8 +15,8 @@ scenes/Main.tscn
             └─ HudRoot (scenes/Hud.tscn, scripts/hud.gd)   ← UI boundary
 
 scripts/*.gd (class_name RefCounted)     ← core logic, no scene access
-  Maze · Pathfinder · Economy · WaveGen · Drone · Gun · Projectile
-  Telemetry · SkillStub
+  Maze · Pathfinder · Economy · WaveGen · WaveDirector · Drone · Gun
+  Projectile · Telemetry · SkillStub
 
 UI scripts (Control-based, no gameplay access)
   GameHud (scripts/hud.gd) · GameHudBar (scripts/hud_bar.gd)
@@ -34,6 +34,7 @@ own panels/labels and only sees the state pushed by `game.gd`.
 | `Pathfinder` | `scripts/pathfinder.gd` | `AStarGrid2D` wrapper; `DIAGONAL_MODE_NEVER`, solid points, `find_path()` returns cell ids, `has_path()`, `reachable_from()` multi-source BFS |
 | `Economy` | `scripts/economy.gd` | Money-as-health: `on_kill(amount)`, `on_leak()`, `spend()`, `is_game_over()` (strictly `< 0`) |
 | `WaveGen` | `scripts/wave.gd` | Static `composition(n, seed)` → `{wave, count, hp, speed, tanks, fast, modifier}` (T10 events from wave 3) |
+| `WaveDirector` | `scripts/wave_director.gd` | Wave flow state machine (T12.5): phase, composition, spawn queue, spawn/break timers, per-wave modifier knobs; `start()`, `begin_break()`, `tick_spawn()`, `tick_break()`, `end_run()` |
 | `TerrainGen` | `scripts/terrain_gen.gd` | Static `generate(size, entries, exits, seed)` → `{blockers, decor}`; greedy placement that never seals an entry |
 | `Drone` | `scripts/drone.gd` | Grid-space walker: `advance(dt)` (returns `true` on leak), `take_damage()`, `reroute()`, `facing()`, `exit_cell()`, `distance_to_exit()`, `KIND_MODS` |
 | `Gun` | `scripts/gun.gd` | Range/cadence/targeting (`range_bonus` hook for wave modifiers); `acquire()` picks the drone closest to its exit, `try_fire(dt, targets)` returns the target when a shot is due |
@@ -60,9 +61,9 @@ only).
 ## Frame order (`game.gd _process`)
 
 0. `_update_shake` — trauma decay + camera offset (also runs after game over)
-1. `_update_spawner` — runs the `BREAK_SECONDS` countdown (auto-starts the
-   next wave), pops one drone from the queue every `SPAWN_INTERVAL`
-   (`_spawn_drone` scatters the entry cell and draws the assigned exit)
+1. `_update_spawner` — asks `WaveDirector` for the next spawn / break timeout
+   (`tick_break`, `tick_spawn`); `_spawn_drone` scatters the entry cell and
+   draws the assigned exit; empty queue + clear field → `begin_break()`
 2. `_update_drones` — advance along the path, handle leaks
 3. `_update_guns` — acquire target, aim barrel, fire (muzzle tracer + flash)
 4. `_update_projectiles` — advance, resolve hits (damage/kill)
@@ -80,13 +81,13 @@ are freed together with it in `_remove_drone()` / `_remove_projectile()`.
 
 ```
 Space ──► _start_wave(n)
-            WaveGen.composition(n, game_seed) → _apply_modifier
+            WaveDirector.start(n): WaveGen.composition → modifier knobs
             (rush/swarm/blackout/bounty; knobs reset every wave)
             queue = normals… + fast… + tanks…      (fixed order)
-            telemetry "wave" (+ modifier) · SFX "wave"
+            scene: gun range ← director · telemetry "wave" · SFX "wave"
 
-Wave cleared ──► _break_timer = BREAK_SECONDS      (HUD countdown)
-            timeout or Space ──► _start_wave(n + 1)   (auto-chain)
+Wave cleared ──► WaveDirector.begin_break()        (HUD countdown)
+            timeout (tick_break) or Space ──► _start_wave(n + 1)   (auto-chain)
 
 spawner ──► _spawn_drone(kind)
             entry + assigned exit drawn from the seeded scatter RNG
@@ -138,10 +139,10 @@ Both        ──► _reroute_drones(): each drone re-paths to its assigned exi
 - A drone that reaches the base leaks exactly once and is removed immediately
   (kills likewise), so `_drones` never contains dead or leaked drones.
 - Game over is strictly `money < 0`, checked only after a leak.
-- The wave phase is a single explicit state (`Phase`: IDLE → RUNNING →
-  BREAK → RUNNING … → GAME_OVER); `_break_timer` only carries the BREAK
-  countdown. A wave only ends when its spawn queue and the field are both
-  empty.
+- The wave phase is a single explicit state (`WaveDirector.Phase`: IDLE →
+  RUNNING → BREAK → RUNNING … → GAME_OVER); the director owns the queue and
+  the BREAK countdown. A wave only ends when its spawn queue and the field
+  are both empty.
 - After game over `_process` stops (frozen world); the only accepted input
   is restart.
 - Money changes only through `Economy`; the HUD reads it, never writes it.
@@ -193,8 +194,9 @@ panel → game-over overlay, in that draw order).
 ## Testing
 
 - Core classes: pure GUT tests in `tests/test_*.gd`, no scene needed
-  (`test_maze`, `test_path`, `test_economy`, `test_wave`, `test_drone`,
-  `test_gun`, `test_projectile`, `test_terrain_gen`).
+  (`test_maze`, `test_path`, `test_economy`, `test_wave`,
+  `test_wave_director`, `test_drone`, `test_gun`, `test_projectile`,
+  `test_terrain_gen`).
 - HUD: `tests/test_hud.gd` instantiates `Hud.tscn` and drives the state API
   and intents (labels, chip, button gating, sell toggle, game-over overlay,
   bar freeze on game over) without the game scene.
