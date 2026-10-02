@@ -46,13 +46,13 @@ func test_wave_end_starts_break_then_auto_chains() -> void:
 	game._start_wave(1)
 	_spawn_all_and_clear(game)
 	game._process(STEP)
-	assert_false(game._wave_running, "Wave ends when queue and field are empty")
-	assert_gt(game._break_timer, 0.0, "Break starts after the wave")
+	assert_eq(game._phase, game.Phase.BREAK, "Wave end starts the break")
+	assert_gt(game._break_timer, 0.0, "Break timer counts down")
 
 	for i in ceili(game.BREAK_SECONDS / STEP) + 2:
 		game._process(STEP)
 	assert_eq(game._wave, 2, "Next wave auto-starts after the break")
-	assert_true(game._wave_running, "Wave 2 is running")
+	assert_eq(game._phase, game.Phase.RUNNING, "Wave 2 is running")
 
 
 func test_space_skips_break() -> void:
@@ -61,14 +61,14 @@ func test_space_skips_break() -> void:
 	game._start_wave(1)
 	_spawn_all_and_clear(game)
 	game._process(STEP)
-	assert_gt(game._break_timer, 0.0, "Break is running")
+	assert_eq(game._phase, game.Phase.BREAK, "Break is running")
 
 	var ev := InputEventKey.new()
 	ev.keycode = KEY_SPACE
 	ev.pressed = true
 	game._unhandled_input(ev)
 	assert_eq(game._wave, 2, "Space starts the next wave during the break")
-	assert_true(game._wave_running, "Wave 2 is running")
+	assert_eq(game._phase, game.Phase.RUNNING, "Wave 2 is running")
 	assert_eq(game._break_timer, 0.0, "Break is over")
 
 
@@ -82,7 +82,7 @@ func test_double_leak_same_frame_records_single_run_end() -> void:
 	game._drones.append(Drone.spawn("normal", base_only, 20.0, 1.0))
 	game.economy.money = -1
 	game._process(STEP)
-	assert_true(game._game_over, "First leak ends the run")
+	assert_eq(game._phase, game.Phase.GAME_OVER, "First leak ends the run")
 	assert_eq(game._drones.size(), 1, "Leak processing stops at game over")
 	var path := "user://run_%d.jsonl" % game.GAME_SEED
 	var content := FileAccess.get_file_as_string(path)
@@ -95,7 +95,7 @@ func test_game_over_shows_screen_and_flushes_telemetry() -> void:
 	add_child_autofree(game)
 	game.economy.money = -1
 	game._end_run()
-	assert_true(game._game_over)
+	assert_eq(game._phase, game.Phase.GAME_OVER)
 	assert_true(game._game_over_screen.visible, "Game-over screen is shown")
 	assert_true(game._game_over_stats.text.contains("Geld"), "Summary shows the run stats")
 	assert_true(

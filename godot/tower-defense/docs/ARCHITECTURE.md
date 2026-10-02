@@ -109,9 +109,10 @@ Both        ──► _reroute_drones(): every drone re-paths from its current c
 - A drone that reaches the base leaks exactly once and is removed immediately
   (kills likewise), so `_drones` never contains dead or leaked drones.
 - Game over is strictly `money < 0`, checked only after a leak.
-- Wave phases are mutually exclusive: running (`_wave_running`), break
-  (`_break_timer > 0`), or idle before wave 1. A wave only ends when its
-  spawn queue and the field are both empty.
+- The wave phase is a single explicit state (`Phase`: IDLE → RUNNING →
+  BREAK → RUNNING … → GAME_OVER); `_break_timer` only carries the BREAK
+  countdown. A wave only ends when its spawn queue and the field are both
+  empty.
 - After game over `_process` stops (frozen world); the only accepted input
   is restart.
 - Money changes only through `Economy`; the HUD reads it, never writes it.

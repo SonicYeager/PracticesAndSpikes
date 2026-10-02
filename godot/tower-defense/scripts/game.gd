@@ -5,6 +5,9 @@ extends Node2D
 ## BREAK_SECONDS intermission (Space skips it), game over shows a full-screen
 ## summary with restart (R or button).
 
+## Wave phase: exactly one state is active at a time.
+enum Phase { IDLE, RUNNING, BREAK, GAME_OVER }
+
 const TILE := 32
 const MAP_SIZE := Vector2i(20, 12)
 const SELL_REFUND := Economy.GUN_COST / 2
@@ -87,11 +90,10 @@ var _wave := 0
 var _wave_comp: Dictionary = {}
 var _spawn_queue: Array[String] = []
 var _spawn_timer := 0.0
-var _wave_running := false
-var _break_timer := 0.0
+var _phase: Phase = Phase.IDLE
+var _break_timer := 0.0  # remaining intermission seconds; only used in Phase.BREAK
 var _anim_time := 0.0
 var _fx_counter := 0
-var _game_over := false
 
 @onready var _money_label: Label = $Hud/Panel/Rows/Row1/Money
 @onready var _gun_cost_label: Label = $Hud/Panel/Rows/Row1/GunCost
@@ -121,17 +123,17 @@ func _ready() -> void:
 
 
 func _notification(what: int) -> void:
-	if what == NOTIFICATION_WM_CLOSE_REQUEST and telemetry != null and not _game_over:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST and telemetry != null and _phase != Phase.GAME_OVER:
 		telemetry.flush(TELEMETRY_PATH % GAME_SEED)
 
 
 func _process(delta: float) -> void:
-	if _game_over:
+	if _phase == Phase.GAME_OVER:
 		return
 	_anim_time += delta
 	_update_spawner(delta)
 	_update_drones(delta)
-	if _game_over:
+	if _phase == Phase.GAME_OVER:
 		# A leak ended the run mid-frame: freeze the rest of the simulation.
 		return
 	_update_guns(delta)
@@ -141,7 +143,7 @@ func _process(delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _game_over:
+	if _phase == Phase.GAME_OVER:
 		if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_R:
 			_restart()
 		return
@@ -171,17 +173,15 @@ func _unhandled_input(event: InputEvent) -> void:
 				_play("sell")
 		_update_hud()
 	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_SPACE:
-		if _break_timer > 0.0:
-			# Skip the intermission.
-			_start_wave(_wave + 1)
-		elif not _wave_running and _drones.is_empty():
+		if _phase == Phase.IDLE or _phase == Phase.BREAK:
+			# IDLE: start wave 1; BREAK: skip the intermission.
 			_start_wave(_wave + 1)
 
 
 func _start_wave(n: int) -> void:
 	_wave = n
 	_wave_comp = WaveGen.composition(n, GAME_SEED)
-	_wave_running = true
+	_phase = Phase.RUNNING
 	_break_timer = 0.0
 	_spawn_timer = 0.0
 	_spawn_queue.clear()
@@ -198,16 +198,16 @@ func _start_wave(n: int) -> void:
 
 
 func _update_spawner(delta: float) -> void:
-	if _break_timer > 0.0:
+	if _phase == Phase.BREAK:
 		_break_timer = maxf(_break_timer - delta, 0.0)
 		if _break_timer == 0.0:
 			_start_wave(_wave + 1)
 		return
-	if not _wave_running:
+	if _phase != Phase.RUNNING:
 		return
 	if _spawn_queue.is_empty():
 		if _drones.is_empty():
-			_wave_running = false
+			_phase = Phase.BREAK
 			_break_timer = BREAK_SECONDS
 			_update_hud()
 		return
@@ -252,7 +252,7 @@ func _update_drones(delta: float) -> void:
 		# Rerouting onto the base cell sets `finished` without `advance()`.
 		if d.advance(delta) or d.finished:
 			_on_leak(d)
-			if _game_over:
+			if _phase == Phase.GAME_OVER:
 				break
 
 
@@ -349,9 +349,9 @@ func _remove_projectile(p: Projectile) -> void:
 
 
 func _end_run() -> void:
-	if _game_over:
+	if _phase == Phase.GAME_OVER:
 		return
-	_game_over = true
+	_phase = Phase.GAME_OVER
 	_game_over_stats.text = "Welle %d — Geld %d" % [_wave, economy.money]
 	_game_over_screen.show()
 	_play("gameover")
@@ -567,18 +567,21 @@ func _hide_tower(cell: Vector2i) -> void:
 func _update_hud() -> void:
 	_money_label.text = str(economy.money)
 	_gun_cost_label.text = str(Economy.GUN_COST)
-	if _wave_running:
-		_space_icon.hide()
-		_wave_icon.show()
-		_wave_label.text = "Welle %d: %d unterwegs, %d in Warteschlange" % [_wave, _drones.size(), _spawn_queue.size()]
-	elif _break_timer > 0.0:
-		_space_icon.show()
-		_wave_icon.hide()
-		_wave_label.text = "Welle %d in %.1f s" % [_wave + 1, _break_timer]
-	else:
-		_space_icon.show()
-		_wave_icon.hide()
-		_wave_label.text = "Welle %d starten" % (_wave + 1)
+	match _phase:
+		Phase.RUNNING:
+			_space_icon.hide()
+			_wave_icon.show()
+			_wave_label.text = "Welle %d: %d unterwegs, %d in Warteschlange" % [_wave, _drones.size(), _spawn_queue.size()]
+		Phase.BREAK:
+			_space_icon.show()
+			_wave_icon.hide()
+			_wave_label.text = "Welle %d in %.1f s" % [_wave + 1, _break_timer]
+		Phase.IDLE:
+			_space_icon.show()
+			_wave_icon.hide()
+			_wave_label.text = "Welle %d starten" % (_wave + 1)
+		_:
+			pass  # GAME_OVER: the overlay covers the HUD
 
 
 func _draw() -> void:
