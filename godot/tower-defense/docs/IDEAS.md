@@ -60,9 +60,15 @@ Each needs a slice decision; vision check noted.*
 - **Endurance goals**: XT missions ran 20–100 waves. Ours could offer light
   "containment milestones" (e.g. clear N waves without a leak) — goals, not
   a meta grind.
-- **Fliers — only with care**: XT's biggest design trap was the anti-air
-  lock & key. If flying/escapee types ever come, they need at least two
-  viable counters and must respect the maze in some way.
+- **Send Next Wave (Early-Send-Bonus)**: XT paid money for calling the next
+  wave early (25/35 + Level/5, cap 50) — an active pressure dial. We already
+  skip breaks with Space; a bonus variant would make it a conscious "pulse"
+  choice. Vision: P3; fits Time Control (M1). Tune only once the
+  pressure-curve data exists.
+- **Fliers — only with care**: if flying/escapee types ever come, they need
+  at least two viable counters and must respect the maze in some way. (The
+  code study showed XT's air answers were broad, not "only DCA" — the
+  two-counter standard stays.)
 
 ## Known open items (from the prototype docs)
 
@@ -74,3 +80,6 @@ Each needs a slice decision; vision check noted.*
   `docs/ARCHITECTURE.md`.
 - **Telemetry enrichment**: e.g. kill events or per-wave money snapshots if
   `tools/analyze_run.py` needs more than leak/build/wave/run_end.
+- **Late-wave perf sanity**: once runs scale past ~25 waves, have the balance
+  harness (see `docs/BACKLOG.md`) watch entity/decal load — low risk at M1
+  lengths.

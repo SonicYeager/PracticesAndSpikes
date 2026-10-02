@@ -67,9 +67,10 @@ Modifier, Überraschungen pro Run. Ruhig mit Puls, nie Reflexdruck.
   **Epilog-Prototyp**: Drone-Budget + eine Rache-Welle nach Game over.
   Kill-Kriterium: Zieht die Symmetrie? Fühlt sich der Epilog wie ein neuer
   Blick an — oder wie ein Fremdkörper?
-- **Meta-Progression**: zwischen „Vielfalt freischalten" (Map-Typen, Gegner-
-  Verhalten, Event-Pools) und „echter, leichter Progression" — noch zu
-  kalibrieren; kein Grind.
+- **Meta-Progression**: entschieden als **leichte Unlocks** (Map-Typen,
+  Gegner-Verhalten, Event-Pools) — Entscheidung 2026-10-02, siehe README
+  „From prototype to game"; kein Grind. Als spätere Ausbaustufe denkbar:
+  kosmetischer Discovery-Codex (P3).
 
 ## Nächste Prototyp-Fragen (Priorität)
 
@@ -120,9 +121,9 @@ mit 20–100 Wellen, fünf Schwierigkeitsgrade, Tower-Upgrades; Ground-Türme
 
 **Was wir bewusst verfeinern/ändern:**
 
-- **Kein Anti-Air-Lock&Key**: XT war „alles hängt an der Luftabwehr" — unser
-  Anti-Pillar verbietet solche Ein-Lösungs-Gegner (wenn je Flieger kommen:
-  mindestens zwei Konter).
+- **Kein Anti-Air-Lock&Key**: Ein-Lösungs-Gegner bleiben verboten — wenn je
+  Flieger kommen, dann mit mindestens zwei Kontern. (Die Code-Analyse zeigt:
+  XT war breiter als erinnert — 4 von 6 Towern trafen Luft; die Regel bleibt.)
 - **Kein No-Save-Marathon**: XT-Läufe über 100 Wellen ohne Speichern waren
   zäh — wir setzen auf Sessions, Determinismus und Telemetrie.
 - **Ton**: XT war hart (Leben, Boss-Wände) — unsere Vision ist „ruhig mit
