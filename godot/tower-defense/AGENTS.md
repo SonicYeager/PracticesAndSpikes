@@ -34,6 +34,15 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
   exit per spawn; re-path goes to the assigned exit, with a nearest-exit
   fallback when it is cut off. Exits are escape zones (reaching one = leak),
   no home core.
+- **Run seed** (T09): random per run (`_random_seed()` from the clock),
+  logged in `run_start.seed`; `seed_override` (>= 0) pins it for
+  tests/editor/replay (default -1 = random).
+- **Terrain / Dirty World** (T09): `TerrainGen.generate(size, entries,
+  exits, seed)` places rock/rubble/vent blockers (solid, reserved, never
+  sealing an entry — same greedy rule as builds) plus cosmetic decor.
+  Battle decals: kill → scorch, leak → skid, hit → debris (cap 300, FIFO).
+  Ambient emitters (vent → embers, crack → sparks, stain → smoke) are
+  presentation-only (internal particle RNG, never gameplay).
 - **Pathfinding**: `AStarGrid2D`, 4-directional (`DIAGONAL_MODE_NEVER`),
   plus a multi-source BFS (`Pathfinder.reachable_from`) for the build rule.
 - **Economy**: money IS health. Kill +6, leak −10, gun 25, sell refund 12.
@@ -107,9 +116,12 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
   closed, `docs/IDEAS.md` collects post-prototype directions. T08:
   whole-side entries/exits, seeded scatter spawn, assigned exit + fallback,
   per-entry reachability validation, route preview fix (floor z-index +
-  redraw). Suite: 40 tests / 145 asserts green.
-- Open: seed flow, real skill-tree UI, segments/more entry/exit sides,
-  telemetry enrichment (see `docs/IDEAS.md`).
+  redraw). Suite: 40 tests / 145 asserts green. T09: random run seed +
+  `seed_override`, `TerrainGen` blockers/decor (greedy, never sealing),
+  battle decals (scorch/skid/debris, cap 300), ambient emitters.
+  Suite: 49 tests / 384 asserts green.
+- Open: skill tree UI, segments/more entry/exit sides, telemetry enrichment
+  (see `docs/IDEAS.md`).
 
 ## Commands
 

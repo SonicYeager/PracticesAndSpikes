@@ -35,6 +35,14 @@ func test_double_build_and_ghost_sell_rejected() -> void:
 	assert_false(m.build(Vector2i(99, 99), "gun"), "Out-of-bounds rejected")
 
 
+func test_terrain_blockers_are_solid_and_reserved() -> void:
+	var m := Maze.new(Vector2i(5, 5), [Vector2i(0, 2)], [Vector2i(4, 2)], [Vector2i(2, 2)])
+	assert_false(m.can_build(Vector2i(2, 2)), "Blocker is not buildable")
+	assert_false(m.build(Vector2i(2, 2)))
+	assert_false(m.sell(Vector2i(2, 2)), "Blocker cannot be sold")
+	assert_true(m.pathfinder.is_solid(Vector2i(2, 2)), "Blocker stays solid")
+
+
 func test_entry_needs_one_open_exit() -> void:
 	# Two exits: sealing one is allowed (it becomes inert), sealing the last
 	# one is rejected.

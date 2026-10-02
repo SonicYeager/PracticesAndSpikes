@@ -50,6 +50,9 @@ breit = Tank. Nie nur über Farbe unterscheiden.
   aktive Taste orange); Gun-Icon nutzt `gun_base`.
 - Effekte: `impact` (8×8 Trefferblitz, Pop von 0.7×), `muzzle` (8×8
   Mündungsblitz, 0.05 s + Skalierungs-Pop), `explosion_0/1` (16×16 Kill).
+- Terrain (T09): Blocker als solide Fels-/Geröll-/Vent-Cluster (geseedet,
+  nie Entry-verstopfend), Deko + Decals als Grime-Schicht (z −1); Vents
+  glühen (C/H), alle Partikel nutzen `ember` (8×8, getintet).
 - Animation minimal: 2-Frame-Bob (Drohnen) + Code-Waddle/Flip (normal/tank)
   bzw. Rotation entlang des Pfads (fast), Flash-Frames (Muzzle/Impact/
   Explosion), HP-Balken als 1px-Textur-Sprites (kein Asset).
@@ -75,6 +78,15 @@ breit = Tank. Nie nur über Farbe unterscheiden.
 | `hud_wave` | 16×16 | HUD: Welle (Doppel-Chevron) |
 | `hud_space` | 16×16 | HUD: Leertaste |
 | `hud_mouse_left/right` | 16×16 | HUD: linke/rechte Maustaste (aktive Taste orange) |
+| `rock` | 16×16 | Terrain-Blocker: Fels (solid, nie bebaubar) |
+| `rubble` | 16×16 | Terrain-Blocker: Geröll |
+| `vent` | 16×16 | Terrain-Blocker: Ember-Vent (glüht, Partikel-Emitter) |
+| `decor_crack` | 16×16 | Deko: Riss (kosmetisch, z −1) |
+| `decor_stain` | 16×16 | Deko: Fleck (kosmetisch, z −1) |
+| `scorch` | 16×16 | Decal: Brandfleck (Kill, z −1) |
+| `skid` | 16×16 | Decal: Schleifspur (Leak, z −1) |
+| `debris` | 16×16 | Decal: Trümmer (Treffer, z −1) |
+| `ember` | 8×8 | Partikel-Textur (Ember/Funke/Rauch, getintet) |
 
 ## Handoff (deine Skizzen → Projekt)
 

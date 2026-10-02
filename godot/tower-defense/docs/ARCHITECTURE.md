@@ -28,6 +28,7 @@ controller owns every sprite, tween, audio player and HUD label.
 | `Pathfinder` | `scripts/pathfinder.gd` | `AStarGrid2D` wrapper; `DIAGONAL_MODE_NEVER`, solid points, `find_path()` returns cell ids, `has_path()`, `reachable_from()` multi-source BFS |
 | `Economy` | `scripts/economy.gd` | Money-as-health: `on_kill()`, `on_leak()`, `spend()`, `is_game_over()` (strictly `< 0`) |
 | `WaveGen` | `scripts/wave.gd` | Static `composition(n, seed)` → `{wave, count, hp, speed, tanks, fast}` |
+| `TerrainGen` | `scripts/terrain_gen.gd` | Static `generate(size, entries, exits, seed)` → `{blockers, decor}`; greedy placement that never seals an entry |
 | `Drone` | `scripts/drone.gd` | Grid-space walker: `advance(dt)` (returns `true` on leak), `take_damage()`, `reroute()`, `facing()`, `exit_cell()`, `distance_to_exit()`, `KIND_MODS` |
 | `Gun` | `scripts/gun.gd` | Range/cadence/targeting; `acquire()` picks the drone closest to base, `try_fire(dt, targets)` returns the target when a shot is due |
 | `Projectile` | `scripts/projectile.gd` | Homing tracer; `advance(dt)` returns `true` on hit, fizzles when the target dies or leaks |
@@ -72,7 +73,7 @@ are freed together with it in `_remove_drone()` / `_remove_projectile()`.
 
 ```
 Space ──► _start_wave(n)
-            WaveGen.composition(n, GAME_SEED)
+            WaveGen.composition(n, game_seed)
             queue = normals… + fast… + tanks…      (fixed order)
             telemetry "wave" · SFX "wave"
 
@@ -86,14 +87,15 @@ spawner ──► _spawn_drone(kind)
 
 Drone.advance(dt) == true ──► _on_leak
             Economy.on_leak() · telemetry "leak" (+ exit cell) · SFX "leak"
+            skid decal at the leak cell
             money < 0 ──► _end_run (game-over screen, "gameover" SFX, log flush)
 
 R / restart button (game over) ──► _restart: reload_current_scene()
 
 Gun.try_fire(dt) ──► _fire: tracer starts at muzzle (0.75 cells) + flash
 Projectile hit ──► _resolve_hit
-            kill: Economy.on_kill() · explosion · SFX "kill"
-            else: hit flash + impact spark · SFX "hit"
+            kill: Economy.on_kill() · explosion · SFX "kill" · scorch decal
+            else: hit flash + impact spark · SFX "hit" · debris decal
 
 Left click ──► spend(25) → reject? refund + SFX "denied"
                         → build: Gun + tower sprite + telemetry "build" + SFX "build"
@@ -108,6 +110,9 @@ Both        ──► _reroute_drones(): each drone re-paths to its assigned exi
 - Every entry always reaches at least one exit: `Maze.can_build()` blocks a
   cell hypothetically and checks the multi-source BFS from all exits.
   Sealed exits are inert; creative splits (left→top, right→bottom) are fine.
+- Terrain blockers are solid and reserved from the start; `TerrainGen`
+  applies the same greedy rule, so the map is playable before the first
+  build. A blocker can never be built or sold over.
 - A tower can never be built on the cell a drone currently occupies
   (`_drone_on_cell()`); therefore a reroute never starts from a solid cell.
 - A drone's path always ends at its assigned exit. `reroute()` keeps the
@@ -127,21 +132,25 @@ Both        ──► _reroute_drones(): each drone re-paths to its assigned exi
 
 ## Determinism
 
-Gameplay RNG exists in exactly two places, both seeded: `WaveGen`
-composition (`game_seed + n * 7919`) and the per-spawn scatter
-(`GAME_SEED * 1000003 + wave * 104729 + spawn index`, entry cell + exit).
-Everything else is derived:
+Gameplay RNG exists in exactly three places, all seeded from the run seed:
+`WaveGen` composition (`game_seed + n * 7919`), the per-spawn scatter
+(`game_seed * 1000003 + wave * 104729 + spawn index`, entry cell + exit) and
+`TerrainGen` dressing. Everything else is derived:
 
+- run seed: random per run (`_random_seed()`), logged as `run_start.seed`;
+  `seed_override` pins it for tests/editor — a logged seed replays a run
 - spawn order: normals, then fast, then tanks (fixed)
 - spawn scatter: per-spawn RNG, deterministic given the run seed
+- terrain: deterministic given the run seed (greedy placement)
 - floor variety: `(x * 7 + y * 13) % 3` (stable pattern)
 - explosion frame alternation: `_fx_counter`
 - animation phases: spawn index (`_drone_phase`), not RNG
 - screen shake: sine pseudo-noise of `_anim_time` (presentation only)
+- ambient particles: internal particle RNG (presentation only, not part of
+  the replay guarantee)
 
-Same seed + same build/sell sequence ⇒ identical run. `GAME_SEED` is
-currently fixed to `1` in `game.gd`; the run seed is written into the
-telemetry log for replay/analysis (`tools/analyze_run.py`).
+Same seed + same build/sell sequence ⇒ identical run. The run seed is
+written into the telemetry log for replay/analysis (`tools/analyze_run.py`).
 
 ## Rendering & z-order
 
@@ -151,9 +160,10 @@ stay above all drones. The live path preview is drawn in `Main._draw()`
 (behind all children). The HUD is a `CanvasLayer` and therefore unaffected by
 world coordinates.
 
-Floor tiles use `z_index = -1`, so `Main._draw()` — the live route preview
-tracing each active drone's assigned path — stays visible above the floor
-and below towers/drones. A `Camera2D` centered on the viewport carries the
+Floor tiles, cosmetic decor and battle decals use `z_index = -1`, so
+`Main._draw()` — the live route preview tracing each active drone's assigned
+path — stays visible above the grime and below blockers/towers/drones
+(z 0; HP bars z 1). A `Camera2D` centered on the viewport carries the
 screen shake; CanvasLayer content is not affected by it, so the HUD stays
 fixed. The vignette is the first child of the HUD layer (world → vignette →
 panel → game-over overlay, in that draw order).
@@ -162,14 +172,15 @@ panel → game-over overlay, in that draw order).
 
 - Core classes: pure GUT tests in `tests/test_*.gd`, no scene needed
   (`test_maze`, `test_path`, `test_economy`, `test_wave`, `test_drone`,
-  `test_gun`, `test_projectile`).
-- Scene: `tests/test_game_scene.gd` instantiates `Main.tscn` and steps
-  `_process(1.0 / 60.0)` manually, so assertions are frame-rate independent;
-  it covers spawn → walk → shoot → kill with scattered entries, the payout,
-  break → auto-chain, the Space skip, scatter determinism, the nearest-exit
-  fallback, the game-over screen incl. telemetry flush and restart-button
-  wiring, and the camera shake offset/decay (writes only `user://`, then
-  deletes the file).
+  `test_gun`, `test_projectile`, `test_terrain_gen`).
+- Scene: `tests/test_game_scene.gd` instantiates `Main.tscn` (with
+  `seed_override` pinned) and steps `_process(1.0 / 60.0)` manually, so
+  assertions are frame-rate independent; it covers spawn → walk → shoot →
+  kill with scattered entries and terrain, the payout, break → auto-chain,
+  the Space skip, scatter/terrain determinism, the nearest-exit fallback,
+  decals + ambient setup, the game-over screen incl. telemetry flush and
+  restart-button wiring, and the camera shake offset/decay (writes only
+  `user://`, then deletes the file).
 - Gotcha: GUT's GUI panel covers the right half of the window, so
   screenshots taken from a GUT run are cropped. For visual QA use a
   temporary `SceneTree` script (`godot --path . -s tools/x.gd`,
@@ -189,5 +200,8 @@ panel → game-over overlay, in that draw order).
   `Side` enum) are deduplicated into cell lists. Segments (side + cell
   range) are a future config detail — validation and the nearest-exit
   fallback already handle non-contiguous exits.
+- **Terrain density/types**: `TerrainGen` constants (cluster count/size,
+  decor count); a new blocker art is a `TERRAIN_TEX` entry. Battle decals
+  are capped by `DECAL_CAP` (FIFO).
 - **Balance changes**: constants are documented in `docs/BALANCE.md`; run the
   suite after touching them (`test_wave`/`test_economy` pin several values).

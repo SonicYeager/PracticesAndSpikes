@@ -9,7 +9,7 @@ telemetry for data-driven balancing.
 
 - Stack: Godot 4.7.2, GDScript (no .NET flow)
 - Entrypoint: `scenes/Main.tscn` (open/import the folder in the Godot editor)
-- Status: prototype complete + sides feature (T01–T08) — see *Controls* and *Roadmap*
+- Status: prototype complete + sides + dirty world (T01–T09) — see *Controls* and *Roadmap*
 
 ## Controls
 
@@ -46,6 +46,9 @@ then auto-starts. Game over shows a run summary and restarts the scene.
 - Sides (T08): enemies enter scattered along the left side and each draws a
   seeded random exit on the right side; reaching an exit is a leak. Builds
   must keep every entry connected to at least one exit.
+- Dirty World (T09): random run seed (logged for replay), seeded terrain
+  blockers + decor, battle decals (scorch/skid/debris) that accumulate
+  during the run, ambient embers/smoke/sparks.
 - Local telemetry: build/sell/wave/leak/run_end events →
   `user://run_<seed>.jsonl` (analysis: `tools/analyze_run.py`).
 - Meta stub: one persistent bonus (`SkillStub` → `user://skill_stub.cfg`).
@@ -67,11 +70,11 @@ GODOT_DISABLE_LEAK_CHECKS=1 godot --headless --path . \
   -s res://addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
 ```
 
-GUT 9.6.1 is vendored under `addons/gut/`. The suite (40 tests / 145 asserts)
+GUT 9.6.1 is vendored under `addons/gut/`. The suite (49 tests / 384 asserts)
 covers every core class plus one scene integration smoke test that steps the
-real `Main.tscn` (spawn → walk → shoot → kill with scattered entries, break →
-auto-chain, game over + log flush, restart wiring, camera shake decay,
-scatter determinism, nearest-exit fallback).
+real `Main.tscn` (spawn → walk → shoot → kill with scattered entries and
+terrain, break → auto-chain, game over + log flush, restart wiring, camera
+shake decay, scatter determinism, nearest-exit fallback, decals/ambient).
 
 ## Project structure
 
@@ -83,6 +86,7 @@ scatter determinism, nearest-exit fallback).
 | `scripts/pathfinder.gd` | AStarGrid2D wrapper, 4-directional (`Pathfinder`) |
 | `scripts/economy.gd` | Money-is-HP rules (`Economy`) |
 | `scripts/wave.gd` | Deterministic wave composition (`WaveGen`) |
+| `scripts/terrain_gen.gd` | Seeded terrain dressing: blockers + decor (`TerrainGen`) |
 | `scripts/drone.gd` | Grid-space walker: path, hp, kinds (`Drone`) |
 | `scripts/gun.gd` | Tower targeting/cadence (`Gun`) |
 | `scripts/projectile.gd` | Homing tracer (`Projectile`) |
@@ -114,7 +118,7 @@ python tools/analyze_run.py path/to/run_1.jsonl  # or explicit files / directori
 ```
 
 Keep runs by copying `user://run_<seed>.jsonl` into `telemetry_local/`
-(gitignored) — restarting overwrites a seed's log.
+(gitignored) — every run writes its own file (random seed per run).
 
 The parser has stdlib regression tests: `python tools/test_analyze_run.py`.
 
@@ -142,5 +146,6 @@ The parser has stdlib regression tests: `python tools/test_analyze_run.py`.
 | T06 | Remaining polish (screen shake, vignette, …) | done |
 | T07 | Docs pass | done |
 | T08 | Multi-entry/exit sides, scatter spawn, nearest-exit fallback | done |
+| T09 | Dirty World: run seed, terrain blockers/decor, decals, ambient | done |
 
 All slices done. Post-prototype directions are collected in `docs/IDEAS.md`.

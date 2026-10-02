@@ -6,7 +6,8 @@ extends Node2D
 ## summary with restart (R or button). T06: trauma screen shake (Camera2D),
 ## vignette overlay, barrel recoil, muzzle/impact polish. T08: whole-side
 ## entries/exits, seeded scatter spawn, assigned exit per drone with a
-## nearest-exit fallback.
+## nearest-exit fallback. T09: random run seed (logged, overridable), seeded
+## terrain blockers + decor, battle decals, ambient emitters.
 
 ## Wave phase: exactly one state is active at a time.
 enum Phase { IDLE, RUNNING, BREAK, GAME_OVER }
@@ -21,9 +22,9 @@ const EXIT_SIDES: Array = [Side.RIGHT]
 const MAP_SIZE := Vector2i(20, 12)
 const SELL_REFUND := Economy.GUN_COST / 2
 const ART_SCALE := Vector2(2, 2)
-const GAME_SEED := 1
 const SCATTER_SEED_MUL := 1000003
 const SCATTER_WAVE_MUL := 104729
+const DECAL_CAP := 300
 const SPAWN_INTERVAL := 0.7
 const BREAK_SECONDS := 5.0
 const SHAKE_DECAY := 1.6         # trauma lost per second
@@ -83,11 +84,29 @@ const SFX_DB := {
 	"wave": -6.0,
 	"gameover": -4.0,
 }
+const TERRAIN_TEX := {
+	"rock": preload("res://art/rock.png"),
+	"rubble": preload("res://art/rubble.png"),
+	"vent": preload("res://art/vent.png"),
+}
+const DECOR_TEX := {
+	"crack": preload("res://art/decor_crack.png"),
+	"stain": preload("res://art/decor_stain.png"),
+}
+const SCORCH_TEX := preload("res://art/scorch.png")
+const SKID_TEX := preload("res://art/skid.png")
+const DEBRIS_TEX := preload("res://art/debris.png")
+const EMBER_TEX := preload("res://art/ember.png")
+
+## Seed override: -1 = random run seed, >= 0 pins it (tests/editor/replay).
+@export var seed_override := -1
+var game_seed := 1
 
 var maze: Maze
 var economy: Economy
 var telemetry: Telemetry
 var origin := Vector2.ZERO
+var _decals: Array[Sprite2D] = []
 
 var _tower_nodes: Dictionary = {}
 var _guns: Dictionary = {}
@@ -126,9 +145,13 @@ var _fx_counter := 0
 
 
 func _ready() -> void:
-	maze = Maze.new(MAP_SIZE, _sides_to_cells(ENTRY_SIDES), _sides_to_cells(EXIT_SIDES))
+	game_seed = seed_override if seed_override >= 0 else _random_seed()
+	var entries := _sides_to_cells(ENTRY_SIDES)
+	var exits := _sides_to_cells(EXIT_SIDES)
+	var terrain := TerrainGen.generate(MAP_SIZE, entries, exits, game_seed)
+	maze = Maze.new(MAP_SIZE, entries, exits, terrain["blockers"])
 	economy = Economy.new(100)
-	telemetry = Telemetry.new(GAME_SEED)
+	telemetry = Telemetry.new(game_seed)
 	origin = (Vector2(get_viewport_rect().size) - Vector2(MAP_SIZE) * TILE) * 0.5
 	_camera.position = Vector2(get_viewport_rect().size) * 0.5
 	_camera.make_current()
@@ -136,15 +159,23 @@ func _ready() -> void:
 	_make_bar_texture()
 	_setup_audio()
 	_draw_floor()
+	_draw_terrain(terrain)
+	_setup_ambient(terrain)
 	_entry_nodes = _draw_markers(maze.entries, SPAWN_TEX)
 	_exit_nodes = _draw_markers(maze.exits, BASE_TEX)
 	_update_hud()
 	queue_redraw()
 
 
+func _random_seed() -> int:
+	# Run seeds come from the clock; the seed is logged for replay and can be
+	# pinned via `seed_override` (tests, editor).
+	return int(Time.get_unix_time_from_system()) ^ Time.get_ticks_usec()
+
+
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_WM_CLOSE_REQUEST and telemetry != null and _phase != Phase.GAME_OVER:
-		telemetry.flush(TELEMETRY_PATH % GAME_SEED)
+		telemetry.flush(TELEMETRY_PATH % game_seed)
 
 
 func _process(delta: float) -> void:
@@ -205,7 +236,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _start_wave(n: int) -> void:
 	_wave = n
-	_wave_comp = WaveGen.composition(n, GAME_SEED)
+	_wave_comp = WaveGen.composition(n, game_seed)
 	_phase = Phase.RUNNING
 	_break_timer = 0.0
 	_spawn_timer = 0.0
@@ -250,7 +281,7 @@ func _spawn_drone(kind: String) -> void:
 	var index := _spawn_counter
 	_spawn_counter += 1
 	var rng := RandomNumberGenerator.new()
-	rng.seed = GAME_SEED * SCATTER_SEED_MUL + _wave * SCATTER_WAVE_MUL + index
+	rng.seed = game_seed * SCATTER_SEED_MUL + _wave * SCATTER_WAVE_MUL + index
 	var entry: Vector2i = maze.entries[rng.randi_range(0, maze.entries.size() - 1)]
 	var exit: Vector2i = maze.exits[rng.randi_range(0, maze.exits.size() - 1)]
 	var cells := _cells_from_path(maze.pathfinder.find_path(entry, exit))
@@ -301,6 +332,7 @@ func _on_leak(d: Drone) -> void:
 	telemetry.event("leak", {"wave": _wave, "money": economy.money, "exit": [exit.x, exit.y]})
 	_play("leak")
 	_add_shake(SHAKE_LEAK)
+	_add_decal(SKID_TEX, d.position)
 	_remove_drone(d)
 	if economy.is_game_over():
 		_end_run()
@@ -360,12 +392,14 @@ func _resolve_hit(p: Projectile) -> void:
 	if target.take_damage(Gun.DAMAGE):
 		economy.on_kill()
 		_spawn_explosion(target.position)
+		_add_decal(SCORCH_TEX, target.position)
 		_play("kill")
 		_add_shake(SHAKE_KILL)
 		_remove_drone(target)
 	else:
 		_hit_flash[target] = HIT_FLASH_TIME
 		_spawn_impact(target.position)
+		_add_decal(DEBRIS_TEX, target.position)
 		_play("hit")
 
 
@@ -401,7 +435,7 @@ func _end_run() -> void:
 	_play("gameover")
 	_add_shake(SHAKE_GAME_OVER)
 	telemetry.event("run_end", {"wave": _wave, "money": economy.money})
-	telemetry.flush(TELEMETRY_PATH % GAME_SEED)
+	telemetry.flush(TELEMETRY_PATH % game_seed)
 	_update_hud()
 
 
@@ -546,6 +580,20 @@ func _spawn_explosion(grid_pos: Vector2) -> void:
 	t.tween_callback(s.queue_free)
 
 
+func _add_decal(tex: Texture2D, grid_pos: Vector2) -> void:
+	var s := Sprite2D.new()
+	s.texture = tex
+	s.position = _grid_to_world(grid_pos)
+	s.scale = ART_SCALE
+	s.rotation = _jitter(0.5)
+	s.z_index = -1  # above floor/decor, below the route preview
+	add_child(s)
+	_decals.append(s)
+	if _decals.size() > DECAL_CAP:
+		var old: Sprite2D = _decals.pop_front()
+		old.queue_free()
+
+
 func _make_bar_texture() -> void:
 	var image := Image.create_empty(1, 1, false, Image.FORMAT_RGBA8)
 	image.fill(Color.WHITE)
@@ -629,6 +677,108 @@ func _draw_floor() -> void:
 			# Bottom layer: keeps the path preview (Main._draw) visible above it.
 			tile.z_index = -1
 			add_child(tile)
+
+
+func _draw_terrain(terrain: Dictionary) -> void:
+	for cell in terrain["blockers"]:
+		var s := Sprite2D.new()
+		s.texture = TERRAIN_TEX[_blocker_type(cell)]
+		s.position = _cell_center(cell)
+		s.scale = ART_SCALE
+		add_child(s)
+	for cell in terrain["decor"]:
+		var d := Sprite2D.new()
+		d.texture = DECOR_TEX[_decor_type(cell)]
+		d.position = _cell_center(cell)
+		d.scale = ART_SCALE
+		d.z_index = -1  # floor grime: above the floor, below the route preview
+		add_child(d)
+
+
+func _setup_ambient(terrain: Dictionary) -> void:
+	# Presentation-only particle emitters (internal randomness, never gameplay).
+	for cell in terrain["blockers"]:
+		if _blocker_type(cell) == "vent":
+			_add_embers(cell)
+	for cell in terrain["decor"]:
+		match _decor_type(cell):
+			"crack":
+				_add_sparks(cell)
+			"stain":
+				_add_smoke(cell)
+
+
+func _add_embers(cell: Vector2i) -> void:
+	var p := CPUParticles2D.new()
+	p.position = _cell_center(cell)
+	p.texture = EMBER_TEX
+	p.amount = 10
+	p.lifetime = 1.8
+	p.preprocess = 1.5
+	p.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	p.emission_rect_extents = Vector2(9.0, 7.0)
+	p.direction = Vector2(0, -1)
+	p.spread = 18.0
+	p.initial_velocity_min = 9.0
+	p.initial_velocity_max = 20.0
+	p.gravity = Vector2(0, -4)
+	p.scale_amount_min = 0.5
+	p.scale_amount_max = 1.1
+	p.color = Color(1.0, 0.7, 0.3, 0.85)
+	add_child(p)
+
+
+func _add_sparks(cell: Vector2i) -> void:
+	var p := CPUParticles2D.new()
+	p.position = _cell_center(cell)
+	p.texture = EMBER_TEX
+	p.amount = 4
+	p.lifetime = 0.9
+	p.preprocess = 1.0
+	p.direction = Vector2(0, -1)
+	p.spread = 60.0
+	p.initial_velocity_min = 14.0
+	p.initial_velocity_max = 30.0
+	p.gravity = Vector2(0, 40)
+	p.scale_amount_min = 0.3
+	p.scale_amount_max = 0.6
+	p.color = Color(1.0, 0.85, 0.45, 0.9)
+	add_child(p)
+
+
+func _add_smoke(cell: Vector2i) -> void:
+	var p := CPUParticles2D.new()
+	p.position = _cell_center(cell)
+	p.texture = EMBER_TEX  # soft dot, tinted dark
+	p.amount = 5
+	p.lifetime = 2.6
+	p.preprocess = 2.0
+	p.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+	p.emission_rect_extents = Vector2(6.0, 4.0)
+	p.direction = Vector2(0, -1)
+	p.spread = 12.0
+	p.initial_velocity_min = 4.0
+	p.initial_velocity_max = 9.0
+	p.gravity = Vector2(0, -2)
+	p.scale_amount_min = 1.0
+	p.scale_amount_max = 2.0
+	p.color = Color(0.25, 0.2, 0.18, 0.35)
+	add_child(p)
+
+
+func _variant(cell: Vector2i, count: int) -> int:
+	# Stable pattern, no RNG (same trick as the floor variety).
+	return (cell.x * 7 + cell.y * 13) % count
+
+
+func _blocker_type(cell: Vector2i) -> String:
+	var types: Array = TERRAIN_TEX.keys()
+	return types[_variant(cell, types.size())]
+
+
+func _decor_type(cell: Vector2i) -> String:
+	var types: Array = DECOR_TEX.keys()
+	return types[_variant(cell, types.size())]
 
 
 func _draw_marker(cell: Vector2i, tex: Texture2D) -> Sprite2D:

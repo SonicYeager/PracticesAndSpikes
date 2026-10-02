@@ -72,7 +72,7 @@ spawn queue and the field are empty, a `BREAK_SECONDS` (5 s) intermission
 runs with a HUD countdown, then the next wave auto-starts; Space skips the
 wait. Wave 1 is started manually.
 
-Composition for the current fixed seed (`GAME_SEED = 1`), verified
+Composition for seed 1 (reproducible via `seed_override = 1`), verified
 by running `WaveGen` directly:
 
 | Wave | Count | HP | Speed (px/s) | Tanks | Fast |
@@ -94,9 +94,12 @@ The tanks/fast split changes with the seed; count/hp/speed do not.
 |---|---|---|
 | `MAP_SIZE` | 20×12 | cells |
 | `TILE` | 32 | px per cell (16 px art at 2×) |
-| `GAME_SEED` | 1 | fixed; the seed flow is still open |
+| run seed | random per run | `_random_seed()`; logged as `run_start.seed`; `seed_override` >= 0 pins it (default -1) |
 | `SPAWN_INTERVAL` | 0.7 s | between two drones of a wave |
-| `SCATTER_SEED_MUL` / `SCATTER_WAVE_MUL` | 1000003 / 104729 | scatter seed: `GAME_SEED * MUL + wave * MUL2 + index` (entry + exit) |
+| `SCATTER_SEED_MUL` / `SCATTER_WAVE_MUL` | 1000003 / 104729 | scatter seed: `game_seed * MUL + wave * MUL2 + index` (entry + exit) |
+| `BLOCKER_CLUSTERS` / `CLUSTER_MIN..MAX` | 7 / 1..3 | terrain clusters (`TerrainGen`) |
+| `DECOR_COUNT` | 26 | cosmetic decor cells |
+| `DECAL_CAP` | 300 | battle decals kept per run (FIFO) |
 | `BREAK_SECONDS` | 5.0 s | intermission between waves (Space skips it) |
 | `SHAKE_DECAY` / `SHAKE_MAX_OFFSET` | 1.6 /s · 9 px | trauma decay / max camera offset |
 | `SHAKE_KILL` / `SHAKE_LEAK` / `SHAKE_GAME_OVER` | 0.12 / 0.3 / 0.7 | trauma per event |

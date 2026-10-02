@@ -23,7 +23,7 @@ routes instead of just walling the direct line.
   feature.
 - Exits are **escape zones**: reaching one = leak, no home core. Money-is-HP
   is unchanged.
-- **Per spawn** (seeded RNG, deterministic per `GAME_SEED`/wave/index): the
+- **Per spawn** (seeded RNG, deterministic per run seed/wave/index): the
   drone draws its entry cell (scatter along the side) and its assigned exit.
 - Re-path walks to the **assigned exit**; if a build cuts that exit off, the
   drone falls back to the **nearest reachable exit** (assignment holds only
@@ -46,8 +46,8 @@ determinism, fallback, leak at exit), docs.
 
 ## Known open items (from the prototype docs)
 
-- **Seed flow**: random seed per run (logged for replay) instead of the
-  fixed `GAME_SEED = 1` — see `AGENTS.md`/`BALANCE.md`.
+- ~~**Seed flow**~~: done (T09) — random run seed, logged as
+  `run_start.seed`; `seed_override` pins it for replay/tests.
 - **Skill tree**: `SkillStub` is a placeholder; real meta UI later, never
   in-match — see `AGENTS.md` "Meta".
 - **More tower types / drone kinds**: extension points documented in

@@ -1,23 +1,33 @@
 class_name Maze
 extends RefCounted
 ## Buildable grid: tracks towers and rejects any build that would leave an
-## entry without a reachable exit. Entry/exit cells are never buildable.
+## entry without a reachable exit. Entry/exit cells and pre-placed terrain
+## blockers are never buildable; blockers are solid from the start.
 ## Any number of entries/exits is supported (side cells by default); a sealed
 ## exit is inert as long as every entry keeps at least one open exit.
 
 var size: Vector2i
 var entries: Array[Vector2i]
 var exits: Array[Vector2i]
+var blockers: Array[Vector2i]
 var built: Dictionary = {}
 var pathfinder: Pathfinder
 
 
-func _init(p_size: Vector2i, p_entries: Array[Vector2i], p_exits: Array[Vector2i]) -> void:
+func _init(
+	p_size: Vector2i,
+	p_entries: Array[Vector2i],
+	p_exits: Array[Vector2i],
+	p_blockers: Array[Vector2i] = [],
+) -> void:
 	size = p_size
 	entries = p_entries
 	exits = p_exits
+	blockers = p_blockers
 	pathfinder = Pathfinder.new()
 	pathfinder.setup(p_size)
+	for cell in blockers:
+		pathfinder.set_solid(cell, true)
 
 
 func is_inside(cell: Vector2i) -> bool:
@@ -25,7 +35,7 @@ func is_inside(cell: Vector2i) -> bool:
 
 
 func is_reserved(cell: Vector2i) -> bool:
-	return entries.has(cell) or exits.has(cell)
+	return entries.has(cell) or exits.has(cell) or blockers.has(cell)
 
 
 func can_build(cell: Vector2i) -> bool:
@@ -36,6 +46,7 @@ func can_build(cell: Vector2i) -> bool:
 	if built.has(cell):
 		return false
 	# Hypothetical block: every entry must still reach at least one exit.
+	var was_solid := pathfinder.is_solid(cell)
 	pathfinder.set_solid(cell, true)
 	var reachable := pathfinder.reachable_from(exits)
 	var ok := true
@@ -43,7 +54,7 @@ func can_build(cell: Vector2i) -> bool:
 		if not reachable.has(entry):
 			ok = false
 			break
-	pathfinder.set_solid(cell, false)
+	pathfinder.set_solid(cell, was_solid)
 	return ok
 
 
