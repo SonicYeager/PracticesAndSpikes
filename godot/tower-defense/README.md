@@ -142,7 +142,7 @@ python tools/analyze_run.py telemetry_local/legacy   # pre-provenance runs live 
 ```
 
 Kills are exact — from `kill` events and `wave_end` summaries, not a
-`count − leaks` estimate — the money column shows each wave's `start→end`, and
+`count − leaks` estimate — the money column shows each wave's `start->end`, and
 a `kill zones` line names the top kill cells. Legacy logs without the newer
 events keep the old derivation, and a non-local `source` shows as a
 `[harness]` marker in the header.

@@ -268,7 +268,7 @@ def report_run(run):
         leaks = len(run["leaks"].get(n, []))
         summary = run["wave_ends"].get(n)
         if summary:
-            money = "%s→%s" % (
+            money = "%s->%s" % (
                 fmt_number(summary["money_start"]),
                 fmt_number(summary["money_end"]),
             )

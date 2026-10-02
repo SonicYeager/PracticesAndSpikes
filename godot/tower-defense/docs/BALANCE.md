@@ -150,7 +150,7 @@ modifiers.
    purpose; update the tests if the change is intended.
 3. Play a few waves, then run `python tools/analyze_run.py` for per-wave
    kill/leak/money tables (exact kills from `kill`/`wave_end` events, each
-   wave's money `start→end`, plus top kill zones; it scans `telemetry_local/`,
+   wave's money `start->end`, plus top kill zones; it scans `telemetry_local/`,
    then the Godot user dir — copy `user://run_<seed>.jsonl` into
    `telemetry_local/` to keep it; pre-provenance runs live in
    `telemetry_local/legacy/` and can be analyzed by passing that dir).

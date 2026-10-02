@@ -109,9 +109,20 @@ class LoadRunTest(unittest.TestCase):
         self.assertEqual(run["kills_by_wave"], {1: 2})
         self.assertEqual(run["wave_ends"][1]["kills"], 2)
         text = "\n".join(ar.report_run(run))
-        self.assertIn("100→112", text)
+        self.assertIn("100->112", text)
         self.assertIn("leaks 2, kills 2", text)
         self.assertIn("kill zones: (3,4):2", text)
+
+    def test_report_is_ascii(self):
+        # Windows-Konsolen laufen oft mit cp1252: jede Nicht-ASCII-Ausgabe
+        # crasht main() beim print (real passiert mit dem ersten Spiel-Log).
+        run = self.load(
+            '{"t":"wave","wave":1,"count":4}\n'
+            '{"t":"wave_end","wave":1,"kills":4,"leaks":0,"money_start":100,"money_end":124}\n'
+            '{"t":"wave","wave":2,"count":6}\n'
+        )
+        text = "\n".join(ar.report_run(run))
+        text.encode("ascii")  # raises UnicodeEncodeError if any glyph survives
 
     def test_kill_events_give_kills_without_summary(self):
         run = self.load(
