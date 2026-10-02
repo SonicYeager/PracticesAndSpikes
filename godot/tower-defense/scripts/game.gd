@@ -1,12 +1,23 @@
 extends Node2D
 ## Prototype entry: variable grid, click-to-build gun maze, sprite visuals.
-## Art: 16px Ember Foundry at 2x (TILE 32). Barrel pivot via offset (T03).
-## Combat (T03), wave loop (T04) and juice (T06) come later.
+## Combat (T03): deterministic waves on Space, drones walk the live path,
+## guns fire homing tracers, kills earn / leaks cost. Juice pass: SFX, muzzle
+## spawn + flash, hit sparks, HP bars, walk animation, HUD icons. Wave
+## chaining and a proper game-over screen follow in T04.
 
 const TILE := 32
 const MAP_SIZE := Vector2i(20, 12)
 const SELL_REFUND := Economy.GUN_COST / 2
 const ART_SCALE := Vector2(2, 2)
+const GAME_SEED := 1
+const SPAWN_INTERVAL := 0.7
+const DRONE_FRAME_TIME := 0.15
+const HIT_FLASH_TIME := 0.07
+const MUZZLE_OFFSET := 0.75
+const BAR_WIDTH := 22.0
+const BAR_HEIGHT := 3.0
+const BAR_OFFSET := Vector2(0, -20)
+const TELEMETRY_PATH := "user://run_%d.jsonl"
 
 const FLOOR_TEX: Array = [
 	preload("res://art/floor_0.png"),
@@ -17,13 +28,75 @@ const GUN_BASE_TEX := preload("res://art/gun_base.png")
 const GUN_BARREL_TEX := preload("res://art/gun_barrel.png")
 const SPAWN_TEX := preload("res://art/spawn.png")
 const BASE_TEX := preload("res://art/base.png")
+const PROJECTILE_TEX := preload("res://art/projectile.png")
+const MUZZLE_TEX := preload("res://art/muzzle.png")
+const IMPACT_TEX := preload("res://art/impact.png")
+const EXPLOSION_TEX: Array = [
+	preload("res://art/explosion_0.png"),
+	preload("res://art/explosion_1.png"),
+]
+const DRONE_TEX := {
+	"normal": [preload("res://art/drone_0.png"), preload("res://art/drone_1.png")],
+	"fast": [preload("res://art/drone_fast_0.png"), preload("res://art/drone_fast_1.png")],
+	"tank": [preload("res://art/drone_tank.png")],
+}
+const SFX := {
+	"shoot": preload("res://audio/shoot.wav"),
+	"hit": preload("res://audio/hit.wav"),
+	"kill": preload("res://audio/kill.wav"),
+	"leak": preload("res://audio/leak.wav"),
+	"build": preload("res://audio/build.wav"),
+	"sell": preload("res://audio/sell.wav"),
+	"denied": preload("res://audio/denied.wav"),
+	"wave": preload("res://audio/wave.wav"),
+	"gameover": preload("res://audio/gameover.wav"),
+}
+const SFX_DB := {
+	"shoot": -15.0,
+	"hit": -16.0,
+	"kill": -8.0,
+	"leak": -4.0,
+	"build": -8.0,
+	"sell": -8.0,
+	"denied": -10.0,
+	"wave": -6.0,
+	"gameover": -4.0,
+}
 
 var maze: Maze
 var economy: Economy
+var telemetry: Telemetry
 var origin := Vector2.ZERO
-var _tower_nodes: Dictionary = {}
 
-@onready var _money_label: Label = $Hud/Money
+var _tower_nodes: Dictionary = {}
+var _guns: Dictionary = {}
+var _drones: Array[Drone] = []
+var _drone_sprites: Dictionary = {}
+var _drone_bars: Dictionary = {}
+var _hit_flash: Dictionary = {}
+var _drone_phase: Dictionary = {}
+var _projectiles: Array[Projectile] = []
+var _projectile_sprites: Dictionary = {}
+var _sfx: Dictionary = {}
+var _bar_tex: ImageTexture
+var _spawn_node: Sprite2D
+var _base_node: Sprite2D
+var _spawn_counter := 0
+var _wave := 0
+var _wave_comp: Dictionary = {}
+var _spawn_queue: Array[String] = []
+var _spawn_timer := 0.0
+var _wave_running := false
+var _anim_time := 0.0
+var _fx_counter := 0
+var _game_over := false
+
+@onready var _money_label: Label = $Hud/Panel/Rows/Row1/Money
+@onready var _gun_cost_label: Label = $Hud/Panel/Rows/Row1/GunCost
+@onready var _wave_label: Label = $Hud/Panel/Rows/Row2/Wave
+@onready var _space_icon: TextureRect = $Hud/Panel/Rows/Row2/Space
+@onready var _wave_icon: TextureRect = $Hud/Panel/Rows/Row2/WaveIcon
+@onready var _game_over_label: Label = $Hud/GameOver
 
 
 func _ready() -> void:
@@ -31,30 +104,382 @@ func _ready() -> void:
 	var base := Vector2i(MAP_SIZE.x - 1, MAP_SIZE.y / 2)
 	maze = Maze.new(MAP_SIZE, spawn, base)
 	economy = Economy.new(100)
+	telemetry = Telemetry.new(GAME_SEED)
 	origin = (Vector2(get_viewport_rect().size) - Vector2(MAP_SIZE) * TILE) * 0.5
+	_game_over_label.hide()
+	_make_bar_texture()
+	_setup_audio()
 	_draw_floor()
-	_draw_marker(spawn, SPAWN_TEX)
-	_draw_marker(base, BASE_TEX)
+	_spawn_node = _draw_marker(spawn, SPAWN_TEX)
+	_base_node = _draw_marker(base, BASE_TEX)
 	_update_hud()
 	queue_redraw()
 
 
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_WM_CLOSE_REQUEST and telemetry != null and not _game_over:
+		telemetry.flush(TELEMETRY_PATH % GAME_SEED)
+
+
+func _process(delta: float) -> void:
+	if _game_over:
+		return
+	_anim_time += delta
+	_update_spawner(delta)
+	_update_drones(delta)
+	_update_guns(delta)
+	_update_projectiles(delta)
+	_sync_sprites(delta)
+	_update_hud()
+
+
 func _unhandled_input(event: InputEvent) -> void:
+	if _game_over:
+		return
 	if event is InputEventMouseButton and event.pressed:
 		var cell := _to_cell(get_global_mouse_position())
 		if event.button_index == MOUSE_BUTTON_LEFT:
-			# Rejected builds (maze would disconnect) refund immediately.
+			# Rejected builds (maze would disconnect, drone in the way) refund.
 			if economy.spend(Economy.GUN_COST):
-				if maze.build(cell):
+				if not _drone_on_cell(cell) and maze.build(cell):
+					_guns[cell] = Gun.new(Drone.center_of(cell))
 					_show_tower(cell)
+					telemetry.event("build", {"cell": [cell.x, cell.y]})
+					_reroute_drones()
+					_play("build")
 				else:
 					economy.earn(Economy.GUN_COST)
+					_play("denied")
+			else:
+				_play("denied")
 		elif event.button_index == MOUSE_BUTTON_RIGHT:
 			if maze.sell(cell):
+				_guns.erase(cell)
 				_hide_tower(cell)
 				economy.earn(SELL_REFUND)
+				telemetry.event("sell", {"cell": [cell.x, cell.y]})
+				_reroute_drones()
+				_play("sell")
 		_update_hud()
-		queue_redraw()
+	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_SPACE:
+		if not _wave_running and _drones.is_empty():
+			_start_wave(_wave + 1)
+
+
+func _start_wave(n: int) -> void:
+	_wave = n
+	_wave_comp = WaveGen.composition(n, GAME_SEED)
+	_wave_running = true
+	_spawn_timer = 0.0
+	_spawn_queue.clear()
+	var normals: int = int(_wave_comp["count"]) - int(_wave_comp["fast"]) - int(_wave_comp["tanks"])
+	for i in normals:
+		_spawn_queue.append("normal")
+	for i in int(_wave_comp["fast"]):
+		_spawn_queue.append("fast")
+	for i in int(_wave_comp["tanks"]):
+		_spawn_queue.append("tank")
+	telemetry.event("wave", {"wave": n, "count": _wave_comp["count"], "hp": _wave_comp["hp"]})
+	_play("wave")
+	_update_hud()
+
+
+func _update_spawner(delta: float) -> void:
+	if not _wave_running:
+		return
+	if _spawn_queue.is_empty():
+		if _drones.is_empty():
+			_wave_running = false
+			_update_hud()
+		return
+	_spawn_timer -= delta
+	if _spawn_timer > 0.0:
+		return
+	_spawn_timer = SPAWN_INTERVAL
+	_spawn_drone(_spawn_queue.pop_front())
+
+
+func _spawn_drone(kind: String) -> void:
+	var cells := _cells_from_path(maze.pathfinder.find_path(maze.spawn_cell, maze.base_cell))
+	if cells.is_empty():
+		return
+	var speed: float = float(_wave_comp["speed"]) / TILE
+	var d := Drone.spawn(kind, cells, _wave_comp["hp"], speed)
+	_drones.append(d)
+	var sprite := Sprite2D.new()
+	sprite.texture = DRONE_TEX[kind][0]
+	sprite.scale = ART_SCALE
+	_drone_sprites[d] = sprite
+	add_child(sprite)
+	var bar_bg := Sprite2D.new()
+	bar_bg.texture = _bar_tex
+	bar_bg.scale = Vector2(BAR_WIDTH, BAR_HEIGHT)
+	bar_bg.modulate = Color(0.08, 0.06, 0.05, 0.9)
+	bar_bg.z_index = 1
+	var bar_fill := Sprite2D.new()
+	bar_fill.texture = _bar_tex
+	bar_fill.scale = Vector2(BAR_WIDTH, BAR_HEIGHT)
+	bar_fill.z_index = 1
+	add_child(bar_bg)
+	add_child(bar_fill)
+	_drone_bars[d] = {"bg": bar_bg, "fill": bar_fill}
+	_drone_phase[d] = float(_spawn_counter) * 0.9
+	_spawn_counter += 1
+
+
+func _update_drones(delta: float) -> void:
+	for i in range(_drones.size() - 1, -1, -1):
+		var d := _drones[i]
+		# Rerouting onto the base cell sets `finished` without `advance()`.
+		if d.advance(delta) or d.finished:
+			_on_leak(d)
+
+
+func _on_leak(d: Drone) -> void:
+	economy.on_leak()
+	telemetry.event("leak", {"wave": _wave, "money": economy.money})
+	_play("leak")
+	_remove_drone(d)
+	if economy.is_game_over():
+		_end_run()
+
+
+func _update_guns(delta: float) -> void:
+	for cell in _guns:
+		var gun: Gun = _guns[cell]
+		var target := gun.acquire(_drones)
+		if target != null:
+			_aim_barrel(cell, target)
+		var fired := gun.try_fire(delta, _drones)
+		if fired != null:
+			_fire(gun, fired)
+
+
+func _aim_barrel(cell: Vector2i, target: Drone) -> void:
+	var root := _tower_nodes.get(cell) as Node2D
+	if root == null:
+		return
+	var barrel := root.get_node_or_null("Barrel") as Node2D
+	if barrel == null:
+		return
+	barrel.rotation = (target.position - Drone.center_of(cell)).angle() + PI / 2
+
+
+func _fire(gun: Gun, target: Drone) -> void:
+	var direction := target.position - gun.position
+	if direction.length() < 0.001:
+		direction = Vector2.RIGHT
+	direction = direction.normalized()
+	var muzzle := gun.position + direction * MUZZLE_OFFSET
+	var p := Projectile.new(muzzle, target)
+	_projectiles.append(p)
+	var sprite := Sprite2D.new()
+	sprite.texture = PROJECTILE_TEX
+	sprite.scale = ART_SCALE
+	_projectile_sprites[p] = sprite
+	add_child(sprite)
+	_spawn_muzzle_flash(muzzle, direction)
+	_play("shoot")
+
+
+func _update_projectiles(delta: float) -> void:
+	for i in range(_projectiles.size() - 1, -1, -1):
+		var p := _projectiles[i]
+		var hit := p.advance(delta)
+		if hit:
+			_resolve_hit(p)
+		if not p.alive:
+			_remove_projectile(p)
+
+
+func _resolve_hit(p: Projectile) -> void:
+	var target := p.target
+	if target.take_damage(Gun.DAMAGE):
+		economy.on_kill()
+		_spawn_explosion(target.position)
+		_play("kill")
+		_remove_drone(target)
+	else:
+		_hit_flash[target] = HIT_FLASH_TIME
+		_spawn_impact(target.position)
+		_play("hit")
+
+
+func _remove_drone(d: Drone) -> void:
+	_drones.erase(d)
+	var sprite := _drone_sprites.get(d) as Node
+	if sprite != null:
+		sprite.queue_free()
+	_drone_sprites.erase(d)
+	var bars: Dictionary = _drone_bars.get(d, {})
+	for node in bars.values():
+		(node as Node).queue_free()
+	_drone_bars.erase(d)
+	_hit_flash.erase(d)
+	_drone_phase.erase(d)
+
+
+func _remove_projectile(p: Projectile) -> void:
+	_projectiles.erase(p)
+	var sprite := _projectile_sprites.get(p) as Node
+	if sprite != null:
+		sprite.queue_free()
+	_projectile_sprites.erase(p)
+
+
+func _end_run() -> void:
+	_game_over = true
+	_game_over_label.text = "GAME OVER\nWelle %d — Geld %d" % [_wave, economy.money]
+	_game_over_label.show()
+	_play("gameover")
+	telemetry.event("run_end", {"wave": _wave, "money": economy.money})
+	telemetry.flush(TELEMETRY_PATH % GAME_SEED)
+	_update_hud()
+
+
+func _sync_sprites(delta: float) -> void:
+	for d in _drones:
+		var sprite := _drone_sprites.get(d) as Sprite2D
+		if sprite == null:
+			continue
+		var facing := d.facing()
+		var world := _grid_to_world(d.position)
+		var phase := float(_drone_phase.get(d, 0.0))
+		match d.kind:
+			"fast":
+				sprite.rotation = facing.angle()
+				sprite.flip_h = false
+			"tank":
+				sprite.flip_h = facing.x < -0.01
+				sprite.rotation = sin(_anim_time * 3.0 + phase) * 0.05
+			_:
+				sprite.flip_h = facing.x < -0.01
+				sprite.rotation = 0.0
+				world.y += sin(_anim_time * 9.0 + phase) * 1.5
+		sprite.position = world
+		var frames: Array = DRONE_TEX[d.kind]
+		sprite.texture = frames[int(_anim_time / DRONE_FRAME_TIME + phase) % frames.size()]
+		if _hit_flash.has(d):
+			_hit_flash[d] = maxf(_hit_flash[d] - delta, 0.0)
+			sprite.modulate = Color(2.5, 2.5, 2.5) if _hit_flash[d] > 0.0 else Color.WHITE
+		_update_hp_bar(d, _grid_to_world(d.position))
+	for p in _projectiles:
+		var sprite := _projectile_sprites.get(p) as Sprite2D
+		if sprite == null:
+			continue
+		sprite.position = _grid_to_world(p.position)
+		var direction := p.target.position - p.position
+		if direction.length() > 0.001:
+			sprite.rotation = direction.angle()
+	if _spawn_node != null:
+		_spawn_node.scale = ART_SCALE * (1.0 + 0.05 * sin(_anim_time * 3.2))
+	if _base_node != null:
+		_base_node.scale = ART_SCALE * (1.0 + 0.03 * sin(_anim_time * 4.0))
+
+
+func _update_hp_bar(d: Drone, world: Vector2) -> void:
+	var bars: Dictionary = _drone_bars.get(d, {})
+	var bg := bars.get("bg") as Sprite2D
+	var fill := bars.get("fill") as Sprite2D
+	if bg == null or fill == null:
+		return
+	var ratio := clampf(d.hp / d.max_hp, 0.0, 1.0)
+	var bar_pos := world + BAR_OFFSET
+	var width := BAR_WIDTH * ratio
+	bg.position = bar_pos
+	fill.scale = Vector2(width, BAR_HEIGHT)
+	fill.position = bar_pos + Vector2((width - BAR_WIDTH) * 0.5, 0.0)
+	fill.modulate = _hp_color(ratio)
+
+
+func _hp_color(ratio: float) -> Color:
+	if ratio > 0.5:
+		return Color(0.49, 0.87, 0.39)
+	if ratio > 0.25:
+		return Color(1.0, 0.82, 0.4)
+	return Color(1.0, 0.23, 0.19)
+
+
+func _spawn_muzzle_flash(grid_pos: Vector2, direction: Vector2) -> void:
+	var s := Sprite2D.new()
+	s.texture = MUZZLE_TEX
+	s.scale = ART_SCALE
+	s.position = _grid_to_world(grid_pos)
+	s.rotation = direction.angle()
+	add_child(s)
+	var t := create_tween()
+	t.tween_property(s, "modulate:a", 0.0, 0.06)
+	t.tween_callback(s.queue_free)
+
+
+func _spawn_impact(grid_pos: Vector2) -> void:
+	var s := Sprite2D.new()
+	s.texture = IMPACT_TEX
+	s.scale = ART_SCALE
+	s.position = _grid_to_world(grid_pos)
+	add_child(s)
+	var t := create_tween()
+	t.tween_property(s, "scale", ART_SCALE * 1.5, 0.12)
+	t.parallel().tween_property(s, "modulate:a", 0.0, 0.12)
+	t.tween_callback(s.queue_free)
+
+
+func _spawn_explosion(grid_pos: Vector2) -> void:
+	var s := Sprite2D.new()
+	s.texture = EXPLOSION_TEX[_fx_counter % EXPLOSION_TEX.size()]
+	_fx_counter += 1
+	s.position = _grid_to_world(grid_pos)
+	s.scale = ART_SCALE
+	add_child(s)
+	var t := create_tween()
+	t.tween_property(s, "scale", ART_SCALE * 1.8, 0.18)
+	t.parallel().tween_property(s, "modulate:a", 0.0, 0.18)
+	t.tween_callback(s.queue_free)
+
+
+func _make_bar_texture() -> void:
+	var image := Image.create_empty(1, 1, false, Image.FORMAT_RGBA8)
+	image.fill(Color.WHITE)
+	_bar_tex = ImageTexture.create_from_image(image)
+
+
+func _setup_audio() -> void:
+	for key in SFX:
+		var player := AudioStreamPlayer.new()
+		player.stream = SFX[key]
+		player.volume_db = SFX_DB.get(key, -10.0)
+		player.max_polyphony = 8
+		add_child(player)
+		_sfx[key] = player
+
+
+func _play(name: String) -> void:
+	var player := _sfx.get(name) as AudioStreamPlayer
+	if player != null:
+		player.play()
+
+
+func _drone_on_cell(cell: Vector2i) -> bool:
+	for d in _drones:
+		if d.cell() == cell:
+			return true
+	return false
+
+
+func _reroute_drones() -> void:
+	for d in _drones:
+		d.reroute(_cells_from_path(maze.pathfinder.find_path(d.cell(), maze.base_cell)))
+
+
+func _cells_from_path(path: PackedVector2Array) -> Array[Vector2i]:
+	var cells: Array[Vector2i] = []
+	for p in path:
+		cells.append(Vector2i(p))
+	return cells
+
+
+func _grid_to_world(grid_pos: Vector2) -> Vector2:
+	return origin + grid_pos * TILE
 
 
 func _to_cell(pos: Vector2) -> Vector2i:
@@ -76,24 +501,28 @@ func _draw_floor() -> void:
 			add_child(tile)
 
 
-func _draw_marker(cell: Vector2i, tex: Texture2D) -> void:
+func _draw_marker(cell: Vector2i, tex: Texture2D) -> Sprite2D:
 	var marker := Sprite2D.new()
 	marker.texture = tex
 	marker.position = _cell_center(cell)
 	marker.scale = ART_SCALE
 	add_child(marker)
+	return marker
 
 
 func _show_tower(cell: Vector2i) -> void:
 	var root := Node2D.new()
 	root.position = _cell_center(cell)
 	var base := Sprite2D.new()
+	base.name = "Base"
 	base.texture = GUN_BASE_TEX
 	base.scale = ART_SCALE
 	var barrel := Sprite2D.new()
+	barrel.name = "Barrel"
 	barrel.texture = GUN_BARREL_TEX
 	barrel.scale = ART_SCALE
-	barrel.position = Vector2(0, -4)
+	# Pivot at the barrel base: texture (8, 12) sits on the tower center.
+	barrel.offset = Vector2(0, -4)
 	root.add_child(base)
 	root.add_child(barrel)
 	add_child(root)
@@ -108,7 +537,16 @@ func _hide_tower(cell: Vector2i) -> void:
 
 
 func _update_hud() -> void:
-	_money_label.text = "Geld (= Leben): %d   |   Gun: %d (Links bauen, Rechts verkaufen)" % [economy.money, Economy.GUN_COST]
+	_money_label.text = str(economy.money)
+	_gun_cost_label.text = str(Economy.GUN_COST)
+	if _wave_running:
+		_space_icon.hide()
+		_wave_icon.show()
+		_wave_label.text = "Welle %d: %d unterwegs, %d in Warteschlange" % [_wave, _drones.size(), _spawn_queue.size()]
+	else:
+		_space_icon.show()
+		_wave_icon.hide()
+		_wave_label.text = "Welle %d starten" % (_wave + 1)
 
 
 func _draw() -> void:
@@ -117,4 +555,4 @@ func _draw() -> void:
 	# Live path preview; floor/towers/markers are sprites now.
 	var path := maze.pathfinder.find_path(maze.spawn_cell, maze.base_cell)
 	for p in path:
-		draw_circle(_cell_center(p), 2.0, Color(0.90, 0.90, 0.40, 0.70))
+		draw_circle(_cell_center(Vector2i(p)), 2.0, Color(0.90, 0.90, 0.40, 0.70))

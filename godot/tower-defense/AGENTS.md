@@ -10,6 +10,17 @@ Location: `repos/Repository/godot/tower-defense/`, new top-level `godot/`
 category (GDScript does not belong under `dotnet/godot/`, which is the C#
 "Squash the Creeps" tutorial).
 
+## Docs map
+
+- `README.md` — human entry: what it is, controls, structure, roadmap.
+- `docs/ARCHITECTURE.md` — classes, frame order, coordinates, invariants,
+  determinism, test strategy, extension points.
+- `docs/BALANCE.md` — every tunable constant + derived numbers + tuning flow.
+- `docs/AUDIO.md` — sound list, synth recipes, volumes, replacing SFX.
+- `art/STYLEGUIDE.md` — Ember Foundry palette, sprite specs + inventory.
+- This file — decisions, slice status, commands, gotchas (keep it lean; put
+  detail in the docs above instead of growing this list).
+
 ## Fixed decisions (Vision V1, 2026-09-21)
 
 - **Grid**: variable map size (default 20×12, TILE 32 = 16px art at 2×).
@@ -19,12 +30,29 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
 - **Economy**: money IS health. Kill +6, leak −10, gun 25, sell refund 12.
   Game over strictly below zero (`money < 0`, not `<= 0`).
 - **Towers**: placement only — no in-match leveling. Gun first, only tower.
+- **Combat** (T03): gun auto-fires at the drone closest to the base within
+  range 3.5 cells, 8 dmg every 0.6 s, homing tracer (`Projectile`). Tracers
+  spawn at the barrel muzzle (0.75 cells) with a muzzle flash. Drones walk
+  the live path and re-path when the maze changes; building on a cell a
+  drone currently occupies is rejected. Kinds via `Drone.KIND_MODS`
+  (fast 0.6 hp/1.6 speed, tank 2.4 hp/0.55 speed).
+- **Feedback** (juice pass): hit = white flash + impact spark + SFX, kill =
+  explosion + SFX, leak/build/sell/denied/wave/game-over all have SFX.
+  HP bars (22×3 px, green/yellow/red) float above every drone. Walk
+  animation: normal/tank flip + waddle, fast rotates along the path.
+  Spawn portal and base core pulse (scale) so the two stay distinct.
+- **Audio**: generated SFX via `tools/make_sounds.py` (stdlib synth, no
+  samples) into `audio/*.wav`; one `AudioStreamPlayer` per sound with
+  `max_polyphony = 8`, volumes in `game.gd` `SFX_DB`. Hand sounds drop in
+  under the same filenames, no code changes.
 - **Waves**: endless + deterministic: `WaveGen.composition(n, seed)`,
   no unseeded RNG. Same seed + same builds = same run (replay via log).
+  T03: Space starts the next wave when none is running; T04 auto-chains.
 - **Meta**: skill tree is a stub (`SkillStub`, one dummy bonus,
   `user://skill_stub.cfg`). Real tree UI later, never in-match.
-- **Telemetry**: local JSONL writer (`Telemetry`), wave/build/leak events
-  only, no per-frame logging. Python analysis script still open (T05).
+- **Telemetry**: local JSONL writer (`Telemetry`), event-based only
+  (build/sell/wave/leak/run_end), no per-frame logging, flushed on game over
+  and on window close. Python analysis script still open (T05).
 - **Art**: Ember Foundry (see `art/STYLEGUIDE.md`): warm near-black ground,
   orange blocky gun, green drones with red eye, shape+color coding
   (round/fast-dart/wide-tank), textured floors. 16×16 (fx 8×8), Nearest
@@ -34,12 +62,20 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
 
 ## Slice status
 
-- Done: T01 scaffold, T02 maze+validation+click build/sell, GUT setup
-  (15 tests / 37 asserts green), 16 placeholder sprites wired into Main
-  (floor tiles, gun base+barrel, spawn/base markers, path dots), STYLEGUIDE,
-  this file.
-- Next: T03 combat (gun shoots, drone walks path, leak costs), T04 wave loop
-  + game over screen, T05 telemetry analysis, T06 juice, T07 docs.
+- Done: T01 scaffold, T02 maze+validation+click build/sell, GUT setup,
+  16 placeholder sprites wired into Main, STYLEGUIDE, this file. T03 combat:
+  `Drone`/`Gun`/`Projectile` core classes + tests, spawner on Space, drone
+  walk/animation, barrel aiming (pivot via `Sprite2D.offset`), tracers,
+  explosions, kill/leak economy, drone-aware build rejection, re-path on
+  maze change, telemetry events (build/sell/wave/leak/run_end) flushed to
+  `user://run_<seed>.jsonl`, minimal game-over label. Juice pass: 9
+  synthesized SFX (`tools/make_sounds.py` → `audio/`), muzzle-tip tracers +
+  flash, hit spark/flash, HP bars, walk animation, spawn/base pulse + art
+  redesign, HUD icon panel (`tools/make_placeholders.py` icons).
+  Suite: 30 tests / 91 asserts green (incl. a scene integration smoke test).
+- Next: T04 wave loop (auto-chain + break) + game-over screen (restart),
+  T05 telemetry analysis (Python), T06 rest (screen shake, vignette,
+  muzzle/impact polish), T07 docs.
 
 ## Commands
 
@@ -50,11 +86,13 @@ Project has no CI; run from the project dir:
 - Run: `godot --path .`
 - Tests: `godot --headless --path . -s res://addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit`
   (+ `GODOT_DISABLE_LEAK_CHECKS=1` so exit code reflects tests, not leaks)
+- Assets: `python tools/make_placeholders.py` (art), `python tools/make_sounds.py` (SFX)
 
 ## Conventions
 
 - Core logic as `class_name` RefCounteds (`Maze`, `Pathfinder`, `Economy`,
-  `WaveGen`, `Telemetry`, `SkillStub`) — unit-testable without scenes.
+  `WaveGen`, `Drone`, `Gun`, `Projectile`, `Telemetry`, `SkillStub`) —
+  unit-testable without scenes; grid-space coordinates, see ARCHITECTURE.md.
 - GUT tests in `tests/test_*.gd`, pure asserts, no FS writes except
   `user://` (telemetry/skill tests if added).
 - Test framework pinned: GUT 9.6.1 vendored in `addons/gut/` (9.7.1 exists,
@@ -71,3 +109,8 @@ Project has no CI; run from the project dir:
 - `const X := Economy.GUN_COST / 2` cross-class const expr is fine.
 - Sub-repo worktree may contain unrelated dirty files (e.g. hot-chocolate
   PoC) — do not touch, do not bundle into commits.
+- Visual QA: GUT's GUI panel covers the right half of the window, so a
+  screenshot taken from a GUT run is cropped. For a full/zoomed capture,
+  run a temporary `SceneTree` script instead (`godot --path . -s tools/x.gd`,
+  `root.add_child(main_scene)`, `await process_frame` before touching nodes,
+  save `root.get_texture().get_image()`); delete it afterwards.

@@ -1,0 +1,106 @@
+# Balance
+
+All tunable gameplay numbers in one place. Values are the current prototype
+defaults; every one of them lives in code (source of truth), this table is
+the map to them.
+
+## Where the numbers live
+
+| Area | File |
+|---|---|
+| Economy (costs, rewards, game-over rule) | `scripts/economy.gd` |
+| Gun (range, damage, cadence) | `scripts/gun.gd` |
+| Drone kinds (hp/speed multipliers) | `scripts/drone.gd` (`KIND_MODS`) |
+| Wave scaling + composition | `scripts/wave.gd` (`WaveGen`) |
+| Scene pacing / layout | `scripts/game.gd` (top constants) |
+
+## Economy (`economy.gd`)
+
+| Constant | Value | Meaning |
+|---|---|---|
+| start money | 100 | `Economy.new(100)` in `game.gd` |
+| `GUN_COST` | 25 | left-click build |
+| `SELL_REFUND` | 12 | `GUN_COST / 2` (integer division, `game.gd`) |
+| `KILL_REWARD` | 6 | per drone killed |
+| `LEAK_COST` | 10 | per drone reaching the base |
+| game over | `money < 0` | zero is still alive |
+
+Derived: one gun costs ~4.2 kills; one leak eats ~1.7 kills. Selling returns
+48% of the build cost, so maze rebuilding is cheap but not free.
+
+## Gun (`gun.gd`)
+
+| Constant | Value | Meaning |
+|---|---|---|
+| `RANGE` | 3.5 cells | 112 px — covers 3 tiles in a straight line |
+| `DAMAGE` | 8.0 | per hit |
+| `INTERVAL` | 0.6 s | cadence |
+
+Derived: 13.3 dps single-target; a wave-1 drone (20 hp) takes 3 hits
+(24 damage) ≈ 1.2 s of fire. Targeting is always the drone closest to the
+base; guns do not lead their shots (homing tracers make that unnecessary).
+
+## Drone kinds (`drone.gd`)
+
+Multipliers applied to the wave's base hp/speed by `Drone.spawn()`:
+
+| Kind | HP × | Speed × | Wave-1 hp | Wave-1 speed |
+|---|---|---|---|---|
+| normal | 1.0 | 1.0 | 20.0 | 1.31 cells/s |
+| fast | 0.6 | 1.6 | 12.0 | 2.10 cells/s |
+| tank | 2.4 | 0.55 | 48.0 | 0.72 cells/s |
+
+Speed is cells/second; `WaveGen` authors px/s and `game.gd` divides by
+`TILE` (32). Fast drones are therefore hard to catch with a single gun, tanks
+soak ~6 hits at wave 1.
+
+## Waves (`wave.gd`)
+
+```
+count = 4 + (n - 1) * 2
+hp    = 20 * 1.15^(n - 1)
+speed = 42 + min((n - 1) * 2, 40)          # px/s, capped at 82
+tanks = randi_range(0, n / 2)              # seeded
+fast  = randi_range(0, n / 3)              # seeded
+seed  = game_seed + n * 7919
+```
+
+Spawn pacing: one drone every 0.7 s (`SPAWN_INTERVAL`), order normals → fast
+→ tanks. Composition for the current fixed seed (`GAME_SEED = 1`), verified
+by running `WaveGen` directly:
+
+| Wave | Count | HP | Speed (px/s) | Tanks | Fast |
+|---|---|---|---|---|---|
+| 1 | 4 | 20.0 | 42 | 0 | 0 |
+| 2 | 6 | 23.0 | 44 | 1 | 0 |
+| 3 | 8 | 26.4 | 46 | 0 | 1 |
+| 4 | 10 | 30.4 | 48 | 0 | 1 |
+| 5 | 12 | 35.0 | 50 | 2 | 1 |
+| 6 | 14 | 40.2 | 52 | 2 | 0 |
+| 7 | 16 | 46.3 | 54 | 3 | 1 |
+| 8 | 18 | 53.2 | 56 | 2 | 0 |
+
+The tanks/fast split changes with the seed; count/hp/speed do not.
+
+## Scene pacing (`game.gd`)
+
+| Constant | Value | Meaning |
+|---|---|---|
+| `MAP_SIZE` | 20×12 | cells |
+| `TILE` | 32 | px per cell (16 px art at 2×) |
+| `GAME_SEED` | 1 | fixed until the seed flow lands (T04/T05) |
+| `SPAWN_INTERVAL` | 0.7 s | between two drones of a wave |
+| `DRONE_FRAME_TIME` | 0.15 s | 2-frame bob |
+| `HIT_FLASH_TIME` | 0.07 s | white hit flash |
+| `MUZZLE_OFFSET` | 0.75 cells | tracer spawn at the barrel tip |
+| `BAR_WIDTH` / `BAR_HEIGHT` | 22 / 3 px | HP bar |
+| `BAR_OFFSET` | (0, −20) px | HP bar above the drone |
+
+## Tuning workflow
+
+1. Change the constant in its class (keep `docs/BALANCE.md` in sync).
+2. Run the suite — `test_economy` and `test_wave` pin several values on
+   purpose; update the tests if the change is intended.
+3. Play a few waves, then check the telemetry log
+   (`user://run_<seed>.jsonl`) for leak/build/wave events. The Python
+   analysis script that turns this into curves is T05.
