@@ -9,7 +9,7 @@ telemetry for data-driven balancing.
 
 - Stack: Godot 4.7.2, GDScript (no .NET flow)
 - Entrypoint: `scenes/Main.tscn` (open/import the folder in the Godot editor)
-- Status: T01–T03 plus a juice pass are playable — see *Controls* and *Roadmap*
+- Status: T01–T04 plus a juice pass are playable — see *Controls* and *Roadmap*
 
 ## Controls
 
@@ -17,11 +17,14 @@ telemetry for data-driven balancing.
 |---|---|
 | Left click | Build a gun (25) — rejected builds refund instantly |
 | Right click | Sell a gun (refund 12) |
-| Space | Start the next wave (only while none is running) |
+| Space | Start wave 1 / skip the break between waves |
+| R (or the button) | Restart after game over |
 
 Rules: money **is** health — kills earn +6, leaks cost −10, game over strictly
 below zero. Builds that would disconnect spawn↔base (or land on a tile a
 drone currently occupies) are rejected. Drones re-route when the maze changes.
+After a wave is cleared, a 5 s break runs (`BREAK_SECONDS`); the next wave
+then auto-starts. Game over shows a run summary and restarts the scene.
 
 ## Features (current)
 
@@ -29,6 +32,8 @@ drone currently occupies) are rejected. Drones re-route when the maze changes.
 - 4-directional AStarGrid2D pathfinding, no corner slipping.
 - Deterministic endless waves: `WaveGen.composition(n, seed)`, no unseeded
   RNG anywhere in gameplay — same seed + same builds = same run.
+- Wave flow: auto-chaining after a 5 s break with HUD countdown (Space
+  skips); game-over screen with run summary + restart.
 - Gun auto-targeting (closest to base, range 3.5 cells, 8 dmg / 0.6 s) with
   homing tracers fired from the barrel muzzle.
 - Three drone kinds (shape + color coded): normal, fast, tank.
@@ -55,9 +60,10 @@ GODOT_DISABLE_LEAK_CHECKS=1 godot --headless --path . \
   -s res://addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
 ```
 
-GUT 9.6.1 is vendored under `addons/gut/`. The suite (30 tests / 91 asserts)
+GUT 9.6.1 is vendored under `addons/gut/`. The suite (32 tests / 101 asserts)
 covers every core class plus one scene integration smoke test that steps the
-real `Main.tscn` (spawn → walk → shoot → kill → game over + log flush).
+real `Main.tscn` (spawn → walk → shoot → kill, break → auto-chain, game over
++ log flush, restart wiring).
 
 ## Project structure
 
@@ -107,7 +113,7 @@ python tools/make_sounds.py         # audio/*.wav (22050 Hz mono)
 | T02 | Maze validation, click build/sell, GUT setup | done |
 | T03 | Combat: drones, guns, projectiles, leak/kill economy, telemetry | done |
 | Juice | SFX, muzzle/hit effects, HP bars, walk animation, HUD icons, spawn/base redesign | done |
-| T04 | Wave chaining (auto-next + break), game-over screen + restart | next |
-| T05 | Telemetry analysis script (Python) | open |
+| T04 | Wave chaining (auto-next + break), game-over screen + restart | done |
+| T05 | Telemetry analysis script (Python) | next |
 | T06 | Remaining polish (screen shake, vignette, …) | open |
 | T07 | Docs pass | open |

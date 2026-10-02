@@ -66,7 +66,11 @@ seed  = game_seed + n * 7919
 ```
 
 Spawn pacing: one drone every 0.7 s (`SPAWN_INTERVAL`), order normals → fast
-→ tanks. Composition for the current fixed seed (`GAME_SEED = 1`), verified
+→ tanks. Between waves: once the spawn queue and the field are empty, a
+`BREAK_SECONDS` (5 s) intermission runs with a HUD countdown, then the next
+wave auto-starts; Space skips the wait. Wave 1 is started manually.
+
+Composition for the current fixed seed (`GAME_SEED = 1`), verified
 by running `WaveGen` directly:
 
 | Wave | Count | HP | Speed (px/s) | Tanks | Fast |
@@ -88,8 +92,9 @@ The tanks/fast split changes with the seed; count/hp/speed do not.
 |---|---|---|
 | `MAP_SIZE` | 20×12 | cells |
 | `TILE` | 32 | px per cell (16 px art at 2×) |
-| `GAME_SEED` | 1 | fixed until the seed flow lands (T04/T05) |
+| `GAME_SEED` | 1 | fixed until the seed flow lands (T05) |
 | `SPAWN_INTERVAL` | 0.7 s | between two drones of a wave |
+| `BREAK_SECONDS` | 5.0 s | intermission between waves (Space skips it) |
 | `DRONE_FRAME_TIME` | 0.15 s | 2-frame bob |
 | `HIT_FLASH_TIME` | 0.07 s | white hit flash |
 | `MUZZLE_OFFSET` | 0.75 cells | tracer spawn at the barrel tip |

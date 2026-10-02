@@ -10,7 +10,7 @@ unit-testable without rendering (see *Testing*).
 scenes/Main.tscn
   └─ Main (Node2D, scripts/game.gd)      ← scene controller
        ├─ floor/marker/tower/drone/... sprites (created at runtime)
-       └─ Hud (CanvasLayer): icon panel, game-over label
+       └─ Hud (CanvasLayer): icon panel, game-over screen (dim + summary)
 
 scripts/*.gd (class_name RefCounted)     ← core logic, no scene access
   Maze · Pathfinder · Economy · WaveGen · Drone · Gun · Projectile
@@ -52,7 +52,8 @@ only).
 
 ## Frame order (`game.gd _process`)
 
-1. `_update_spawner` — pops one drone from the queue every `SPAWN_INTERVAL`
+1. `_update_spawner` — runs the `BREAK_SECONDS` countdown (auto-starts the
+   next wave), pops one drone from the queue every `SPAWN_INTERVAL`
 2. `_update_drones` — advance along the path, handle leaks
 3. `_update_guns` — acquire target, aim barrel, fire (muzzle tracer + flash)
 4. `_update_projectiles` — advance, resolve hits (damage/kill)
@@ -73,13 +74,18 @@ Space ──► _start_wave(n)
             queue = normals… + fast… + tanks…      (fixed order)
             telemetry "wave" · SFX "wave"
 
+Wave cleared ──► _break_timer = BREAK_SECONDS      (HUD countdown)
+            timeout or Space ──► _start_wave(n + 1)   (auto-chain)
+
 spawner ──► _spawn_drone(kind)
             path = Pathfinder.find_path(spawn, base)   (snapshot)
             Drone.spawn(kind, cells, hp, speed) + sprite + HP bar
 
 Drone.advance(dt) == true ──► _on_leak
             Economy.on_leak() · telemetry "leak" · SFX "leak"
-            money < 0 ──► _end_run (game-over label, "gameover" SFX, log flush)
+            money < 0 ──► _end_run (game-over screen, "gameover" SFX, log flush)
+
+R / restart button (game over) ──► _restart: reload_current_scene()
 
 Gun.try_fire(dt) ──► _fire: tracer starts at muzzle (0.75 cells) + flash
 Projectile hit ──► _resolve_hit
@@ -103,6 +109,11 @@ Both        ──► _reroute_drones(): every drone re-paths from its current c
 - A drone that reaches the base leaks exactly once and is removed immediately
   (kills likewise), so `_drones` never contains dead or leaked drones.
 - Game over is strictly `money < 0`, checked only after a leak.
+- Wave phases are mutually exclusive: running (`_wave_running`), break
+  (`_break_timer > 0`), or idle before wave 1. A wave only ends when its
+  spawn queue and the field are both empty.
+- After game over `_process` stops (frozen world); the only accepted input
+  is restart.
 - Money changes only through `Economy`; the HUD reads it, never writes it.
 
 ## Determinism
@@ -134,8 +145,9 @@ world coordinates.
   `test_gun`, `test_projectile`).
 - Scene: `tests/test_game_scene.gd` instantiates `Main.tscn` and steps
   `_process(1.0 / 60.0)` manually, so assertions are frame-rate independent;
-  it covers spawn → walk → shoot → kill, the payout, and the game-over
-  path incl. telemetry flush (writes only `user://`, then deletes the file).
+  it covers spawn → walk → shoot → kill, the payout, break → auto-chain,
+  the Space skip, and the game-over screen incl. telemetry flush and
+  restart-button wiring (writes only `user://`, then deletes the file).
 - Gotcha: GUT's GUI panel covers the right half of the window, so
   screenshots taken from a GUT run are cropped. For visual QA use a
   temporary `SceneTree` script (`godot --path . -s tools/x.gd`,

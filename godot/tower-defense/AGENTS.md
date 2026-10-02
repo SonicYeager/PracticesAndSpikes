@@ -47,7 +47,12 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
   under the same filenames, no code changes.
 - **Waves**: endless + deterministic: `WaveGen.composition(n, seed)`,
   no unseeded RNG. Same seed + same builds = same run (replay via log).
-  T03: Space starts the next wave when none is running; T04 auto-chains.
+  T04: waves auto-chain — after a wave is cleared, a `BREAK_SECONDS` (5 s)
+  intermission runs with a HUD countdown; Space skips it. Wave 1 stays
+  manual (build phase). Restart reuses the fixed seed until the seed flow
+  lands (T05).
+- **Game over** (T04): dimmed full-screen overlay with run summary (wave,
+  money); restart via R or the button = `get_tree().reload_current_scene()`.
 - **Meta**: skill tree is a stub (`SkillStub`, one dummy bonus,
   `user://skill_stub.cfg`). Real tree UI later, never in-match.
 - **Telemetry**: local JSONL writer (`Telemetry`), event-based only
@@ -73,8 +78,10 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
   flash, hit spark/flash, HP bars, walk animation, spawn/base pulse + art
   redesign, HUD icon panel (`tools/make_placeholders.py` icons).
   Suite: 30 tests / 91 asserts green (incl. a scene integration smoke test).
-- Next: T04 wave loop (auto-chain + break) + game-over screen (restart),
-  T05 telemetry analysis (Python), T06 rest (screen shake, vignette,
+  T04: break countdown + auto-chaining (Space skips), game-over overlay
+  (run summary, restart via scene reload, button wired in `Main.tscn`).
+  Suite: 32 tests / 101 asserts green.
+- Next: T05 telemetry analysis (Python), T06 rest (screen shake, vignette,
   muzzle/impact polish), T07 docs.
 
 ## Commands

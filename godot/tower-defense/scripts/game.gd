@@ -1,9 +1,9 @@
 extends Node2D
 ## Prototype entry: variable grid, click-to-build gun maze, sprite visuals.
-## Combat (T03): deterministic waves on Space, drones walk the live path,
-## guns fire homing tracers, kills earn / leaks cost. Juice pass: SFX, muzzle
-## spawn + flash, hit sparks, HP bars, walk animation, HUD icons. Wave
-## chaining and a proper game-over screen follow in T04.
+## Combat (T03): deterministic waves, drones walk the live path, guns fire
+## homing tracers, kills earn / leaks cost. T04: waves auto-chain after a
+## BREAK_SECONDS intermission (Space skips it), game over shows a full-screen
+## summary with restart (R or button).
 
 const TILE := 32
 const MAP_SIZE := Vector2i(20, 12)
@@ -11,6 +11,7 @@ const SELL_REFUND := Economy.GUN_COST / 2
 const ART_SCALE := Vector2(2, 2)
 const GAME_SEED := 1
 const SPAWN_INTERVAL := 0.7
+const BREAK_SECONDS := 5.0
 const DRONE_FRAME_TIME := 0.15
 const HIT_FLASH_TIME := 0.07
 const MUZZLE_OFFSET := 0.75
@@ -87,6 +88,7 @@ var _wave_comp: Dictionary = {}
 var _spawn_queue: Array[String] = []
 var _spawn_timer := 0.0
 var _wave_running := false
+var _break_timer := 0.0
 var _anim_time := 0.0
 var _fx_counter := 0
 var _game_over := false
@@ -96,7 +98,9 @@ var _game_over := false
 @onready var _wave_label: Label = $Hud/Panel/Rows/Row2/Wave
 @onready var _space_icon: TextureRect = $Hud/Panel/Rows/Row2/Space
 @onready var _wave_icon: TextureRect = $Hud/Panel/Rows/Row2/WaveIcon
-@onready var _game_over_label: Label = $Hud/GameOver
+@onready var _game_over_screen: Control = $Hud/GameOver
+@onready var _game_over_stats: Label = $Hud/GameOver/Center/Stats
+@onready var _restart_button: Button = $Hud/GameOver/Center/Restart
 
 
 func _ready() -> void:
@@ -106,7 +110,7 @@ func _ready() -> void:
 	economy = Economy.new(100)
 	telemetry = Telemetry.new(GAME_SEED)
 	origin = (Vector2(get_viewport_rect().size) - Vector2(MAP_SIZE) * TILE) * 0.5
-	_game_over_label.hide()
+	_game_over_screen.hide()
 	_make_bar_texture()
 	_setup_audio()
 	_draw_floor()
@@ -127,6 +131,9 @@ func _process(delta: float) -> void:
 	_anim_time += delta
 	_update_spawner(delta)
 	_update_drones(delta)
+	if _game_over:
+		# A leak ended the run mid-frame: freeze the rest of the simulation.
+		return
 	_update_guns(delta)
 	_update_projectiles(delta)
 	_sync_sprites(delta)
@@ -135,6 +142,8 @@ func _process(delta: float) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if _game_over:
+		if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_R:
+			_restart()
 		return
 	if event is InputEventMouseButton and event.pressed:
 		var cell := _to_cell(get_global_mouse_position())
@@ -162,7 +171,10 @@ func _unhandled_input(event: InputEvent) -> void:
 				_play("sell")
 		_update_hud()
 	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_SPACE:
-		if not _wave_running and _drones.is_empty():
+		if _break_timer > 0.0:
+			# Skip the intermission.
+			_start_wave(_wave + 1)
+		elif not _wave_running and _drones.is_empty():
 			_start_wave(_wave + 1)
 
 
@@ -170,6 +182,7 @@ func _start_wave(n: int) -> void:
 	_wave = n
 	_wave_comp = WaveGen.composition(n, GAME_SEED)
 	_wave_running = true
+	_break_timer = 0.0
 	_spawn_timer = 0.0
 	_spawn_queue.clear()
 	var normals: int = int(_wave_comp["count"]) - int(_wave_comp["fast"]) - int(_wave_comp["tanks"])
@@ -185,11 +198,17 @@ func _start_wave(n: int) -> void:
 
 
 func _update_spawner(delta: float) -> void:
+	if _break_timer > 0.0:
+		_break_timer = maxf(_break_timer - delta, 0.0)
+		if _break_timer == 0.0:
+			_start_wave(_wave + 1)
+		return
 	if not _wave_running:
 		return
 	if _spawn_queue.is_empty():
 		if _drones.is_empty():
 			_wave_running = false
+			_break_timer = BREAK_SECONDS
 			_update_hud()
 		return
 	_spawn_timer -= delta
@@ -233,6 +252,8 @@ func _update_drones(delta: float) -> void:
 		# Rerouting onto the base cell sets `finished` without `advance()`.
 		if d.advance(delta) or d.finished:
 			_on_leak(d)
+			if _game_over:
+				break
 
 
 func _on_leak(d: Drone) -> void:
@@ -328,13 +349,20 @@ func _remove_projectile(p: Projectile) -> void:
 
 
 func _end_run() -> void:
+	if _game_over:
+		return
 	_game_over = true
-	_game_over_label.text = "GAME OVER\nWelle %d — Geld %d" % [_wave, economy.money]
-	_game_over_label.show()
+	_game_over_stats.text = "Welle %d — Geld %d" % [_wave, economy.money]
+	_game_over_screen.show()
 	_play("gameover")
 	telemetry.event("run_end", {"wave": _wave, "money": economy.money})
 	telemetry.flush(TELEMETRY_PATH % GAME_SEED)
 	_update_hud()
+
+
+func _restart() -> void:
+	# Full scene reload: no state to unwind by hand.
+	get_tree().reload_current_scene()
 
 
 func _sync_sprites(delta: float) -> void:
@@ -543,6 +571,10 @@ func _update_hud() -> void:
 		_space_icon.hide()
 		_wave_icon.show()
 		_wave_label.text = "Welle %d: %d unterwegs, %d in Warteschlange" % [_wave, _drones.size(), _spawn_queue.size()]
+	elif _break_timer > 0.0:
+		_space_icon.show()
+		_wave_icon.hide()
+		_wave_label.text = "Welle %d in %.1f s" % [_wave + 1, _break_timer]
 	else:
 		_space_icon.show()
 		_wave_icon.hide()
