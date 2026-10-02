@@ -9,7 +9,11 @@ unit-testable without rendering (see *Testing*).
 ```
 scenes/Main.tscn
   └─ Main (Node2D, scripts/game.gd)      ← scene controller
-       ├─ floor/marker/tower/drone/... sprites (created at runtime)
+       ├─ Board (scripts/board_view.gd)  ← board rendering + grid math
+       │    ├─ floor/terrain/decor sprites (z −1) + decals (z −1)
+       │    ├─ entry/exit markers + ambient emitters
+       │    └─ _draw(): live route preview
+       ├─ tower/drone/projectile/fx sprites (created at runtime)
        └─ Hud (CanvasLayer)
             ├─ Vignette (full-screen overlay)
             └─ HudRoot (scenes/Hud.tscn, scripts/hud.gd)   ← UI boundary
@@ -20,11 +24,15 @@ scripts/*.gd (class_name RefCounted)     ← core logic, no scene access
 
 UI scripts (Control-based, no gameplay access)
   GameHud (scripts/hud.gd) · GameHudBar (scripts/hud_bar.gd)
+
+View classes (Node2D, presentation only, state pushed in)
+  BoardView (scripts/board_view.gd)
 ```
 
 Core classes never reference nodes, `origin`, `TILE` or textures. The scene
-controller owns every world sprite, tween and audio player; the HUD owns its
-own panels/labels and only sees the state pushed by `game.gd`.
+controller owns units, towers and combat FX (sprites, tweens, audio); the
+`BoardView` owns the board (tiles, terrain, markers, decals, ambient, route
+preview) and the grid math; the HUD owns its panels and only sees pushed state.
 
 ## Core classes
 
@@ -45,12 +53,12 @@ own panels/labels and only sees the state pushed by `game.gd`.
 ## Coordinates
 
 Core logic uses **grid space**: 1 unit = 1 cell, cell center is
-`Vector2(cell) + Vector2(0.5, 0.5)`, speed is cells/second. The scene converts
-once at the boundary:
+`Vector2(cell) + Vector2(0.5, 0.5)`, speed is cells/second. `BoardView`
+converts at the boundary:
 
 ```gdscript
-world = origin + grid_pos * TILE        # _grid_to_world()
-cell  = Vector2i((world - origin) / TILE).floor()
+world = origin + grid_pos * TILE        # BoardView.grid_to_world()
+cell  = Vector2i((world - origin) / TILE).floor()   # BoardView.to_cell()
 ```
 
 `WaveGen` speeds are px/s (author-friendly); `game.gd` divides by `TILE`
@@ -70,6 +78,8 @@ only).
 5. `_sync_sprites` — positions, walk animation, hit flash, HP bars, pulses
 6. `_update_hud` — pushes money/wave/progress state into `GameHud.update_state`
    (labels, bar, chip, button states)
+7. `BoardView._process` — its own update: entry/exit marker pulse and the
+   ambient emitters (presentation only, runs in every phase)
 
 Removing objects is always done with a backwards index loop
 (`for i in range(size - 1, -1, -1)`) because handlers can remove the current
@@ -119,7 +129,8 @@ Left click ──► vent? _try_overcharge(cell): spend(20) · cooldown 6 s
 Right click ─► Maze.sell → refund 12 + telemetry "sell" + SFX "sell"
 Both        ──► _reroute_drones(): each drone re-paths to its assigned exit,
                 or to the nearest reachable exit when that one is cut off
-            ──► queue_redraw(): the route preview follows the new maze
+            ──► _sync_sprites pushes the routes (BoardView.set_routes) each
+                frame, so the preview follows the new maze
 ```
 
 ## Invariants
@@ -177,16 +188,18 @@ written into the telemetry log for replay/analysis (`tools/analyze_run.py`).
 
 ## Rendering & z-order
 
-Floor tiles, spawn/base markers, towers and drones are `Sprite2D` children of
-`Main` (default z 0) in creation order. HP bars use `z_index = 1` so they
-stay above all drones. The live path preview is drawn in `Main._draw()`
-(behind all children). The HUD is a `CanvasLayer` and therefore unaffected by
-world coordinates.
+Floor tiles, decor and decals are `Sprite2D` children of `Board`
+(`z_index = -1`); entry/exit markers and ambient emitters also live there.
+Towers, drones and projectiles are `Sprite2D` children of `Main` (default
+z 0) in creation order. HP bars use `z_index = 1` so they stay above all
+drones. The live path preview is drawn in `BoardView._draw()` (above
+floor/decor/decals, below units). The HUD is a `CanvasLayer` and therefore
+unaffected by world coordinates.
 
 Floor tiles, cosmetic decor and battle decals use `z_index = -1`, so
-`Main._draw()` — the live route preview tracing each active drone's assigned
-path — stays visible above the grime and below blockers/towers/drones
-(z 0; HP bars z 1). A `Camera2D` centered on the viewport carries the
+`BoardView._draw()` — the live route preview tracing each active drone's
+assigned path — stays visible above the grime and below blockers/towers/
+drones (z 0; HP bars z 1). A `Camera2D` centered on the viewport carries the
 screen shake; CanvasLayer content is not affected by it, so the HUD stays
 fixed. The vignette is the first child of the HUD layer (world → vignette →
 panel → game-over overlay, in that draw order).
@@ -229,7 +242,7 @@ panel → game-over overlay, in that draw order).
   range) are a future config detail — validation and the nearest-exit
   fallback already handle non-contiguous exits.
 - **Terrain density/types**: `TerrainGen` constants (cluster count/size,
-  decor count); a new blocker art is a `TERRAIN_TEX` entry. Battle decals
-  are capped by `DECAL_CAP` (FIFO).
+  decor count); a new blocker art is a `TERRAIN_TEX` entry in `BoardView`.
+  Battle decals are capped by `BoardView.DECAL_CAP` (FIFO).
 - **Balance changes**: constants are documented in `docs/BALANCE.md`; run the
   suite after touching them (`test_wave`/`test_economy` pin several values).

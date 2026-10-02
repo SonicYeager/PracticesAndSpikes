@@ -143,7 +143,10 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
   HUD emits intents. T12.5 (Refactor): the wave flow (phase, queue, timers,
   modifier knobs) lives in `scripts/wave_director.gd`; the scene orchestrates.
   T13 (Art): all sprites redrawn at 32×32 (fx 16×16) with the procedural
-  generator, displayed 1:1 (`ART_SCALE` 1). Suite: 68 tests / 510 asserts green.
+  generator, displayed 1:1 (`ART_SCALE` 1). T13.5 (Refactor): board rendering
+  (floor/terrain/markers/decals/ambient/routes) + grid math moved into
+  `scripts/board_view.gd`; the scene pushes routes and vent state in.
+  Suite: 68 tests / 510 asserts green.
 - Vision (2026-10-02): `docs/VISION.md` — pillars P1–P3 (workbench, living
   foundry, curiosity), values, anti-pillars; calibrations + next prototype
   questions (epilog twist, pressure curve, decal readability, meta, time

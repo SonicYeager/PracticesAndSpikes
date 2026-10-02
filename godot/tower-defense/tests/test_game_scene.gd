@@ -231,14 +231,14 @@ func test_different_seeds_dress_different_maps() -> void:
 func test_leak_leaves_a_decal_and_ambient_runs() -> void:
 	var game = _make_game()
 	var emitters := 0
-	for child in game.get_children():
+	for child in game._board.get_children():
 		if child is CPUParticles2D:
 			emitters += 1
 	assert_gt(emitters, 0, "Ambient emitters are set up")
 	var exit_only: Array[Vector2i] = [game.maze.exits[0]]
 	game._drones.append(Drone.spawn("normal", exit_only, 20.0, 1.0))
 	game._process(STEP)
-	assert_eq(game._decals.size(), 1, "A leak leaves a skid decal")
+	assert_eq(game._board._decals.size(), 1, "A leak leaves a skid decal")
 
 
 func test_seed_override_pins_the_run_seed() -> void:
@@ -250,29 +250,29 @@ func test_seed_override_pins_the_run_seed() -> void:
 func test_decal_cap_evicts_oldest() -> void:
 	var game = _make_game()
 	# Spread across cells (per-cell cap 2) so the global cap is what evicts.
-	for i in game.DECAL_CAP + 10:
+	for i in BoardView.DECAL_CAP + 10:
 		var cell := Vector2i(i % 20, (i / 20) % 12)
-		game._add_decal(game.DEBRIS_TEX, Vector2(cell))
-	assert_eq(game._decals.size(), game.DECAL_CAP, "Decals are capped globally")
+		game._board.add_decal(game.DEBRIS_TEX, Vector2(cell))
+	assert_eq(game._board._decals.size(), BoardView.DECAL_CAP, "Decals are capped globally")
 
 
 func test_decal_per_cell_cap() -> void:
 	var game = _make_game()
-	game._add_decal(game.DEBRIS_TEX, Vector2(5, 5))
-	var oldest: Sprite2D = game._decals[0]
+	game._board.add_decal(game.DEBRIS_TEX, Vector2(5, 5))
+	var oldest: Sprite2D = game._board._decals[0]
 	for i in 4:
-		game._add_decal(game.DEBRIS_TEX, Vector2(5, 5))
+		game._board.add_decal(game.DEBRIS_TEX, Vector2(5, 5))
 	assert_eq(
-		game._decals_by_cell[Vector2i(5, 5)].size(),
-		game.DECAL_CELL_CAP,
+		game._board._decals_by_cell[Vector2i(5, 5)].size(),
+		BoardView.DECAL_CELL_CAP,
 		"A cell keeps only its cap"
 	)
 	assert_true(oldest.is_queued_for_deletion(), "The oldest decal is freed")
 	assert_false(
-		game._decals_by_cell[Vector2i(5, 5)].has(oldest),
+		game._board._decals_by_cell[Vector2i(5, 5)].has(oldest),
 		"And removed from the cell list"
 	)
-	assert_eq(game._decals.size(), game.DECAL_CELL_CAP, "Overflow is freed")
+	assert_eq(game._board._decals.size(), BoardView.DECAL_CELL_CAP, "Overflow is freed")
 
 
 func test_overcharge_spends_and_damages_nearby_drones() -> void:

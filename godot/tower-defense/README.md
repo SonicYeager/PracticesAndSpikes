@@ -98,6 +98,7 @@ modifiers, decal caps).
 | `scripts/hud_bar.gd` | Segmented wave-progress bar |
 | `scripts/game.gd` | Scene controller: input, orchestration, sprites, effects, audio, HUD push |
 | `scripts/wave_director.gd` | Wave flow state machine: phase, queue, timers, modifier knobs |
+| `scripts/board_view.gd` | Board rendering: floor/terrain/markers/decals, ambient, route preview, grid math |
 | `scripts/maze.gd` | Buildable grid + connectivity validation (`Maze`) |
 | `scripts/pathfinder.gd` | AStarGrid2D wrapper, 4-directional (`Pathfinder`) |
 | `scripts/economy.gd` | Money-is-HP rules (`Economy`) |
@@ -170,8 +171,9 @@ The parser has stdlib regression tests: `python tools/test_analyze_run.py`.
 | T12 | HUD framework: status/build panels, wave bar, game-over restyle | done |
 | T12.5 | Refactor: extract WaveDirector (wave state machine) | done |
 | T13 | Art pass: all sprites 32×32 at 1:1, fx 16×16 | done |
+| T13.5 | Refactor: extract BoardView (board rendering + grid math) | done |
 
-All slices done (T01–T13). Post-prototype directions are collected in `docs/IDEAS.md`;
+All slices done (T01–T13.5). Post-prototype directions are collected in `docs/IDEAS.md`;
 the concrete candidate queue is `docs/BACKLOG.md`.
 
 ### From prototype to game
