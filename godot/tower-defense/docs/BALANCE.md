@@ -9,7 +9,7 @@ the map to them.
 | Area | File |
 |---|---|
 | Economy (costs, rewards, game-over rule) | `scripts/economy.gd` |
-| Gun (range, damage, cadence) | `scripts/gun.gd` |
+| Gun levels (prices, stats, refunds) | `scripts/gun_upgrades.gd` (`GunUpgrades`, ADR 0012) |
 | Drone kinds (hp/speed multipliers) | `scripts/drone.gd` (`KIND_MODS`) |
 | Wave scaling + composition | `scripts/wave.gd` (`WaveGen`) |
 | Wave pacing (spawn/break, modifier knobs) | `scripts/wave_director.gd` (`WaveDirector`) |
@@ -21,26 +21,33 @@ the map to them.
 | Constant | Value | Meaning |
 |---|---|---|
 | start money | 100 | `Economy.new(100)` in `game.gd` |
-| `GUN_COST` | 25 | left-click build |
-| `SELL_REFUND` | 12 | `GUN_COST / 2` (integer division, `game.gd`) |
+| `GUN_COST` | 25 | left-click build (= level-1 price) |
+| sell refund | `GunUpgrades.refund(level)` | half of the cumulative invest (L1 → 12) |
 | `KILL_REWARD` | 6 | per drone killed |
 | `LEAK_COST` | 10 | per drone reaching the base |
 | game over | `money < 0` | zero is still alive |
 
 Derived: one gun costs ~4.2 kills; one leak eats ~1.7 kills. Selling returns
-48% of the build cost, so maze rebuilding is cheap but not free.
+half of the cumulative invest (L1 → 48% of the build cost), so maze rebuilding
+is cheap but not free.
 
-## Gun (`gun.gd`)
+## Gun levels (`gun_upgrades.gd`, ADR 0012)
 
-| Constant | Value | Meaning |
-|---|---|---|
-| `RANGE` | 3.5 cells | 112 px — covers 3 tiles in a straight line |
-| `DAMAGE` | 8.0 | per hit |
-| `INTERVAL` | 0.6 s | cadence |
+Cumulative prices — an upgrade pays the delta to the next level; selling
+refunds half of the current price. First balance pass; tune via `upgrade`
+telemetry.
 
-Derived: 13.3 dps single-target; a wave-1 drone (20 hp) takes 3 hits
-(24 damage) ≈ 1.2 s of fire. Targeting is always the drone closest to the
-base; guns do not lead their shots (homing tracers make that unnecessary).
+| Level | Price (total) | Upgrade delta | Damage | Range | Interval | DPS | Name |
+|---|---|---|---|---|---|---|---|
+| 1 | 25 | — | 8.0 | 3.5 | 0.6 s | 13.3 | KANONE |
+| 2 | 45 | 20 | 11.0 | 3.5 | 0.6 s | 18.3 | KANONE 2 |
+| 3 | 80 | 35 | 15.0 | 3.5 | 0.55 s | 27.3 | KANONE 3 |
+| 4 | 140 | 60 | 21.0 | 3.8 | 0.5 s | 42.0 | KANONE 4 |
+| 5 | 250 | 110 | 30.0 | 4.5 | 0.5 s | 60.0 | LANZE |
+
+Derived: total invest to max = 250 (refund 125); refunds 12/22/40/70/125 are
+always ≤ the invest. Targeting is always the drone closest to the base; guns
+do not lead their shots (homing tracers make that unnecessary).
 
 ## Drone kinds (`drone.gd`)
 

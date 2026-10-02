@@ -24,7 +24,6 @@ const TILE := BoardView.TILE
 const ENTRY_SIDES: Array = [Side.LEFT]
 const EXIT_SIDES: Array = [Side.RIGHT]
 const MAP_SIZE := Vector2i(20, 12)
-const SELL_REFUND := Economy.GUN_COST / 2
 const ART_SCALE := BoardView.ART_SCALE
 const SCATTER_SEED_MUL := 1000003
 const SCATTER_WAVE_MUL := 104729
@@ -113,6 +112,7 @@ var _sfx: Dictionary = {}
 var _bar_tex: ImageTexture
 var _spawn_counter := 0
 var _sell_mode := false
+var _selected := Vector2i(-1, -1)
 var _director: WaveDirector
 var _wave_kills := 0
 var _wave_leaks := 0
@@ -139,6 +139,7 @@ func _ready() -> void:
 	_fx.setup(_camera)
 	_hud.wave_pressed.connect(_on_wave_pressed)
 	_hud.sell_toggled.connect(_on_sell_toggled)
+	_hud.upgrade_pressed.connect(_on_upgrade_pressed)
 	_hud.restart_pressed.connect(_restart)
 	_make_bar_texture()
 	_setup_audio()
@@ -193,17 +194,22 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_SPACE:
 		# IDLE: start wave 1; BREAK: skip the intermission (same path as the button).
 		_on_wave_pressed()
+	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
+		_deselect_tower()
 
 
 func _dispatch_primary(cell: Vector2i) -> void:
-	## LMB dispatch: sell-mode sells, vents overcharge, everything else builds.
+	## LMB dispatch: sell-mode sells, vents overcharge, towers select, else build.
 	if _sell_mode:
 		_try_sell(cell)
 	elif _vents.has(cell):
 		# Only during a wave: otherwise there are no drones to hit.
 		if _director.phase != WaveDirector.Phase.RUNNING or not _try_overcharge(cell):
 			_play("denied")
+	elif _guns.has(cell):
+		_select_tower(cell)
 	else:
+		_deselect_tower()
 		_try_build(cell)
 
 
@@ -226,13 +232,86 @@ func _try_build(cell: Vector2i) -> bool:
 	return true
 
 
+func _try_upgrade(cell: Vector2i) -> bool:
+	## Pay the level delta; mutate in place so range_bonus (blackout) stays.
+	if _director.phase == WaveDirector.Phase.GAME_OVER:
+		return false
+	var gun: Gun = _guns.get(cell)
+	if gun == null or gun.level >= GunUpgrades.MAX_LEVEL:
+		_play("denied")
+		return false
+	var cost := GunUpgrades.upgrade_cost(gun.level)
+	if not economy.spend(cost):
+		_play("denied")
+		return false
+	gun.level += 1
+	_refresh_tower(cell)
+	_fx.puff(_board.grid_to_world(Drone.center_of(cell)))
+	telemetry.event("upgrade", {
+		"cell": [cell.x, cell.y],
+		"from": gun.level - 1,
+		"to": gun.level,
+		"cost": cost,
+		"money": economy.money,
+	})
+	_play("build")
+	_update_hud()
+	return true
+
+
+func _select_tower(cell: Vector2i) -> void:
+	_selected = cell
+	_update_hud()
+
+
+func _deselect_tower() -> void:
+	if _selected == Vector2i(-1, -1):
+		return
+	_selected = Vector2i(-1, -1)
+	_update_hud()
+
+
+func _refresh_tower(cell: Vector2i) -> void:
+	## Level visuals: signature tint here, pips via `_refresh_pips` (visual step).
+	var root := _tower_nodes.get(cell) as Node2D
+	var gun: Gun = _guns.get(cell)
+	if root == null or gun == null:
+		return
+	var base := root.get_node_or_null("Base") as Sprite2D
+	if base != null:
+		base.modulate = Color(1.0, 0.9, 0.6) if gun.level >= GunUpgrades.MAX_LEVEL else Color.WHITE
+	_refresh_pips(root, gun.level)
+
+
+func _refresh_pips(root: Node2D, level: int) -> void:
+	## Level pips: MAX_LEVEL nodes exist, `level` of them are visible, centered.
+	var pips := root.get_node_or_null("LevelPips") as Node2D
+	if pips == null:
+		pips = Node2D.new()
+		pips.name = "LevelPips"
+		root.add_child(pips)
+		for i in GunUpgrades.MAX_LEVEL:
+			var pip := Sprite2D.new()
+			pip.texture = _bar_tex
+			pip.scale = Vector2(3, 2)
+			pip.modulate = Color(0.62, 0.85, 1.0)
+			pips.add_child(pip)
+	for i in pips.get_child_count():
+		var pip := pips.get_child(i) as Sprite2D
+		pip.visible = i < level
+		pip.position = Vector2((i - (level - 1) * 0.5) * 4.0, 13.0)
+
+
 func _try_sell(cell: Vector2i) -> bool:
 	if not maze.sell(cell):
 		return false
+	var gun: Gun = _guns.get(cell)
 	_guns.erase(cell)
 	_hide_tower(cell)
 	_fx.puff(_board.grid_to_world(Drone.center_of(cell)), Color(0.66, 0.7, 0.78))
-	economy.earn(SELL_REFUND)
+	economy.earn(GunUpgrades.refund(gun.level) if gun != null else 0)
+	if _selected == cell:
+		_deselect_tower()
 	telemetry.event("sell", {"cell": [cell.x, cell.y]})
 	_reroute_drones()
 	_play("sell")
@@ -272,6 +351,11 @@ func _on_wave_pressed() -> void:
 
 func _on_sell_toggled(active: bool) -> void:
 	_sell_mode = active
+
+
+func _on_upgrade_pressed() -> void:
+	if _selected != Vector2i(-1, -1):
+		_try_upgrade(_selected)
 
 
 func _start_wave(n: int) -> void:
@@ -410,7 +494,7 @@ func _fire(cell: Vector2i, gun: Gun, target: Drone) -> void:
 		direction = Vector2.RIGHT
 	direction = direction.normalized()
 	var muzzle := gun.position + direction * MUZZLE_OFFSET
-	var p := Projectile.new(muzzle, target)
+	var p := Projectile.new(muzzle, target, gun.damage())
 	_projectiles.append(p)
 	var sprite := Sprite2D.new()
 	sprite.texture = PROJECTILE_TEX
@@ -433,7 +517,7 @@ func _update_projectiles(delta: float) -> void:
 
 
 func _resolve_hit(p: Projectile) -> void:
-	_apply_damage(p.target, Gun.DAMAGE)
+	_apply_damage(p.target, p.damage)
 
 
 func _apply_damage(target: Drone, amount: float) -> bool:
@@ -698,6 +782,8 @@ func _show_tower(cell: Vector2i) -> void:
 	root.add_child(barrel)
 	add_child(root)
 	_tower_nodes[cell] = root
+	var gun: Gun = _guns.get(cell)
+	_refresh_pips(root, gun.level if gun != null else 1)
 
 
 func _hide_tower(cell: Vector2i) -> void:
@@ -714,6 +800,19 @@ func _update_hud() -> void:
 			modifier_id = str(_director.composition.get("modifier", ""))
 		WaveDirector.Phase.BREAK:
 			modifier_id = _director.next_modifier
+	var selected := {}
+	if _selected != Vector2i(-1, -1) and _guns.has(_selected):
+		var gun: Gun = _guns[_selected]
+		var next_cost := GunUpgrades.upgrade_cost(gun.level)
+		selected = {
+			"level": gun.level,
+			"name": GunUpgrades.display_name(gun.level),
+			"max_level": GunUpgrades.MAX_LEVEL,
+			"next_cost": next_cost,
+			"affordable": economy.can_afford(next_cost),
+		}
+	else:
+		_selected = Vector2i(-1, -1)  # stale selection (tower gone)
 	_hud.update_state({
 		"money": economy.money,
 		"gun_cost": Economy.GUN_COST,
@@ -725,6 +824,7 @@ func _update_hud() -> void:
 		"break_left": _director.break_timer,
 		"modifier_id": modifier_id,
 		"modifier_label": _modifier_text(modifier_id),
+		"selected": selected,
 	})
 
 

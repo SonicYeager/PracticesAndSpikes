@@ -51,11 +51,15 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
   vents stay.
 - **Pathfinding**: `AStarGrid2D`, 4-directional (`DIAGONAL_MODE_NEVER`),
   plus a multi-source BFS (`Pathfinder.reachable_from`) for the build rule.
-- **Economy**: money IS health. Kill +6, leak −10, gun 25, sell refund 12,
-  rock clear 15. Game over strictly below zero (`money < 0`, not `<= 0`).
-- **Towers**: placement only — no in-match leveling. Gun first, only tower.
+- **Economy**: money IS health. Kill +6, leak −10, gun 25 (= level-1 price),
+  rock clear 15; selling refunds half of the cumulative invest
+  (`GunUpgrades.refund`). Game over strictly below zero (`money < 0`, not `<= 0`).
+- **Towers**: placement first; in-match upgrades since ADR 0012 (five-level
+  `GunUpgrades` table, cumulative prices, delta buys, half refund, L5 = LANZE).
+  Gun first, only tower.
 - **Combat** (T03): gun auto-fires at the drone closest to the base within
-  range 3.5 cells, 8 dmg every 0.6 s, homing tracer (`Projectile`). Tracers
+  its level-based range (L1: 3.5 cells, 8 dmg / 0.6 s; T16/ADR 0012), homing
+  tracer (`Projectile`, carries its damage). Tracers
   spawn at the barrel muzzle (0.75 cells) with a muzzle flash. Drones walk
   the live path and re-path when the maze changes; building on a cell a
   drone currently occupies is rejected. Kinds via `Drone.KIND_MODS`
@@ -74,8 +78,7 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
   no unseeded RNG. Same seed + same builds = same run (replay via log).
   T04: waves auto-chain — after a wave is cleared, a `BREAK_SECONDS` (5 s)
   intermission runs with a HUD countdown; Space skips it. Wave 1 stays
-  manual (build phase). Restart reuses the fixed seed until the seed flow
-  lands (still open).
+  manual (build phase); restart draws a fresh run seed (T09).
 - **Game over** (T04): dimmed full-screen overlay with run summary (wave,
   money); restart via R or the button = `get_tree().reload_current_scene()`.
 - **Polish** (T06): trauma-based screen shake on kill/leak/game-over
@@ -92,7 +95,7 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
 - **Meta**: skill tree is a stub (`SkillStub`, one dummy bonus,
   `user://skill_stub.cfg`). Real tree UI later, never in-match.
 - **Telemetry**: local JSONL writer (`Telemetry`), event-based only
-  (build/sell/clear/wave/leak/kill/send + wave summaries), no per-frame logging, flushed on game over
+  (build/sell/clear/upgrade/wave/leak/kill/send + wave summaries), no per-frame logging, flushed on game over
   and on window close. Analysis: `tools/analyze_run.py` (stdlib) — per-run
   wave tables + aggregate; scans `telemetry_local/`, then the Godot user dir.
 - **Art (T11/T14)**: XT steel/lab look (see `art/STYLEGUIDE.md`): dark
@@ -158,7 +161,10 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
   kills, money start→end and kill zones (legacy logs stay readable). Suite:
   75 tests / 533 asserts green. Polish (2026-10-02, playtest feedback):
   vent-only ambient, kill ring/build puff/leak flash, rocks clearable via
-  right-click (15); suite: 84 tests / 595 asserts green.
+  right-click (15); suite: 84 tests / 595 asserts green. T16 (Upgrades,
+  2026-10-03, ADR 0012): `GunUpgrades` five-level path (cumulative prices,
+  delta buys, half refund), selection + UPGRADE panel, level pips/signature
+  tint, `upgrade` telemetry; suite: 103 tests / 710 asserts green.
 - Vision (2026-10-02): `docs/VISION.md` — pillars P1–P3 (workbench, living
   foundry, curiosity), values, anti-pillars; calibrations + next prototype
   questions (epilog twist, pressure curve, decal readability, meta, time
@@ -182,7 +188,7 @@ Project has no CI; run from the project dir:
 ## Conventions
 
 - Core logic as `class_name` RefCounteds (`Maze`, `Pathfinder`, `Economy`,
-  `WaveGen`, `Drone`, `Gun`, `Projectile`, `Telemetry`, `SkillStub`) —
+  `WaveGen`, `Drone`, `Gun`, `GunUpgrades`, `Projectile`, `Telemetry`, `SkillStub`) —
   unit-testable without scenes; grid-space coordinates, see ARCHITECTURE.md.
 - GUT tests in `tests/test_*.gd`, pure asserts, no FS writes except
   `user://` (telemetry/skill tests if added).

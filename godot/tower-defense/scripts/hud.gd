@@ -8,6 +8,7 @@ extends Control
 signal wave_pressed
 signal sell_toggled(active: bool)
 signal restart_pressed
+signal upgrade_pressed
 
 const COLOR_CYAN := Color(0.624, 0.847, 1.0)
 const LEAK_FLASH_ALPHA := 0.45
@@ -29,6 +30,9 @@ var _flash_tween: Tween
 @onready var _chip_label: Label = $Status/Row/Chip/Label
 @onready var _cost_label: Label = $Build/Box/Actions/Slot/SlotRow/Cost
 @onready var _sell_button: Button = $Build/Box/Actions/Sell
+@onready var _upgrade_row: HBoxContainer = $Build/Box/UpgradeRow
+@onready var _upgrade_info: Label = $Build/Box/UpgradeRow/UpgradeInfo
+@onready var _upgrade_button: Button = $Build/Box/UpgradeRow/Upgrade
 @onready var _wave_text: Label = $WavePanel/Row/WaveText
 @onready var _wave_bar: GameHudBar = $WavePanel/Row/Bar
 @onready var _wave_button: Button = $WavePanel/Row/WaveButton
@@ -41,7 +45,13 @@ func _ready() -> void:
 	_wave_button.pressed.connect(_on_wave_pressed)
 	_sell_button.toggled.connect(func(active: bool) -> void: sell_toggled.emit(active))
 	_restart_button.pressed.connect(func() -> void: restart_pressed.emit())
+	_upgrade_button.pressed.connect(_on_upgrade_pressed)
 	_game_over.hide()
+
+
+func _on_upgrade_pressed() -> void:
+	if not _upgrade_button.disabled:
+		upgrade_pressed.emit()
 
 
 func _on_wave_pressed() -> void:
@@ -56,6 +66,7 @@ func update_state(state: Dictionary) -> void:
 	_set_label(_cost_label, str(int(state.get("gun_cost", 0))))
 	_update_status(wave, phase, str(state.get("modifier_id", "")), str(state.get("modifier_label", "")))
 	_update_wave_row(wave, phase, state)
+	_update_upgrade_row(phase, state)
 	if phase != "game_over":
 		_wave_bar.set_progress(_resolved(state), int(state.get("total", 0)))
 
@@ -122,6 +133,25 @@ func _set_wave_button(text: String, enabled: bool) -> void:
 	if _wave_button.text != text:
 		_wave_button.text = text
 	_wave_button.disabled = not enabled
+
+
+func _update_upgrade_row(phase: String, state: Dictionary) -> void:
+	var selected: Dictionary = state.get("selected", {})
+	var has_selection := not selected.is_empty() and phase != "game_over"
+	_upgrade_row.visible = has_selection
+	if not has_selection:
+		return
+	var level := int(selected.get("level", 1))
+	var max_level := int(selected.get("max_level", 1))
+	if level >= max_level:
+		_set_label(_upgrade_info, "%s · MAX" % str(selected.get("name", "")))
+		_upgrade_button.disabled = true
+		return
+	_set_label(
+		_upgrade_info,
+		"%s · +%d" % [str(selected.get("name", "")), int(selected.get("next_cost", 0))]
+	)
+	_upgrade_button.disabled = not bool(selected.get("affordable", false))
 
 
 func _resolved(state: Dictionary) -> int:

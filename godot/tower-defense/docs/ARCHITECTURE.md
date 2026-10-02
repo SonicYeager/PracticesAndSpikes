@@ -23,7 +23,7 @@ scenes/Main.tscn
 
 scripts/*.gd (class_name RefCounted)     ← core logic, no scene access
   Maze · Pathfinder · Economy · WaveGen · WaveDirector · Drone · Gun
-  Projectile · Telemetry · SkillStub
+  GunUpgrades · Projectile · Telemetry · SkillStub
 
 UI scripts (Control-based, no gameplay access)
   GameHud (scripts/hud.gd) · GameHudBar (scripts/hud_bar.gd)
@@ -49,9 +49,10 @@ owns its panels and only sees pushed state.
 | `WaveDirector` | `scripts/wave_director.gd` | Wave flow state machine (T12.5): phase, composition, spawn queue, spawn/break timers, per-wave modifier knobs; `start()`, `begin_break()`, `tick_spawn()`, `tick_break()`, `end_run()` |
 | `TerrainGen` | `scripts/terrain_gen.gd` | Static `generate(size, entries, exits, seed)` → `{blockers, decor}`; greedy placement that never seals an entry |
 | `Drone` | `scripts/drone.gd` | Grid-space walker: `advance(dt)` (returns `true` on leak), `take_damage()`, `reroute()`, `facing()`, `exit_cell()`, `distance_to_exit()`, `KIND_MODS` |
-| `Gun` | `scripts/gun.gd` | Range/cadence/targeting (`range_bonus` hook for wave modifiers); `acquire()` picks the drone closest to its exit, `try_fire(dt, targets)` returns the target when a shot is due |
-| `Projectile` | `scripts/projectile.gd` | Homing tracer; `advance(dt)` returns `true` on hit, fizzles when the target dies or leaks |
-| `Telemetry` | `scripts/telemetry.gd` | Buffers JSON events (wave/build/sell/clear/leak/kill/send/overcharge + `wave_end` summaries), `flush(path)` writes JSONL; `run_start` carries `source`/`harness` provenance |
+| `Gun` | `scripts/gun.gd` | Level-based range/cadence/damage (`GunUpgrades`, ADR 0012) + targeting (`range_bonus` hook for wave modifiers); `acquire()` picks the drone closest to its exit, `try_fire(dt, targets)` returns the target when a shot is due |
+| `GunUpgrades` | `scripts/gun_upgrades.gd` | Five-level upgrade table (ADR 0012): cumulative prices, deltas, half refunds, names/descriptions; static helpers only |
+| `Projectile` | `scripts/projectile.gd` | Homing tracer carrying its damage (level-aware); `advance(dt)` returns `true` on hit, fizzles when the target dies or leaks |
+| `Telemetry` | `scripts/telemetry.gd` | Buffers JSON events (wave/build/sell/clear/upgrade/leak/kill/send/overcharge + `wave_end` summaries), `flush(path)` writes JSONL; `run_start` carries `source`/`harness` provenance |
 | `SkillStub` | `scripts/skill_stub.gd` | Meta stub: one bonus persisted via `ConfigFile` |
 
 ## Coordinates
@@ -117,7 +118,7 @@ R / restart button (game over) ──► _restart: reload_current_scene()
 HUD wave button ─► _on_wave_pressed (IDLE/BREAK only) → _start_wave(n + 1)
 HUD sell toggle ─► _sell_mode: LMB sells towers (RMB always sells)
 HUD state       ◄─ GameHud.update_state({money, wave, phase, alive, queued,
-                    total, break_left, modifier_id, modifier_label})
+                    total, break_left, modifier_id, modifier_label, selected})
                     phase: "idle" | "running" | "break" | "game_over"
 
 Gun.try_fire(dt) ──► _fire: tracer starts at muzzle (0.75 cells) + flash
@@ -130,10 +131,14 @@ Fx ──► muzzle/impact/explosion/ember bursts + barrel recoil (world space)
 Left click ──► _dispatch_primary(cell): sell-mode → sell · vent → overcharge
                 (_try_overcharge: spend(20) · cooldown 6 s · ember burst ·
                 damage 15 in 2.5 cells · telemetry "overcharge")
+              tower? → select (HUD row: name · +delta, UPGRADE button)
               else → _try_build: spend(25) → reject? refund + SFX "denied"
                         → build: Gun + tower sprite + dust puff + telemetry
                           "build" + SFX "build"
-Right click ─► _try_sell → Maze.sell → refund 12 + dust puff + telemetry "sell"
+              UPGRADE button ─► _try_upgrade: spend(delta) · level+1 · pips/tint
+                        · dust puff · telemetry "upgrade" · SFX "build"
+              ESC ──► _deselect_tower()
+Right click ─► _try_sell → Maze.sell → refund half of the invest + dust puff + telemetry "sell"
               else _try_clear: blocker (non-vent)? spend(15) → clear_blocker
                         + sprite removed + dust puff + telemetry "clear"
 Both        ──► _reroute_drones(): each drone re-paths to its assigned exit,
@@ -195,7 +200,7 @@ Gameplay RNG exists in exactly three places, all seeded from the run seed:
 - ambient particles: internal particle RNG (presentation only, not part of
   the replay guarantee)
 
-Same seed + same build/sell/clear sequence ⇒ identical run. The run seed is
+Same seed + same build/sell/clear/upgrade sequence ⇒ identical run. The run seed is
 written into the telemetry log for replay/analysis (`tools/analyze_run.py`).
 
 ## Rendering & z-order
@@ -223,17 +228,18 @@ panels → game-over overlay).
 
 - Core classes: pure GUT tests in `tests/test_*.gd`, no scene needed
   (`test_maze`, `test_path`, `test_economy`, `test_wave`,
-  `test_wave_director`, `test_drone`, `test_gun`, `test_projectile`,
-  `test_terrain_gen`).
+  `test_wave_director`, `test_drone`, `test_gun`, `test_gun_upgrades`,
+  `test_projectile`, `test_terrain_gen`).
 - HUD: `tests/test_hud.gd` instantiates `Hud.tscn` and drives the state API
-  and intents (labels, chip, button gating, sell toggle, game-over overlay,
-  bar freeze on game over) without the game scene.
+  and intents (labels, chip, button gating, sell toggle, upgrade row,
+  game-over overlay, bar freeze on game over) without the game scene.
 - Scene: `tests/test_game_scene.gd` instantiates `Main.tscn` (with
   `seed_override` pinned) and steps `_process(1.0 / 60.0)` manually, so
   assertions are frame-rate independent; it covers spawn → walk → shoot →
   kill with scattered entries and terrain, the payout, break → auto-chain,
   the Space skip, scatter/terrain determinism, the nearest-exit fallback,
-  overcharge, modifier knobs, decal caps + ambient setup, the game-over
+  overcharge, modifier knobs, decal caps + ambient setup, terrain clearing,
+  upgrades + selection + level pips, the game-over
   screen incl. telemetry flush and restart-button wiring, and the camera
   shake offset/decay (writes only `user://`, then deletes the file).
 - Gotcha: GUT's GUI panel covers the right half of the window, so
@@ -247,11 +253,10 @@ panels → game-over overlay).
 - **New combat effect**: add a spawn method to `Fx` (world-space positions)
   and call it from the event site in `game.gd`; shake intensities stay
   per-event constants in `game.gd`.
-- **New tower type**: `Gun` is parameter-free by design; either add a
-  constructor/params or a subclass with different `RANGE`/`DAMAGE`/`INTERVAL`
-  and a new sprite set. `_guns` maps cell → `Gun`, so multiple types only
-  need a type field. The HUD build slot is the future per-type selector
-  (currently one gun).
+- **New tower type**: `Gun` reads its stats from `GunUpgrades` (five-level path,
+  ADR 0012); either add constructor params or a subclass with a different table
+  and sprite set. `_guns` maps cell → `Gun`, so multiple types only need a type
+  field. The HUD build slot is the future per-type selector (currently one gun).
 - **New drone kind**: add multipliers to `Drone.KIND_MODS` and a frame array
   to `game.gd` `DRONE_TEX`; `WaveGen` decides counts.
 - **New wave shape**: `WaveGen.composition()` is the single source; keep it

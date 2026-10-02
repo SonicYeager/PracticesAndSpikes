@@ -13,17 +13,18 @@ func _still_drone() -> Drone:
 
 func test_homing_hit() -> void:
 	var d := _still_drone()
-	var p := Projectile.new(Vector2(0.5, 0.5), d)
+	var p := Projectile.new(Vector2(0.5, 0.5), d, 8.0)
 	assert_false(p.advance(0.1), "Still flying")
 	assert_gt(p.position.x, 0.5, "Moved toward the target")
 	assert_true(p.advance(1.0), "Reaches the target")
 	assert_eq(p.position, d.position)
+	assert_eq(p.damage, 8.0, "Damage is carried by the tracer")
 	assert_false(p.alive)
 
 
 func test_fizzles_when_target_dies() -> void:
 	var d := _still_drone()
-	var p := Projectile.new(Vector2(0.5, 0.5), d)
+	var p := Projectile.new(Vector2(0.5, 0.5), d, 8.0)
 	d.take_damage(100.0)
 	assert_false(p.advance(0.1))
 	assert_false(p.alive, "Dead target ends the shot")

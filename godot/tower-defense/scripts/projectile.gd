@@ -7,12 +7,14 @@ const SPEED := 14.0
 
 var position: Vector2
 var target: Drone
+var damage: float
 var alive := true
 
 
-func _init(p_position: Vector2, p_target: Drone) -> void:
+func _init(p_position: Vector2, p_target: Drone, p_damage: float) -> void:
 	position = p_position
 	target = p_target
+	damage = p_damage
 
 
 func advance(delta: float) -> bool:

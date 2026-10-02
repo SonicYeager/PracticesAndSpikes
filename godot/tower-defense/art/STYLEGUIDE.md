@@ -70,6 +70,8 @@ breit = Tank. Nie nur über Farbe unterscheiden.
 - Animation minimal: 2-Frame-Lauf (Drohnen) + Code-Waddle/Flip (normal/tank)
   bzw. Rotation entlang des Pfads (fast), Flash-Frames (Muzzle/Impact/
   Explosion), HP-Balken als 1px-Textur-Sprites (kein Asset).
+- Turm-Stufen (T16, ADR 0012): Pips (1×1-Weißtextur, 3×2 px, Cyan) und
+  Gold-Tint der Signatur (LANZE) — Code-Visuals, kein Asset.
 
 ## UI/HUD (T12)
 

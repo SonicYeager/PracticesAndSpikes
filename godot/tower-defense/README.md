@@ -9,20 +9,23 @@ telemetry for data-driven balancing.
 
 - Stack: Godot 4.7.2, GDScript (no .NET flow)
 - Entrypoint: `scenes/Main.tscn` (open/import the folder in the Godot editor)
-- Status: prototype complete + sides + dirty world + pulse + XT look + HUD (T01–T14) — see *Controls* and *Roadmap*
+- Status: prototype complete + sides + dirty world + pulse + XT look + HUD + telemetry + upgrades (T01–T16) — see *Controls* and *Roadmap*
 
 ## Controls
 
 | Input | Action |
 |---|---|
 | Left click | Build a gun (25) — rejected builds refund instantly |
+| Left click on a tower | Select it; the HUD shows name, next level and an UPGRADE button (ESC deselects) |
+| UPGRADE (HUD) | Upgrade the selected tower one level (delta price; level 5 = LANZE) |
 | Left click on a vent | Overcharge (20): ember burst, 15 dmg in 2.5 cells, 6 s cooldown |
-| Right click | Sell a gun (refund 12) · clear a rock/rubble blocker for 15 (vents stay); the HUD VERKAUFEN toggle sells via left click while active |
+| Right click | Sell a gun (refund = half of the cumulative invest; L1: 12) · clear a rock/rubble blocker for 15 (vents stay); the HUD VERKAUFEN toggle sells via left click while active |
 | Space (or the wave button) | Start wave 1 / skip the break between waves |
 | R (or the button) | Restart after game over |
 
 Rules: money **is** health — kills earn +6, leaks cost −10, game over strictly
-below zero. Builds that would leave an entry without a reachable exit (or
+below zero. Selling refunds half of the cumulative tower invest (level 1 → 12).
+Builds that would leave an entry without a reachable exit (or
 land on a tile a drone currently occupies) are rejected. Drones re-route when
 the maze changes. Rock/rubble blockers can be cleared for 15 (right click);
 vents stay.
@@ -38,8 +41,11 @@ then auto-starts. Game over shows a run summary and restarts the scene.
   RNG anywhere in gameplay — same seed + same builds = same run.
 - Wave flow: auto-chaining after a 5 s break with HUD countdown (Space
   skips); game-over screen with run summary + restart.
-- Gun auto-targeting (closest to base, range 3.5 cells, 8 dmg / 0.6 s) with
-  homing tracers fired from the barrel muzzle.
+- Gun auto-targeting (closest to base; L1: 3.5 cells, 8 dmg / 0.6 s,
+  level-scaled) with homing tracers fired from the barrel muzzle.
+- Upgrades (T16, ADR 0012): five-level gun path (KANONE → LANZE) with
+  cumulative prices and delta buys; click a tower, then UPGRADE in the HUD;
+  level pips + signature tint.
 - Three drone kinds (shape + color coded): normal, fast, tank.
 - Feedback: 10 synthesized SFX, muzzle flash, hit sparks, explosions +
   kill shockwave ring, build/sell/clear dust puffs, leak edge flash, HP bars,
@@ -89,12 +95,13 @@ GODOT_DISABLE_LEAK_CHECKS=1 godot --headless --path . \
   -s res://addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
 ```
 
-GUT 9.6.1 is vendored under `addons/gut/`. The suite (84 tests / 595 asserts)
+GUT 9.6.1 is vendored under `addons/gut/`. The suite (103 tests / 710 asserts)
 covers every core class plus one scene integration smoke test that steps the
 real `Main.tscn` (spawn → walk → shoot → kill with scattered entries and
 terrain, break → auto-chain, game over + log flush, restart wiring, camera
 shake decay, scatter determinism, nearest-exit fallback, overcharge,
-modifiers, decal caps, terrain clearing, build/sell FX wiring).
+modifiers, decal caps, terrain clearing, build/sell FX wiring, upgrades +
+selection).
 
 ## Project structure
 
@@ -114,7 +121,8 @@ modifiers, decal caps, terrain clearing, build/sell FX wiring).
 | `scripts/wave.gd` | Deterministic wave composition (`WaveGen`) |
 | `scripts/terrain_gen.gd` | Seeded terrain dressing: blockers + decor (`TerrainGen`) |
 | `scripts/drone.gd` | Grid-space walker: path, hp, kinds (`Drone`) |
-| `scripts/gun.gd` | Tower targeting/cadence (`Gun`) |
+| `scripts/gun.gd` | Tower targeting + level stats (`Gun`) |
+| `scripts/gun_upgrades.gd` | Five-level upgrade table (prices/stats/refunds, ADR 0012) |
 | `scripts/projectile.gd` | Homing tracer (`Projectile`) |
 | `scripts/telemetry.gd` | JSONL event writer (`Telemetry`) |
 | `scripts/skill_stub.gd` | Meta-progression stub (`SkillStub`) |
@@ -189,8 +197,10 @@ The parser has stdlib regression tests: `python tools/test_analyze_run.py`.
 | T13 | Art pass: all sprites 32×32 at 1:1, fx 16×16 | done |
 | T13.5 | Refactor: extract BoardView (board rendering + grid math) | done |
 | T14 | Turret & enemy redesign, Fx extraction | done |
+| T15 | Telemetry enrichment: kill/send/wave_end events, run provenance, analyzer | done |
+| T16 | Upgrades: five-level `GunUpgrades` path, panel/pips, `upgrade` telemetry (ADR 0012) | done |
 
-All slices done (T01–T14). Post-prototype directions are collected in `docs/IDEAS.md`;
+All slices done (T01–T16). Post-prototype directions are collected in `docs/IDEAS.md`;
 the concrete candidate queue is `docs/BACKLOG.md`.
 
 ### From prototype to game
@@ -209,7 +219,7 @@ treadmill.
 
 **Decisions (2026-10-02):** run = finite mission with an optional endless mode after
 clear (M1 length 15–25 waves) · meta = light unlocks · towers = breadth first (wall →
-slow) plus one small upgrade-path slice, gated by an ADR on the "placement only" rule ·
+slow) plus the upgrade path (T16, ADR 0012 — shipped 2026-10-03) ·
 epilogue = own M3 slice (the run frame comes first).
 
 **Working rules:** one prototype question + kill criterion per slice

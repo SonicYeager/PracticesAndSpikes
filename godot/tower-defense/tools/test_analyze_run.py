@@ -160,6 +160,7 @@ class LoadRunTest(unittest.TestCase):
             '{"t":"overcharge","cell":[3,4],"money":80}\n'
         )
         self.assertEqual(run["overcharges"], 1)
+        self.assertEqual(run["overcharges_during"], {1: 1})
         self.assertEqual(run["unknown"], {})
 
     def test_clear_is_known(self):
@@ -168,9 +169,22 @@ class LoadRunTest(unittest.TestCase):
             '{"t":"clear","cell":[3,4],"money":60}\n'
         )
         self.assertEqual(run["clears"], 1)
+        self.assertEqual(run["clears_during"], {1: 1})
         self.assertEqual(run["unknown"], {})
         text = "\n".join(ar.report_run(run))
         self.assertIn("clears 1", text)
+
+    def test_upgrade_is_known(self):
+        run = self.load(
+            '{"t":"wave","wave":1,"count":4}\n'
+            '{"t":"upgrade","cell":[3,4],"from":1,"to":2,"cost":20,"money":60}\n'
+        )
+        self.assertEqual(run["upgrades"], 1)
+        self.assertEqual(run["upgrades_during"], {1: 1})
+        self.assertEqual(run["unknown"], {})
+        text = "\n".join(ar.report_run(run))
+        self.assertIn("upgrades 1", text)
+        self.assertIn("spend", text)
 
     def test_bad_kill_and_wave_end_counted(self):
         run = self.load(

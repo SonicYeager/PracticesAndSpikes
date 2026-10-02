@@ -84,9 +84,9 @@ Kandidaten für *wiederkehrende* Entscheidungen (Analyse:
   Telegraphing im Break.
 - **Commander-Fähigkeiten** (Cooldowns): Repair/EMP/Rally o. ä. als
   Mikro-Entscheidungen im Puls, ohne Türme zu versetzen (P2/P3).
-- **Turm-Upgrades** als laufende Geld-Senke (M2; braucht ADR zur
-  „placement only"-Regel) — macht Optimieren dauerhaft, invalidiert das Layout
-  aber nicht.
+- **Turm-Upgrades** als laufende Geld-Senke — **umgesetzt 2026-10-03** (T16,
+  ADR 0012: 5 Stufen, kumulative Preise, Delta-Kauf, Halb-Refund; Panel/Pips) —
+  macht Optimieren dauerhaft, invalidiert das Layout aber nicht.
 - **Vorerst verworfen**: Flieger/Immunpfade — Anti-Pillar „alles hängt an der
   Luftabwehr".
 

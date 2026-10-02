@@ -55,3 +55,14 @@ func test_range_bonus_shrinks_coverage() -> void:
 	assert_true(gun.in_range(far), "Within the base range")
 	gun.range_bonus = -1.0
 	assert_false(gun.in_range(far), "Blackout range shrinks coverage")
+
+
+func test_level_scales_stats() -> void:
+	var base := Gun.new(Vector2(0.5, 0.5))
+	var upgraded := Gun.new(Vector2(0.5, 0.5), 3)
+	var lance := Gun.new(Vector2(0.5, 0.5), 5)
+	assert_eq(base.damage(), 8.0, "Level 1 keeps the base damage")
+	assert_gt(upgraded.damage(), base.damage(), "Higher level hits harder")
+	assert_lt(upgraded.fire_interval(), base.fire_interval(), "Higher level fires faster")
+	assert_gt(lance.base_range(), base.base_range(), "The signature extends range")
+	assert_eq(Gun.new(Vector2.ZERO, 99).level, GunUpgrades.MAX_LEVEL, "Level clamps")

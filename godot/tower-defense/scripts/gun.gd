@@ -1,24 +1,35 @@
 class_name Gun
 extends RefCounted
-## Placement-only tower: fixed range, damage and cadence.
-## Grid-space position (cell units); targets are Drones. Priority is the
-## target closest to its own exit, so imminent leaks get shot first.
-
-const RANGE := 3.5
-const DAMAGE := 8.0
-const INTERVAL := 0.6
+## Tower with a five-level upgrade path (`GunUpgrades` table, ADR 0012): stats
+## come from the level; the scene owns placement and upgrades. Grid-space
+## position (cell units); targets are Drones. Priority is the target closest to
+## its own exit, so imminent leaks get shot first.
 
 var position: Vector2
+var level := 1
 var cooldown := 0.0
 var range_bonus := 0.0  # per-wave modifier hook (e.g. blackout), scene-set
 
 
-func _init(p_position: Vector2) -> void:
+func _init(p_position: Vector2, p_level: int = 1) -> void:
 	position = p_position
+	level = clampi(p_level, 1, GunUpgrades.MAX_LEVEL)
+
+
+func damage() -> float:
+	return float(GunUpgrades.stats(level)["damage"])
+
+
+func fire_interval() -> float:
+	return float(GunUpgrades.stats(level)["interval"])
+
+
+func base_range() -> float:
+	return float(GunUpgrades.stats(level)["range"])
 
 
 func in_range(target: Drone) -> bool:
-	return position.distance_to(target.position) <= RANGE + range_bonus
+	return position.distance_to(target.position) <= base_range() + range_bonus
 
 
 func acquire(targets: Array) -> Drone:
@@ -44,5 +55,5 @@ func try_fire(delta: float, targets: Array) -> Drone:
 	var target := acquire(targets)
 	if target == null:
 		return null
-	cooldown = INTERVAL
+	cooldown = fire_interval()
 	return target

@@ -41,6 +41,14 @@ func _find_clearable(game) -> Vector2i:
 	return Vector2i(-1, -1)
 
 
+func _visible_pips(pips: Node2D) -> int:
+	var count := 0
+	for child in pips.get_children():
+		if (child as Sprite2D).visible:
+			count += 1
+	return count
+
+
 func test_wave_spawns_walks_and_gun_kills() -> void:
 	var game = _make_game()
 	game._start_wave(1)
@@ -583,3 +591,176 @@ func test_leak_pulses_the_hud_flash() -> void:
 	game._drones.append(Drone.spawn("normal", exit_only, 20.0, 1.0))
 	game._process(STEP)
 	assert_gt(flash.modulate.a, 0.0, "Leak flashes the screen edge")
+
+
+func test_try_upgrade_pays_and_logs() -> void:
+	var game = _make_game()
+	var cell := _find_buildable(game)
+	assert_ne(cell, Vector2i(-1, -1))
+	assert_true(game._try_build(cell))
+	var money_before: int = game.economy.money
+	var fx_before: int = game._fx.get_child_count()
+	assert_true(game._try_upgrade(cell), "Upgrade succeeds")
+	assert_eq(game.economy.money, money_before - 20, "Upgrade pays the level delta")
+	assert_eq(game._guns[cell].level, 2, "The tower levels up")
+	assert_gt(game._fx.get_child_count(), fx_before, "Upgrade puffs dust")
+	var line := ""
+	for entry in game.telemetry.lines:
+		if entry.contains("\"t\":\"upgrade\""):
+			line = entry
+	assert_true(line.contains("\"from\":1"), "Upgrade logs the source level")
+	assert_true(line.contains("\"to\":2"), "Upgrade logs the target level")
+	assert_true(line.contains("\"cost\":20"), "Upgrade logs the cost")
+
+
+func test_try_upgrade_rejects_broke_max_and_game_over() -> void:
+	var game = _make_game()
+	var cell := _find_buildable(game)
+	assert_ne(cell, Vector2i(-1, -1))
+	assert_false(game._try_upgrade(cell), "A cell without a tower is ignored")
+	assert_true(game._try_build(cell))
+	game.economy.money = 19
+	assert_false(game._try_upgrade(cell), "Cannot afford the delta")
+	assert_eq(game._guns[cell].level, 1, "Level unchanged when broke")
+	assert_eq(game.economy.money, 19, "No money moved")
+	game.economy.earn(300)
+	for i in 4:
+		assert_true(game._try_upgrade(cell), "Upgrade %d succeeds" % (i + 2))
+	assert_eq(game._guns[cell].level, GunUpgrades.MAX_LEVEL, "Reached the max level")
+	var money_at_max: int = game.economy.money
+	assert_false(game._try_upgrade(cell), "Max level rejects further upgrades")
+	assert_eq(game.economy.money, money_at_max, "Max rejection moves no money")
+	game._director.end_run()
+	assert_false(game._try_upgrade(cell), "Game over blocks upgrades")
+	assert_eq(game.economy.money, money_at_max, "Game-over rejection moves no money")
+
+
+func test_sell_refund_uses_the_invested_total() -> void:
+	var game = _make_game()
+	var cell := _find_buildable(game)
+	assert_ne(cell, Vector2i(-1, -1))
+	assert_true(game._try_build(cell))
+	var money_after_build: int = game.economy.money
+	assert_true(game._try_upgrade(cell), "Level 2 reached")
+	assert_eq(game.economy.money, money_after_build - 20)
+	assert_true(game._try_sell(cell))
+	assert_eq(
+		game.economy.money,
+		money_after_build - 20 + 22,
+		"Refund is half of the cumulative invest"
+	)
+
+
+func test_upgrade_keeps_blackout_range_bonus() -> void:
+	var game = _make_game()
+	var cell := _find_buildable(game)
+	assert_ne(cell, Vector2i(-1, -1))
+	assert_true(game._try_build(cell))
+	game._guns[cell].range_bonus = -1.0
+	assert_true(game._try_upgrade(cell))
+	assert_almost_eq(
+		game._guns[cell].range_bonus,
+		-1.0,
+		0.001,
+		"Mutating in place keeps the blackout malus"
+	)
+
+
+func test_fire_carries_the_upgraded_damage() -> void:
+	var game = _make_game()
+	var cell := _find_buildable(game)
+	assert_ne(cell, Vector2i(-1, -1))
+	assert_true(game._try_build(cell))
+	game.economy.earn(200)
+	assert_true(game._try_upgrade(cell))
+	assert_true(game._try_upgrade(cell), "Level 3 reached")
+	var gun: Gun = game._guns[cell]
+	assert_almost_eq(gun.damage(), 15.0, 0.001, "Level 3 damage")
+	var target := Drone.spawn("normal", [cell], 20.0, 1.0)
+	game._fire(cell, gun, target)
+	assert_eq(game._projectiles.size(), 1, "One tracer spawned")
+	assert_almost_eq(
+		game._projectiles[0].damage,
+		15.0,
+		0.001,
+		"The tracer carries the level damage"
+	)
+
+
+func test_primary_dispatch_selects_a_tower_and_escape_deselects() -> void:
+	var game = _make_game()
+	var cell := _find_buildable(game)
+	assert_ne(cell, Vector2i(-1, -1))
+	assert_true(game._try_build(cell))
+	game._dispatch_primary(cell)
+	assert_eq(game._selected, cell, "LMB on a tower selects it")
+	var money_before: int = game.economy.money
+	assert_eq(game.economy.money, money_before, "Selecting spends nothing")
+	var ev := InputEventKey.new()
+	ev.keycode = KEY_ESCAPE
+	ev.pressed = true
+	game._unhandled_input(ev)
+	assert_eq(game._selected, Vector2i(-1, -1), "ESC deselects")
+
+
+func test_upgrade_button_flow_upgrades_the_selection() -> void:
+	var game = _make_game()
+	var cell := _find_buildable(game)
+	assert_ne(cell, Vector2i(-1, -1))
+	assert_true(game._try_build(cell))
+	game._select_tower(cell)
+	assert_true(game._hud._upgrade_row.visible, "Selection shows the HUD row")
+	game._hud._upgrade_button.pressed.emit()
+	assert_eq(game._guns[cell].level, 2, "The HUD button upgrades the selected tower")
+
+
+func test_level_pips_and_signature_tint() -> void:
+	var game = _make_game()
+	var cell := _find_buildable(game)
+	assert_ne(cell, Vector2i(-1, -1))
+	game.economy.earn(500)
+	assert_true(game._try_build(cell))
+	var pips := game._tower_nodes[cell].get_node_or_null("LevelPips") as Node2D
+	assert_not_null(pips, "Pip container exists")
+	assert_eq(_visible_pips(pips), 1, "Level 1 shows one pip")
+	assert_true(game._try_upgrade(cell))
+	assert_eq(_visible_pips(pips), 2, "Level 2 shows two pips")
+	for i in 3:
+		assert_true(game._try_upgrade(cell))
+	assert_eq(_visible_pips(pips), 5, "Level 5 shows five pips")
+	var base := game._tower_nodes[cell].get_node("Base") as Sprite2D
+	assert_ne(base.modulate, Color.WHITE, "The signature tints the base")
+
+
+func test_upgrade_works_during_running_and_sell_deselects() -> void:
+	var game = _make_game()
+	var cell := _find_buildable(game)
+	assert_ne(cell, Vector2i(-1, -1))
+	assert_true(game._try_build(cell))
+	game._select_tower(cell)
+	game._start_wave(1)
+	assert_eq(game._director.phase, WaveDirector.Phase.RUNNING)
+	assert_true(game._try_upgrade(cell), "Upgrades are allowed during a wave")
+	assert_true(game._try_sell(cell))
+	assert_eq(game._selected, Vector2i(-1, -1), "Selling the selected tower deselects it")
+
+
+func test_update_hud_clears_stale_selection() -> void:
+	var game = _make_game()
+	var cell := _find_buildable(game)
+	assert_ne(cell, Vector2i(-1, -1))
+	assert_true(game._try_build(cell))
+	game._select_tower(cell)
+	game._guns.erase(cell)
+	game._update_hud()
+	assert_eq(game._selected, Vector2i(-1, -1), "Stale selection is cleared")
+
+
+func test_show_tower_with_preleveled_gun() -> void:
+	var game = _make_game()
+	var cell := _find_buildable(game)
+	assert_ne(cell, Vector2i(-1, -1))
+	game._guns[cell] = Gun.new(Drone.center_of(cell), 3)
+	game._show_tower(cell)
+	var pips := game._tower_nodes[cell].get_node_or_null("LevelPips") as Node2D
+	assert_eq(_visible_pips(pips), 3, "Pre-leveled towers render their pips")

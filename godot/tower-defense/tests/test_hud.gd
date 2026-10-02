@@ -85,3 +85,45 @@ func test_game_over_overlay() -> void:
 	watch_signals(hud)
 	hud._restart_button.pressed.emit()
 	assert_signal_emitted(hud, "restart_pressed")
+
+
+func test_upgrade_row_follows_selection_and_affordability() -> void:
+	var hud = _make_hud()
+	var state := _running_state()
+	assert_false(hud._upgrade_row.visible, "No selection, no upgrade row")
+	state["selected"] = {
+		"level": 2, "name": "KANONE 2", "max_level": 5, "next_cost": 35, "affordable": true,
+	}
+	hud.update_state(state)
+	assert_true(hud._upgrade_row.visible, "Selection shows the row")
+	assert_true(hud._upgrade_info.text.contains("KANONE 2"), "Row shows the name")
+	assert_true(hud._upgrade_info.text.contains("+35"), "Row shows the delta")
+	assert_false(hud._upgrade_button.disabled, "Affordable upgrade is enabled")
+
+
+func test_upgrade_button_disabled_states_and_signal() -> void:
+	var hud = _make_hud()
+	var state := _running_state()
+	watch_signals(hud)
+	state["selected"] = {
+		"level": 2, "name": "KANONE 2", "max_level": 5, "next_cost": 35, "affordable": false,
+	}
+	hud.update_state(state)
+	assert_true(hud._upgrade_button.disabled, "Unaffordable upgrade is disabled")
+	hud._upgrade_button.pressed.emit()
+	assert_signal_not_emitted(hud, "upgrade_pressed", "Disabled button emits nothing")
+	state["selected"] = {
+		"level": 5, "name": "LANZE", "max_level": 5, "next_cost": 0, "affordable": true,
+	}
+	hud.update_state(state)
+	assert_true(hud._upgrade_button.disabled, "Max level is disabled")
+	assert_true(hud._upgrade_info.text.contains("MAX"), "Max level shows MAX")
+	state["selected"] = {
+		"level": 1, "name": "KANONE", "max_level": 5, "next_cost": 20, "affordable": true,
+	}
+	hud.update_state(state)
+	hud._upgrade_button.pressed.emit()
+	assert_signal_emitted(hud, "upgrade_pressed", "Enabled button emits the intent")
+	state["phase"] = "game_over"
+	hud.update_state(state)
+	assert_false(hud._upgrade_row.visible, "Game over hides the row")
