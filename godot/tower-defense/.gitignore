@@ -4,6 +4,8 @@
 reports/
 # Local telemetry runs (user:// also works without this)
 telemetry_local/
+# Study-only reference material (e.g. extracted Xeno Tactic assets)
+reference/
 # OS noise
 Thumbs.db
 Desktop.ini

@@ -31,6 +31,18 @@ by hand-made recordings under the same filenames.
 Volume intent: `shoot` fires several times per second, so it is the quietest;
 `leak` and `gameover` are the most important signals and the loudest.
 
+## Zielbild: Xeno Tactic (Flash-Ära)
+
+Referenz (SWF-Extraktion 2026-10-02): 30 kurze Original-Sounds, funktional
+benannt (`THUNK`, `SPLAT`, `pop`, …). Charakter: trocken, knapp, Alarm vor
+Melodie — kein Score, keine Loops.
+
+- Unser stdlib-Synth (`tools/make_sounds.py`) trifft das schon; im XT-Pass
+  werden die Rezepte in diese Richtung gezogen: Schuss = trockener Zap,
+  Treffer = kurzer Thunk, Kill = Splat/Crunch, Leak = aufdringlicher Alarm,
+  UI = harte Beeps.
+- Keine Originaldateien übernehmen — nur den Charakter nachbilden.
+
 ## Runtime wiring (`scripts/game.gd`)
 
 - `SFX` — const dictionary, one `preload()` per file

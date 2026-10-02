@@ -162,6 +162,9 @@ Project has no CI; run from the project dir:
   do not upgrade without running the suite).
 - Git: `.godot/`, `reports/`, `telemetry_local/` ignored. Never commit
   `.godot/`. Keep commits scoped to `godot/` only.
+- Reference material: `reference/` (gitignored) holds study-only material —
+  e.g. the extracted Xeno Tactic SWF (`reference/xt/`) for look/sound
+  reference. Never ship or commit it; own assets stay self-generated.
 
 ## Gotchas
 

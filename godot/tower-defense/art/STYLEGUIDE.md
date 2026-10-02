@@ -57,6 +57,37 @@ breit = Tank. Nie nur über Farbe unterscheiden.
   bzw. Rotation entlang des Pfads (fast), Flash-Frames (Muzzle/Impact/
   Explosion), HP-Balken als 1px-Textur-Sprites (kein Asset).
 
+## Referenz-Anker (Xeno Tactic)
+
+Ursprungs-Inspiration (Flash-Maze-TD, Labor-Containment-Setting).
+
+> **Kalibrierung 2026-10-02:** Audio und Visuelles **so nah wie möglich** an
+> Xeno Tactic; Fiktion/UI-Text nur grob ankern, iterativ nach Gefühl. Der
+> Look unten ist **Zielbild** — der Ember-Foundry-Stand wird im **XT-Pass
+> (T11)** ersetzt. Bis dahin beschreiben die Abschnitte darunter den Ist-Stand.
+
+### Zielbild Xeno Tactic (verifiziert am Original, 2026-10-02)
+
+Referenzmaterial: Original-SWF (`xenotactic.swf`, XGen) per FFDec extrahiert —
+**nur Studienmaterial, nichts davon wird übernommen oder committet**.
+Quelle: Titel-/Help-Screen, Kachel-/Effekt-Sprites, eingebettete Texte.
+
+| Element | Ziel |
+|---|---|
+| Titel/Menü | Neon-Cyan-Schrift auf dunkelblauem Stahl-Textur-Hintergrund, blaue Turret-Render-Optik |
+| Boden | Dunkle blaugraue Metall-Kacheln mit Rasterlinien; Varianten: dunkelrot; Hazard-Streifen rot/weiß |
+| Gegner | Weiß-graue Alien-Bugs (dunkle Outline), grüne Variante; Swarm-Optik, Form+Farbe kodiert |
+| Türme | Graue Metall-Silhouetten mit farbigem Kopf; Titel zeigt eine blaue Render-Turret als Vorbild |
+| UI | Dunkelblaue Metall-Panels; goldene Pixel-Schrift (ALL CAPS); Icon-Grid; segmentierte grüne Upgrade-Bars; GOLD-Zähler + Coin; „SEND NEXT WAVE“; grüner GO-Pfeil-Cursor; Cyan-Highlights |
+| Effekte | Pixelige Feuerbälle (orange/gelb), Ringe, Säure-/Blut-Splats (grün/rot) |
+| Palette (Vorschlag) | Steel `#2e3742`, Steel hell `#3d4856`, Grid `#161b21`, Dark-Red `#3a1f1f`, Alien-White `#d7dde3`, Acid `#86c34a`, Health `#6fdc4f`, Gold `#ffd75e`, Neon `#aef6ff`, Hazard `#c8433a` |
+| Sound | Kurze, trockene Blips/Alarme, kein Score — siehe `docs/AUDIO.md` |
+
+- Lesbarkeit vor Effekten: der XT-Look war schlicht, aber sofort erfassbar.
+- Kein Asset-Kopieren: Stil nachahmen, Assets selbst generieren. XT nennt als
+  Vorbild „Desktop Tower Defense by Paul Preece“ — ein Hommage-Kredit ist fair.
+- Referenz-Ablage (falls behalten): `reference/xt/` (gitignored), nie im Build.
+
 ## Sprite-Inventar
 
 | Datei | Größe | Verwendung |

@@ -44,6 +44,26 @@ scatter spawn, markers per entry/exit cell, re-route/fallback, path
 preview), telemetry (`leak` gains the exit cell), tests (validation, scatter
 determinism, fallback, leak at exit), docs.
 
+## Xeno Tactic homages (reference-driven candidates)
+
+*Source: maintainer, 2026-10-02 — Xeno Tactic was the original inspiration.
+Each needs a slice decision; vision check noted.*
+
+- **Wall piece** (cheap blocker): a dedicated wall tower without attack
+  (e.g. 8–10 money) deepens mazing without paying the full gun price. XT
+  added walls late and players loved them. Vision: pure P1 (workbench).
+- **Splitters**: on death spawn two weak offspring — a new enemy behavior
+  (Discovery) that rewards wide kill coverage. Caution: keep counterplay
+  open (no lock & key).
+- **Slow/Frost tower**: the second tower type — a slow field instead of
+  damage; XT's freeze was the answer to "reversing the field". Vision: P1/P3.
+- **Endurance goals**: XT missions ran 20–100 waves. Ours could offer light
+  "containment milestones" (e.g. clear N waves without a leak) — goals, not
+  a meta grind.
+- **Fliers — only with care**: XT's biggest design trap was the anti-air
+  lock & key. If flying/escapee types ever come, they need at least two
+  viable counters and must respect the maze in some way.
+
 ## Known open items (from the prototype docs)
 
 - ~~**Seed flow**~~: done (T09) — random run seed, logged as
