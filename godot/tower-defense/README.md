@@ -171,4 +171,29 @@ The parser has stdlib regression tests: `python tools/test_analyze_run.py`.
 | T12.5 | Refactor: extract WaveDirector (wave state machine) | done |
 
 All slices done (T01–T12.5). Post-prototype directions are collected in `docs/IDEAS.md`;
-the concrete candidate queue for the next slices is `docs/BACKLOG.md`.
+the concrete candidate queue is `docs/BACKLOG.md`.
+
+### From prototype to game
+
+**Target picture** — a self-contained session game: one run has a beginning, a pressure
+arc and an ending (mission clear, game over, or the role-reversal epilogue); 2–3 clearly
+different tower roles and 3–5 enemy behaviors that ask new questions instead of grinding;
+light unlock meta (missions, behaviors, event pools); calm with a pulse — no twitch, no
+treadmill.
+
+| Milestone | Content | Prototype question / kill |
+|---|---|---|
+| **M1 — One complete run** | Time control (pause/speed, actions in pause); finite run (15–25 waves, win/lose, run summary); wave preview (data + HUD); wall piece; telemetry enrichment + balance harness; minimal help/legend | Does a finite run with planning tools feel like a game? · Kill: pause/speed unused, runs end without a felt arc |
+| **M2 — Variety & identity** | Splitter drone; slow/frost tower (role #3); entry/exit segments + difficulty topology (more fronts, not just bigger numbers); 2–3 mission maps; light unlock meta (minimal save) | Do the new roles/behaviors change plans, not just DPS? · Kill: a single dominant strategy remains |
+| **M3 — Resolution & v1** | Epilog twist (revenge wave, own prototype slice); onboarding/help completion; balance pass on real telemetry; polish. v1 = playable from the repo (no store release) | Does the role reversal feel like a new perspective, not a foreign body? |
+
+**Decisions (2026-10-02):** run = finite mission with an optional endless mode after
+clear (M1 length 15–25 waves) · meta = light unlocks · towers = breadth first (wall →
+slow) plus one small upgrade-path slice, gated by an ADR on the "placement only" rule ·
+epilogue = own M3 slice (the run frame comes first).
+
+**Working rules:** one prototype question + kill criterion per slice
+(`docs/BACKLOG.md`); logic-first slices extract new `RefCounted` classes instead of
+growing `game.gd`; balance claims come from the harness + telemetry (min. 8 harness +
+3 human runs), not from feel; every milestone ends with a human playtest (3 Wow / 3 Meh)
+and a readability check (P2).

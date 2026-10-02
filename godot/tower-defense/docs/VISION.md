@@ -82,6 +82,10 @@ Modifier, Überraschungen pro Run. Ruhig mit Puls, nie Reflexdruck.
 4. **Meta-Kalibrierung**: was genau zwischen Vielfalt und Progression?
 5. **Total Time Control** (P3): Pause/Speed als „ruhig mit Puls"-Werkzeug?
 
+**Reihenfolge (Entscheidung 2026-10-02)**: Der Run-Frame (endliche Mission +
+Time Control, M1) kommt vor dem Epilog-Twist (M3) — Twists brauchen erst ein
+Ende, das sich lohnt. Verortung: README „From prototype to game".
+
 ## Anwendung
 
 - Jede Slice-Entscheidung zuerst gegen P1–P3 prüfen; kein Pillar → verwerfen
@@ -99,9 +103,9 @@ Tower Defense): Türme blockieren die Wege, Aliens laufen von den Spawns zum
 Ausgang, man baut und upgradet Türme, Durchbrüche kosten Leben. Setting:
 Forschungslabor — die Xenos versuchen auszubrechen; man richtet automatische
 Verteidigung ein, um sie an der Flucht zur Oberfläche zu hindern. Missionen
-mit 20–100 Wellen, vier Schwierigkeitsgrade, Tower-Upgrades; Ground-Türme
-(Vulcan/Sam/Plasma), Slow (Freeze/Sonic), Anti-Air (DCA/THW); Splitters
-(zerfallen beim Tod), Boss-Flieger mit sechsstelligen HP.
+mit 20–100 Wellen, fünf Schwierigkeitsgrade, Tower-Upgrades; Ground-Türme
+(Vulcan/Missile/Plasma), Slow (Freeze), Flächen-Paralyse (Sonic), Anti-Air
+(DCA/ThW); Splitters (zerfallen beim Tod), Flieger-Bosse.
 
 **Was wir übernehmen (Anker):**
 
@@ -125,6 +129,15 @@ mit 20–100 Wellen, vier Schwierigkeitsgrade, Tower-Upgrades; Ground-Türme
   Puls" (Solo-Zen; Discovery/Sensory vor Challenge).
 - **Eigene Ideen obendrauf**: Seiten-Entries/Exits mit Scatter, Overcharge,
   Wellen-Events, Dirty World — das ist die „Verfeinerung".
+
+**Code-Analyse 2026-10-02** (deobfuskiertes SWF; Belege und Zahlen im
+Research-Artefakt `context/tasks/research-td-xt-reference/research.md`):
+Schwierigkeit ist auch Topologie (Easy einseitig, Normal+ öffnet oben/unten);
+klarer Wellenrhythmus aus Normwellen + Eskalationswellen mit HP-Kompoundierung;
+Early-Send-Bonus als Zeitdruck-Regler; Leben und Geld sind getrennte Achsen;
+6 Missionen mit leichtem Unlock-Save; Lufttreffer sind breit (Vulcan/Plasma/
+DCA/Freeze), nur Missile und Sonic sind blind — die „nur DCA"-Erinnerung ist zu
+hart. Referenzzahlen bleiben Studienmaterial, keine Zielwerte.
 
 **Grafik/Sound-Anker (pinnen):**
 
