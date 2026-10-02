@@ -17,6 +17,7 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
   determinism, test strategy, extension points.
 - `docs/BALANCE.md` — every tunable constant + derived numbers + tuning flow.
 - `docs/AUDIO.md` — sound list, synth recipes, volumes, replacing SFX.
+- `docs/IDEAS.md` — post-prototype directions (candidates, not committed scope).
 - `art/STYLEGUIDE.md` — Ember Foundry palette, sprite specs + inventory.
 - This file — decisions, slice status, commands, gotchas (keep it lean; put
   detail in the docs above instead of growing this list).
@@ -94,8 +95,10 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
   against a real wave-7 game-over run. T06: trauma screen shake (Camera2D,
   deterministic sines, decays during game over), vignette overlay
   (`vignette.png` via `make_placeholders.py`), barrel recoil, muzzle/impact
-  pops. Suite: 34 tests / 111 asserts green.
-- Next: T07 docs pass.
+  pops. Suite: 34 tests / 111 asserts green. T07: docs pass — roadmap
+  closed, `docs/IDEAS.md` collects post-prototype directions.
+- Prototype complete (T01–T07). Open: seed flow, real skill-tree UI,
+  multi-entry/exit sides (see `docs/IDEAS.md`).
 
 ## Commands
 

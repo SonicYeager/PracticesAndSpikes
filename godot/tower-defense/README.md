@@ -9,7 +9,7 @@ telemetry for data-driven balancing.
 
 - Stack: Godot 4.7.2, GDScript (no .NET flow)
 - Entrypoint: `scenes/Main.tscn` (open/import the folder in the Godot editor)
-- Status: T01–T06 are playable — see *Controls* and *Roadmap*
+- Status: prototype complete (T01–T07) — see *Controls* and *Roadmap*
 
 ## Controls
 
@@ -121,6 +121,7 @@ The parser has stdlib regression tests: `python tools/test_analyze_run.py`.
 | `docs/BALANCE.md` | Every tunable constant + derived numbers + tuning workflow |
 | `docs/AUDIO.md` | Sound list, synthesis recipes, volume tuning, replacing SFX |
 | `art/STYLEGUIDE.md` | Ember Foundry palette, sprite specs + inventory |
+| `docs/IDEAS.md` | Post-prototype directions (multi-entry/exit sides, open items) |
 
 ## Roadmap
 
@@ -133,4 +134,6 @@ The parser has stdlib regression tests: `python tools/test_analyze_run.py`.
 | T04 | Wave chaining (auto-next + break), game-over screen + restart | done |
 | T05 | Telemetry analysis script (Python) | done |
 | T06 | Remaining polish (screen shake, vignette, …) | done |
-| T07 | Docs pass | next |
+| T07 | Docs pass | done |
+
+All slices done. Post-prototype directions are collected in `docs/IDEAS.md`.
