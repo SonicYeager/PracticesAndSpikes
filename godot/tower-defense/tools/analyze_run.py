@@ -5,9 +5,9 @@ Reads the JSONL files written by scripts/telemetry.gd (`user://run_<seed>.jsonl`
 and prints a per-run report plus an aggregate across runs.
 
 Events: run_start {seed,source,harness} · wave {wave,count,hp} · build {cell}
-        · sell {cell} · kill {wave,cell,kind} · wave_end {wave,kills,leaks,
-        money_start,money_end} · leak {wave,money} · send {wave} · time_control
-        · overcharge {cell,money} · run_end {wave,money}
+        · sell {cell} · clear {cell,money} · kill {wave,cell,kind} · wave_end
+        {wave,kills,leaks,money_start,money_end} · leak {wave,money} · send
+        {wave} · time_control · overcharge {cell,money} · run_end {wave,money}
 
 Derived numbers:
   kills      = exact per wave: wave_end.kills once the wave was cleared, else the
@@ -118,6 +118,7 @@ def load_run(path):
         "leaks": {},          # wave -> [money, ...] (one entry per leak)
         "builds": 0,
         "sells": 0,
+        "clears": 0,          # pay-to-clear rock removals
         "builds_during": {},  # wave -> builds while it was the current wave
         "sells_during": {},
         "run_end": None,
@@ -162,6 +163,8 @@ def load_run(path):
             elif kind == "sell":
                 run["sells"] += 1
                 run["sells_during"][current] = run["sells_during"].get(current, 0) + 1
+            elif kind == "clear":
+                run["clears"] += 1
             elif kind == "leak":
                 n = as_int(event.get("wave"))
                 if n is None:
@@ -236,12 +239,13 @@ def report_run(run):
     if any(value is not None for value in kill_values):
         total_kills = sum(value for value in kill_values if value is not None)
         lines.append(
-            "  builds %d, sells %d, leaks %d, kills %d"
-            % (run["builds"], run["sells"], total_leaks, total_kills)
+            "  builds %d, sells %d, clears %d, leaks %d, kills %d"
+            % (run["builds"], run["sells"], run["clears"], total_leaks, total_kills)
         )
     else:
         lines.append(
-            "  builds %d, sells %d, leaks %d" % (run["builds"], run["sells"], total_leaks)
+            "  builds %d, sells %d, clears %d, leaks %d"
+            % (run["builds"], run["sells"], run["clears"], total_leaks)
         )
 
     if run["run_starts"] != 1:

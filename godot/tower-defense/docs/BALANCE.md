@@ -129,6 +129,7 @@ modifiers.
 | `DECAL_CAP` / `DECAL_CELL_CAP` | 300 / 2 | battle decals per run (FIFO) / per cell |
 | `OVERCHARGE_COST` / `OVERCHARGE_COOLDOWN` | 20 / 6 s | vent overcharge cost and cooldown |
 | `OVERCHARGE_DAMAGE` / `OVERCHARGE_RADIUS` | 15 / 2.5 cells | vent burst damage and radius |
+| `ROCK_CLEAR_COST` | 15 | right-click removes a rock/rubble blocker (vents stay) |
 | `SHAKE_KILL` / `SHAKE_LEAK` / `SHAKE_OVERCHARGE` / `SHAKE_GAME_OVER` | 0.12 / 0.3 / 0.35 / 0.7 | trauma per event (amounts live here, decay in `Fx`) |
 | `DRONE_FRAME_TIME` | 0.15 s | 2-frame gait |
 | `HIT_FLASH_TIME` | 0.07 s | white hit flash |

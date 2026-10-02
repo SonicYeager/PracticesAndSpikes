@@ -2,9 +2,10 @@ class_name Maze
 extends RefCounted
 ## Buildable grid: tracks towers and rejects any build that would leave an
 ## entry without a reachable exit. Entry/exit cells and pre-placed terrain
-## blockers are never buildable; blockers are solid from the start.
-## Any number of entries/exits is supported (side cells by default); a sealed
-## exit is inert as long as every entry keeps at least one open exit.
+## blockers are never buildable; blockers are solid until the game layer
+## clears them via `clear_blocker`. Any number of entries/exits is supported
+## (side cells by default); a sealed exit is inert as long as every entry
+## keeps at least one open exit.
 
 var size: Vector2i
 var entries: Array[Vector2i]
@@ -70,6 +71,16 @@ func sell(cell: Vector2i) -> bool:
 	if not built.has(cell):
 		return false
 	built.erase(cell)
+	pathfinder.set_solid(cell, false)
+	return true
+
+
+func clear_blocker(cell: Vector2i) -> bool:
+	## Removes a terrain blocker (the game side pays for it). Opening a cell
+	## can only improve connectivity, so no build validation is needed.
+	if not blockers.has(cell):
+		return false
+	blockers.erase(cell)
 	pathfinder.set_solid(cell, false)
 	return true
 

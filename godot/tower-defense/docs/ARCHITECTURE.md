@@ -18,6 +18,8 @@ scenes/Main.tscn
        └─ Hud (CanvasLayer)
             ├─ Vignette (full-screen overlay)
             └─ HudRoot (scenes/Hud.tscn, scripts/hud.gd)   ← UI boundary
+                 ├─ LeakFlash overlay (first child, under the panels)
+                 └─ panels (status/build/wave/game-over)
 
 scripts/*.gd (class_name RefCounted)     ← core logic, no scene access
   Maze · Pathfinder · Economy · WaveGen · WaveDirector · Drone · Gun
@@ -40,7 +42,7 @@ owns its panels and only sees pushed state.
 
 | Class | File | Responsibility |
 |---|---|---|
-| `Maze` | `scripts/maze.gd` | Buildable grid (`built: cell → tower_type`), entry/exit reservation, `can_build()` via hypothetical block + multi-source BFS (every entry keeps an exit), `build()`, `sell()` |
+| `Maze` | `scripts/maze.gd` | Buildable grid (`built: cell → tower_type`), entry/exit reservation, `can_build()` via hypothetical block + multi-source BFS (every entry keeps an exit), `build()`, `sell()`, `clear_blocker()` |
 | `Pathfinder` | `scripts/pathfinder.gd` | `AStarGrid2D` wrapper; `DIAGONAL_MODE_NEVER`, solid points, `find_path()` returns cell ids, `has_path()`, `reachable_from()` multi-source BFS |
 | `Economy` | `scripts/economy.gd` | Money-as-health: `on_kill(amount)`, `on_leak()`, `spend()`, `is_game_over()` (strictly `< 0`) |
 | `WaveGen` | `scripts/wave.gd` | Static `composition(n, seed)` → `{wave, count, hp, speed, tanks, fast, modifier}` (T10 events from wave 3) |
@@ -49,7 +51,7 @@ owns its panels and only sees pushed state.
 | `Drone` | `scripts/drone.gd` | Grid-space walker: `advance(dt)` (returns `true` on leak), `take_damage()`, `reroute()`, `facing()`, `exit_cell()`, `distance_to_exit()`, `KIND_MODS` |
 | `Gun` | `scripts/gun.gd` | Range/cadence/targeting (`range_bonus` hook for wave modifiers); `acquire()` picks the drone closest to its exit, `try_fire(dt, targets)` returns the target when a shot is due |
 | `Projectile` | `scripts/projectile.gd` | Homing tracer; `advance(dt)` returns `true` on hit, fizzles when the target dies or leaks |
-| `Telemetry` | `scripts/telemetry.gd` | Buffers JSON events (wave/build/leak/kill/send + `wave_end` summaries), `flush(path)` writes JSONL; `run_start` carries `source`/`harness` provenance |
+| `Telemetry` | `scripts/telemetry.gd` | Buffers JSON events (wave/build/sell/clear/leak/kill/send/overcharge + `wave_end` summaries), `flush(path)` writes JSONL; `run_start` carries `source`/`harness` provenance |
 | `SkillStub` | `scripts/skill_stub.gd` | Meta stub: one bonus persisted via `ConfigFile` |
 
 ## Coordinates
@@ -81,7 +83,7 @@ only).
 6. `_update_hud` — pushes money/wave/progress state into `GameHud.update_state`
    (labels, bar, chip, button states)
 7. `BoardView._process` — its own update: entry/exit marker pulse and the
-   ambient emitters (presentation only, runs in every phase)
+   vent-only ambient emitters (presentation only, runs in every phase)
 
 Removing objects is always done with a backwards index loop
 (`for i in range(size - 1, -1, -1)`) because handlers can remove the current
@@ -120,17 +122,20 @@ HUD state       ◄─ GameHud.update_state({money, wave, phase, alive, queued,
 
 Gun.try_fire(dt) ──► _fire: tracer starts at muzzle (0.75 cells) + flash
 Projectile hit ──► _resolve_hit
-            kill: Economy.on_kill() · explosion · SFX "kill" · scorch decal · telemetry "kill"
+            kill: Economy.on_kill() · explosion + shockwave ring · SFX "kill" · scorch decal · telemetry "kill"
             else: hit flash + impact spark · SFX "hit" · debris decal
 Fx ──► muzzle/impact/explosion/ember bursts + barrel recoil (world space)
             taken from the same call sites; Fx.update decays the shake trauma
 
-Left click ──► vent? _try_overcharge(cell): spend(20) · cooldown 6 s
-                ember burst · damage (15 in 2.5 cells) via _apply_damage
-                telemetry "overcharge" · SFX "overcharge"
-              else: spend(25) → reject? refund + SFX "denied"
-                        → build: Gun + tower sprite + telemetry "build" + SFX "build"
-Right click ─► Maze.sell → refund 12 + telemetry "sell" + SFX "sell"
+Left click ──► _dispatch_primary(cell): sell-mode → sell · vent → overcharge
+                (_try_overcharge: spend(20) · cooldown 6 s · ember burst ·
+                damage 15 in 2.5 cells · telemetry "overcharge")
+              else → _try_build: spend(25) → reject? refund + SFX "denied"
+                        → build: Gun + tower sprite + dust puff + telemetry
+                          "build" + SFX "build"
+Right click ─► _try_sell → Maze.sell → refund 12 + dust puff + telemetry "sell"
+              else _try_clear: blocker (non-vent)? spend(15) → clear_blocker
+                        + sprite removed + dust puff + telemetry "clear"
 Both        ──► _reroute_drones(): each drone re-paths to its assigned exit,
                 or to the nearest reachable exit when that one is cut off
             ──► _sync_sprites pushes the routes (BoardView.set_routes) each
@@ -144,7 +149,8 @@ Both        ──► _reroute_drones(): each drone re-paths to its assigned exi
   Sealed exits are inert; creative splits (left→top, right→bottom) are fine.
 - Terrain blockers are solid and reserved from the start; `TerrainGen`
   applies the same greedy rule, so the map is playable before the first
-  build. A blocker can never be built or sold over.
+  build. A blocker can never be built or sold over; rock/rubble can be
+  cleared for 15 (right click) — vents stay as the money sink.
 - A tower can never be built on the cell a drone currently occupies
   (`_drone_on_cell()`); therefore a reroute never starts from a solid cell.
 - A drone's path always ends at its assigned exit. `reroute()` keeps the
@@ -189,13 +195,14 @@ Gameplay RNG exists in exactly three places, all seeded from the run seed:
 - ambient particles: internal particle RNG (presentation only, not part of
   the replay guarantee)
 
-Same seed + same build/sell sequence ⇒ identical run. The run seed is
+Same seed + same build/sell/clear sequence ⇒ identical run. The run seed is
 written into the telemetry log for replay/analysis (`tools/analyze_run.py`).
 
 ## Rendering & z-order
 
 Floor tiles, decor and decals are `Sprite2D` children of `Board`
-(`z_index = -1`); entry/exit markers and ambient emitters also live there.
+(`z_index = -1`); entry/exit markers and the vent ambient emitters also live
+there.
 Towers, drones and projectiles are `Sprite2D` children of `Main` (default
 z 0) in creation order; FX sprites are added under `Fx` (`z_index = 1`, so
 effects cover units). HP bars also use `z_index = 1` and are appended after
@@ -208,8 +215,9 @@ Floor tiles, cosmetic decor and battle decals use `z_index = -1`, so
 assigned path — stays visible above the grime and below blockers/towers/
 drones (z 0; HP bars z 1). A `Camera2D` centered on the viewport carries the
 screen shake; CanvasLayer content is not affected by it, so the HUD stays
-fixed. The vignette is the first child of the HUD layer (world → vignette →
-panel → game-over overlay, in that draw order).
+fixed. The vignette is the first child of the HUD layer; inside HudRoot the
+leak-flash overlay draws beneath the panels (world → vignette → leak flash →
+panels → game-over overlay).
 
 ## Testing
 

@@ -41,7 +41,7 @@ breit = Tank. Nie nur über Farbe unterscheiden.
 
 ## Specs
 
-- Basis 32×32 px (Effekte/Projektile 16×16), transparentes PNG, 1px Outline.
+- Basis 32×32 px (Effekte/Projektile 16×16, Ring 32×32), transparentes PNG, 1px Outline.
 - Ingame 1:1 (TILE 32, 1 Art-Pixel = 1 Screen-Pixel). `Nearest` ist gesetzt.
 - T13 (2026-10-02): alle Sprites von 16×16 auf 32×32 (fx 16×16) neu
   gezeichnet; Anzeige von 2× auf 1× umgestellt.
@@ -62,7 +62,8 @@ breit = Tank. Nie nur über Farbe unterscheiden.
   projektweit via `gui/theme/custom_font`; HUD-Panels dunkelblau mit
   Stahl-Rahmen, Geld gold, Titel/Buttons cyan.
 - Effekte: `impact` (16×16 Trefferblitz, Pop von 0.7×), `muzzle` (16×16
-  Mündungsblitz, 0.05 s + Skalierungs-Pop), `explosion_0/1` (32×32 Kill).
+  Mündungsblitz, 0.05 s + Skalierungs-Pop), `explosion_0/1` (32×32 Kill),
+  `ring` (32×32 Schockwellen-Ring/Staub-Puff, per Modulate getintet).
 - Terrain (T09): Blocker als solide Fels-/Geröll-/Vent-Cluster (geseedet,
   nie Entry-verstopfend), Deko + Decals als Grime-Schicht (z −1); Vents
   glühen (C/H), alle Partikel nutzen `ember` (16×16, getintet).
@@ -130,6 +131,7 @@ Quelle: Titel-/Help-Screen, Kachel-/Effekt-Sprites, eingebettete Texte.
 | `impact` | 16×16 | Trefferblitz (0.12 s, Pop von 0.7×) |
 | `explosion_0/1` | 32×32 | Kill-Explosion, 2 Frames alternierend |
 | `vignette` | 640×360 | Randabdunkelung (Alpha-Gradient, linear gefiltert, HUD-Overlay) |
+| `flash_edge` | 640×360 | Leak-Rand-Flash: weißer Alpha-Rand, im HUD rot getintet |
 | `hud_coin` | 32×32 | HUD: Geld |
 | `hud_wave` | 32×32 | HUD: Welle (Doppel-Chevron) |
 | `hud_space` | 32×32 | HUD: Leertaste |
@@ -142,7 +144,8 @@ Quelle: Titel-/Help-Screen, Kachel-/Effekt-Sprites, eingebettete Texte.
 | `scorch` | 32×32 | Decal: Brandfleck (Kill, z −1) |
 | `skid` | 32×32 | Decal: Schleifspur (Leak, z −1) |
 | `debris` | 32×32 | Decal: Trümmer (Treffer, z −1) |
-| `ember` | 16×16 | Partikel-Textur (Glut/Funke/Rauch, getintet) |
+| `ember` | 16×16 | Partikel-Textur (Glut/Funke, getintet) |
+| `ring` | 32×32 | Schockwellen-Ring (Kill) + Staub-Puff (Build/Sell/Clear), getintet |
 
 ## Handoff (deine Skizzen → Projekt)
 

@@ -32,6 +32,7 @@ const OVERCHARGE_COST := 20
 const OVERCHARGE_DAMAGE := 15.0
 const OVERCHARGE_RADIUS := 2.5
 const OVERCHARGE_COOLDOWN := 6.0
+const ROCK_CLEAR_COST := 15
 const MODIFIER_LABELS := {
 	"rush": "Ansturm",
 	"swarm": "Schwarm",
@@ -184,32 +185,45 @@ func _unhandled_input(event: InputEvent) -> void:
 		# Camera-aware: maps to the cell under the cursor even while shaking.
 		var cell := _board.to_cell(get_global_mouse_position())
 		if event.button_index == MOUSE_BUTTON_LEFT:
-			if _sell_mode:
-				_try_sell(cell)
-			elif _vents.has(cell):
-				# Only during a wave: otherwise there are no drones to hit.
-				if _director.phase != WaveDirector.Phase.RUNNING or not _try_overcharge(cell):
-					_play("denied")
-			# Rejected builds (maze would disconnect, drone in the way) refund.
-			elif economy.spend(Economy.GUN_COST):
-				if not _drone_on_cell(cell) and maze.build(cell):
-					_guns[cell] = Gun.new(Drone.center_of(cell))
-					_guns[cell].range_bonus = _director.range_bonus
-					_show_tower(cell)
-					telemetry.event("build", {"cell": [cell.x, cell.y]})
-					_reroute_drones()
-					_play("build")
-				else:
-					economy.earn(Economy.GUN_COST)
-					_play("denied")
-			else:
-				_play("denied")
+			_dispatch_primary(cell)
 		elif event.button_index == MOUSE_BUTTON_RIGHT:
-			_try_sell(cell)
+			if not _try_sell(cell):
+				_try_clear(cell)
 		_update_hud()
 	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_SPACE:
 		# IDLE: start wave 1; BREAK: skip the intermission (same path as the button).
 		_on_wave_pressed()
+
+
+func _dispatch_primary(cell: Vector2i) -> void:
+	## LMB dispatch: sell-mode sells, vents overcharge, everything else builds.
+	if _sell_mode:
+		_try_sell(cell)
+	elif _vents.has(cell):
+		# Only during a wave: otherwise there are no drones to hit.
+		if _director.phase != WaveDirector.Phase.RUNNING or not _try_overcharge(cell):
+			_play("denied")
+	else:
+		_try_build(cell)
+
+
+func _try_build(cell: Vector2i) -> bool:
+	## One build attempt: spend, validate (drone/maze), place; failures refund.
+	if not economy.spend(Economy.GUN_COST):
+		_play("denied")
+		return false
+	if _drone_on_cell(cell) or not maze.build(cell):
+		economy.earn(Economy.GUN_COST)
+		_play("denied")
+		return false
+	_guns[cell] = Gun.new(Drone.center_of(cell))
+	_guns[cell].range_bonus = _director.range_bonus
+	_show_tower(cell)
+	_fx.puff(_board.grid_to_world(Drone.center_of(cell)))
+	telemetry.event("build", {"cell": [cell.x, cell.y]})
+	_reroute_drones()
+	_play("build")
+	return true
 
 
 func _try_sell(cell: Vector2i) -> bool:
@@ -217,10 +231,33 @@ func _try_sell(cell: Vector2i) -> bool:
 		return false
 	_guns.erase(cell)
 	_hide_tower(cell)
+	_fx.puff(_board.grid_to_world(Drone.center_of(cell)), Color(0.66, 0.7, 0.78))
 	economy.earn(SELL_REFUND)
 	telemetry.event("sell", {"cell": [cell.x, cell.y]})
 	_reroute_drones()
 	_play("sell")
+	return true
+
+
+func _try_clear(cell: Vector2i) -> bool:
+	## Pay to remove a non-vent terrain blocker; the cell becomes buildable.
+	if _vents.has(cell):
+		_play("denied")
+		return false
+	if not maze.blockers.has(cell):
+		return false
+	if not economy.spend(ROCK_CLEAR_COST):
+		_play("denied")
+		return false
+	if not maze.clear_blocker(cell):
+		economy.earn(ROCK_CLEAR_COST)
+		_play("denied")
+		return false
+	_board.remove_blocker(cell)
+	_fx.puff(_board.grid_to_world(Drone.center_of(cell)), Color(0.72, 0.66, 0.55))
+	_reroute_drones()
+	telemetry.event("clear", {"cell": [cell.x, cell.y], "money": economy.money})
+	_play("build")
 	return true
 
 
@@ -339,6 +376,7 @@ func _on_leak(d: Drone) -> void:
 	telemetry.event("leak", {"wave": _director.wave, "money": economy.money, "exit": [exit.x, exit.y]})
 	_play("leak")
 	_fx.shake(SHAKE_LEAK)
+	_hud.flash_leak()
 	_board.add_decal(SKID_TEX, d.position)
 	_remove_drone(d)
 	if economy.is_game_over():
@@ -409,6 +447,7 @@ func _apply_damage(target: Drone, amount: float) -> bool:
 			"kind": target.kind,
 		})
 		_fx.explosion(_board.grid_to_world(target.position))
+		_fx.ring(_board.grid_to_world(target.position))
 		_board.add_decal(SCORCH_TEX, target.position)
 		_play("kill")
 		_fx.shake(SHAKE_KILL)

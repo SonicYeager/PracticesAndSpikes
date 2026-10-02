@@ -162,6 +162,16 @@ class LoadRunTest(unittest.TestCase):
         self.assertEqual(run["overcharges"], 1)
         self.assertEqual(run["unknown"], {})
 
+    def test_clear_is_known(self):
+        run = self.load(
+            '{"t":"wave","wave":1,"count":4}\n'
+            '{"t":"clear","cell":[3,4],"money":60}\n'
+        )
+        self.assertEqual(run["clears"], 1)
+        self.assertEqual(run["unknown"], {})
+        text = "\n".join(ar.report_run(run))
+        self.assertIn("clears 1", text)
+
     def test_bad_kill_and_wave_end_counted(self):
         run = self.load(
             '{"t":"kill","wave":null,"cell":[1,1]}\n'

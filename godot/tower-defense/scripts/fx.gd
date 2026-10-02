@@ -17,6 +17,7 @@ const EXPLOSION_TEX: Array = [
 	preload("res://art/explosion_1.png"),
 ]
 const EMBER_TEX := preload("res://art/ember.png")
+const RING_TEX := preload("res://art/ring.png")
 
 var _camera: Camera2D
 var _trauma := 0.0
@@ -81,6 +82,31 @@ func explosion(world_pos: Vector2) -> void:
 	var t := create_tween()
 	t.tween_property(s, "scale", ART_SCALE * 1.8, 0.18)
 	t.parallel().tween_property(s, "modulate:a", 0.0, 0.18)
+	t.tween_callback(s.queue_free)
+
+
+func ring(world_pos: Vector2, color: Color = Color(1.0, 0.72, 0.4)) -> void:
+	## Kill shockwave: expands past the explosion and fades out.
+	_spawn_ring(world_pos, color, 0.35, 1.6, 0.3)
+
+
+func puff(world_pos: Vector2, color: Color = Color(0.72, 0.78, 0.86)) -> void:
+	## Small dust ring for build/sell/clear feedback.
+	_spawn_ring(world_pos, color, 0.2, 0.9, 0.25)
+
+
+func _spawn_ring(
+	world_pos: Vector2, color: Color, from_scale: float, to_scale: float, time: float
+) -> void:
+	var s := Sprite2D.new()
+	s.texture = RING_TEX
+	s.position = world_pos
+	s.scale = ART_SCALE * from_scale
+	s.modulate = color
+	add_child(s)
+	var t := create_tween()
+	t.tween_property(s, "scale", ART_SCALE * to_scale, time)
+	t.parallel().tween_property(s, "modulate:a", 0.0, time)
 	t.tween_callback(s.queue_free)
 
 

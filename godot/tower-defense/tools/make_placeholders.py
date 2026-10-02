@@ -515,6 +515,12 @@ def ember():
     return c
 
 
+def ring():
+    c = Canvas(32, 32)
+    c.ring(16, 16, 13, C["white"], 2.0)
+    return c
+
+
 SPRITES = {
     "floor_0": floor_tile(0),
     "floor_1": floor_tile(1),
@@ -547,6 +553,7 @@ SPRITES = {
     "skid": skid(),
     "debris": debris(),
     "ember": ember(),
+    "ring": ring(),
 }
 
 
@@ -585,15 +592,17 @@ def write_canvas(path, canvas):
 
 
 # Vignette: near-black blue alpha ramp towards the corners (screen overlay).
+# Leak flash: the same ramp in white so the HUD can tint it red (modulate on
+# the near-black vignette would stay invisible).
 VIGNETTE_W, VIGNETTE_H = 640, 360
-VIGNETTE_INNER = 0.45  # normalized distance where darkening starts
+VIGNETTE_INNER = 0.45  # normalized distance where the ramp starts
 VIGNETTE_OUTER = 1.15  # normalized distance at full opacity
-VIGNETTE_ALPHA = 0.55  # max edge opacity
+VIGNETTE_ALPHA = 0.55  # max vignette edge opacity
+FLASH_ALPHA = 0.85     # max leak-flash edge opacity
 
 
-def vignette_raw(w, h):
+def edge_raw(w, h, base, max_alpha):
     cx, cy = w * 0.5, h * 0.5
-    base = C["outline"]
     raw = bytearray()
     for y in range(h):
         raw.append(0)  # filter: none
@@ -602,17 +611,28 @@ def vignette_raw(w, h):
             dx = (x + 0.5 - cx) / cx
             t = (math.hypot(dx, dy) - VIGNETTE_INNER) / (VIGNETTE_OUTER - VIGNETTE_INNER)
             t = min(max(t, 0.0), 1.0)
-            raw.extend((*base, int(255 * VIGNETTE_ALPHA * t * t)))
+            raw.extend((*base, int(255 * max_alpha * t * t)))
     return raw
+
+
+def vignette_raw(w, h):
+    return edge_raw(w, h, C["outline"], VIGNETTE_ALPHA)
+
+
+def flash_edge_raw(w, h):
+    return edge_raw(w, h, C["white"], FLASH_ALPHA)
 
 
 def main():
     os.makedirs(OUT, exist_ok=True)
     for name, canvas in SPRITES.items():
         write_canvas(os.path.join(OUT, name + ".png"), canvas)
-    raw = vignette_raw(VIGNETTE_W, VIGNETTE_H)
-    write_png_raw(os.path.join(OUT, "vignette.png"), VIGNETTE_W, VIGNETTE_H, raw)
-    print(f"wrote {len(SPRITES)} sprites + vignette to {OUT}")
+    for name, raw in (
+        ("vignette", vignette_raw(VIGNETTE_W, VIGNETTE_H)),
+        ("flash_edge", flash_edge_raw(VIGNETTE_W, VIGNETTE_H)),
+    ):
+        write_png_raw(os.path.join(OUT, name + ".png"), VIGNETTE_W, VIGNETTE_H, raw)
+    print(f"wrote {len(SPRITES)} sprites + vignette + flash edge to {OUT}")
 
 
 if __name__ == "__main__":

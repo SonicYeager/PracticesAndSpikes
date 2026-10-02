@@ -45,12 +45,14 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
   exits, seed)` places rock/rubble/vent blockers (solid, reserved, never
   sealing an entry — same greedy rule as builds) plus cosmetic decor.
   Battle decals: kill → scorch, leak → skid, hit → debris (cap 300, FIFO).
-  Ambient emitters (vent → embers, crack → sparks, stain → smoke) are
-  presentation-only (internal particle RNG, never gameplay).
+  Ambient emitters (vents only → embers; crack/stain stay static since the
+  2026-10-02 playtest) are presentation-only (internal particle RNG, never
+  gameplay). Rock/rubble clears for 15 via right-click (`Maze.clear_blocker`);
+  vents stay.
 - **Pathfinding**: `AStarGrid2D`, 4-directional (`DIAGONAL_MODE_NEVER`),
   plus a multi-source BFS (`Pathfinder.reachable_from`) for the build rule.
-- **Economy**: money IS health. Kill +6, leak −10, gun 25, sell refund 12.
-  Game over strictly below zero (`money < 0`, not `<= 0`).
+- **Economy**: money IS health. Kill +6, leak −10, gun 25, sell refund 12,
+  rock clear 15. Game over strictly below zero (`money < 0`, not `<= 0`).
 - **Towers**: placement only — no in-match leveling. Gun first, only tower.
 - **Combat** (T03): gun auto-fires at the drone closest to the base within
   range 3.5 cells, 8 dmg every 0.6 s, homing tracer (`Projectile`). Tracers
@@ -58,8 +60,9 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
   the live path and re-path when the maze changes; building on a cell a
   drone currently occupies is rejected. Kinds via `Drone.KIND_MODS`
   (fast 0.6 hp/1.6 speed, tank 2.4 hp/0.55 speed).
-- **Feedback** (juice pass): hit = white flash + impact spark + SFX, kill =
-  explosion + SFX, leak/build/sell/denied/wave/game-over all have SFX.
+- **Feedback** (juice pass + 2026-10-02 polish): hit = white flash + impact
+  spark + SFX, kill = explosion + shockwave ring + SFX, build/sell/clear =
+  dust puff, leak = red edge flash + SFX, denied/wave/game-over all have SFX.
   HP bars (22×3 px, green/yellow/red) float above every drone. Walk
   animation: normal/tank flip + waddle, fast rotates along the path.
   Spawn portal and base core pulse (scale) so the two stay distinct.
@@ -89,7 +92,7 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
 - **Meta**: skill tree is a stub (`SkillStub`, one dummy bonus,
   `user://skill_stub.cfg`). Real tree UI later, never in-match.
 - **Telemetry**: local JSONL writer (`Telemetry`), event-based only
-  (build/sell/wave/leak/kill/send + wave summaries), no per-frame logging, flushed on game over
+  (build/sell/clear/wave/leak/kill/send + wave summaries), no per-frame logging, flushed on game over
   and on window close. Analysis: `tools/analyze_run.py` (stdlib) — per-run
   wave tables + aggregate; scans `telemetry_local/`, then the Godot user dir.
 - **Art (T11/T14)**: XT steel/lab look (see `art/STYLEGUIDE.md`): dark
@@ -97,8 +100,9 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
   core), bug-style drones (head + legs, red eyes; white/acid/grey-blue coded),
   textured floors, hazard-strip containment base. UI font VT323 (OFL,
   `fonts/`) via `gui/theme/custom_font`, HUD panels dark blue/steel, gold
-  money. 32×32 (fx 16×16) with the Nearest filter from `project.godot`; the
-  640×360 vignette overlay sets Linear on its node. Placeholders generated
+  money. 32×32 (fx 16×16, ring 32×32) with the Nearest filter from
+  `project.godot`; the 640×360 vignette/leak-flash overlays set Linear on
+  their nodes. Placeholders generated
   by `tools/make_placeholders.py` (stdlib-only, XT palette); hand art drops
   in under the same filenames, no code changes needed. Study reference
   (`reference/xt/`) is gitignored, never shipped.
@@ -152,11 +156,13 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
   (shake, muzzle/impact/explosion, ember bursts, recoil). T15 (Telemetry):
   kill/send/wave_end events + run_start provenance; the analyzer renders exact
   kills, money start→end and kill zones (legacy logs stay readable). Suite:
-  75 tests / 533 asserts green.
+  75 tests / 533 asserts green. Polish (2026-10-02, playtest feedback):
+  vent-only ambient, kill ring/build puff/leak flash, rocks clearable via
+  right-click (15); suite: 84 tests / 595 asserts green.
 - Vision (2026-10-02): `docs/VISION.md` — pillars P1–P3 (workbench, living
   foundry, curiosity), values, anti-pillars; calibrations + next prototype
   questions (epilog twist, pressure curve, decal readability, meta, time
-  control).
+  control, loop maintenance).
 - Open: epilog twist prototype, meta calibration, time control, pressure
   tuning via telemetry, segments/more entry/exit sides (see `docs/IDEAS.md`;
   candidate queue with priorities: `docs/BACKLOG.md`).

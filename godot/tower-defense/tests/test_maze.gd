@@ -43,6 +43,17 @@ func test_terrain_blockers_are_solid_and_reserved() -> void:
 	assert_true(m.pathfinder.is_solid(Vector2i(2, 2)), "Blocker stays solid")
 
 
+func test_clear_blocker_opens_a_terrain_cell() -> void:
+	var m := Maze.new(Vector2i(5, 5), [Vector2i(0, 2)], [Vector2i(4, 2)], [Vector2i(2, 2)])
+	assert_true(m.clear_blocker(Vector2i(2, 2)))
+	assert_false(m.blockers.has(Vector2i(2, 2)))
+	assert_false(m.pathfinder.is_solid(Vector2i(2, 2)))
+	assert_false(m.is_reserved(Vector2i(2, 2)))
+	assert_true(m.can_build(Vector2i(2, 2)), "Cleared cell is buildable")
+	assert_false(m.clear_blocker(Vector2i(2, 2)), "Double clear rejected")
+	assert_false(m.clear_blocker(Vector2i(0, 2)), "Entry is not a blocker")
+
+
 func test_entry_needs_one_open_exit() -> void:
 	# Two exits: sealing one is allowed (it becomes inert), sealing the last
 	# one is rejected.

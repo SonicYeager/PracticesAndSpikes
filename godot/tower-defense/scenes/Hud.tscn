@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3]
+[gd_scene load_steps=16 format=3]
 
 [ext_resource type="Script" path="res://scripts/hud.gd" id="1_hud"]
 [ext_resource type="Script" path="res://scripts/hud_bar.gd" id="2_bar"]
@@ -6,6 +6,7 @@
 [ext_resource type="Texture2D" path="res://art/gun_base.png" id="4_gun"]
 [ext_resource type="Texture2D" path="res://art/hud_space.png" id="5_space"]
 [ext_resource type="Texture2D" path="res://art/hud_mouse_right.png" id="6_rmb"]
+[ext_resource type="Texture2D" path="res://art/flash_edge.png" id="7_flash"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBox_panel"]
 bg_color = Color(0.0784314, 0.105882, 0.141176, 0.94)
@@ -128,6 +129,17 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("1_hud")
+
+[node name="LeakFlash" type="TextureRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture_filter = 2
+modulate = Color(1, 0.25, 0.2, 0)
+texture = ExtResource("7_flash")
 
 [node name="Status" type="PanelContainer" parent="."]
 offset_left = 12.0

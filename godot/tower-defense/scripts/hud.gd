@@ -10,6 +10,8 @@ signal sell_toggled(active: bool)
 signal restart_pressed
 
 const COLOR_CYAN := Color(0.624, 0.847, 1.0)
+const LEAK_FLASH_ALPHA := 0.45
+const LEAK_FLASH_FADE := 0.45
 const MODIFIER_COLORS := {
 	"rush": Color(1.0, 0.541, 0.231),
 	"swarm": Color(0.557, 0.878, 0.29),
@@ -18,7 +20,9 @@ const MODIFIER_COLORS := {
 }
 
 var _chip_modifier := ""
+var _flash_tween: Tween
 
+@onready var _leak_flash: TextureRect = $LeakFlash
 @onready var _money_label: Label = $Status/Row/Money
 @onready var _wave_label: Label = $Status/Row/Wave
 @onready var _chip: PanelContainer = $Status/Row/Chip
@@ -63,6 +67,15 @@ func show_game_over(wave: int, money: int) -> void:
 
 func is_game_over_visible() -> bool:
 	return _game_over.visible
+
+
+func flash_leak() -> void:
+	## Red edge pulse on a leak; re-triggers restart the fade (no stacking).
+	_leak_flash.modulate.a = LEAK_FLASH_ALPHA
+	if _flash_tween != null and _flash_tween.is_valid():
+		_flash_tween.kill()
+	_flash_tween = create_tween()
+	_flash_tween.tween_property(_leak_flash, "modulate:a", 0.0, LEAK_FLASH_FADE)
 
 
 func game_over_text() -> String:

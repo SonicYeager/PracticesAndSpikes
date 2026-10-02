@@ -32,6 +32,7 @@ var origin := Vector2.ZERO
 
 var _entry_nodes: Array[Sprite2D] = []
 var _exit_nodes: Array[Sprite2D] = []
+var _blocker_sprites: Dictionary = {}
 var _vent_sprites: Dictionary = {}
 var _decals: Array[Sprite2D] = []
 var _decals_by_cell: Dictionary = {}
@@ -46,7 +47,7 @@ func setup(map_size: Vector2i, entries: Array[Vector2i], exits: Array[Vector2i],
 	_draw_terrain(terrain)
 	_entry_nodes = _draw_markers(entries, SPAWN_TEX)
 	_exit_nodes = _draw_markers(exits, BASE_TEX)
-	_setup_ambient(terrain)
+	_setup_ambient()
 
 
 func grid_to_world(grid_pos: Vector2) -> Vector2:
@@ -70,6 +71,17 @@ func set_vent_ready(cell: Vector2i, ready: bool) -> void:
 	if node == null:
 		return
 	node.modulate = Color(1.15, 1.05, 0.9) if ready else Color(0.55, 0.55, 0.6)
+
+
+func remove_blocker(cell: Vector2i) -> void:
+	# Defensive: vents are the money sink and stay (the game layer guards too).
+	if _vent_sprites.has(cell):
+		return
+	var node := _blocker_sprites.get(cell) as Sprite2D
+	if node == null:
+		return
+	_blocker_sprites.erase(cell)
+	node.queue_free()
 
 
 func set_routes(routes: Array) -> void:
@@ -129,13 +141,15 @@ func _draw_floor(map_size: Vector2i) -> void:
 func _draw_terrain(terrain: Dictionary) -> void:
 	var nodes: Array[Sprite2D] = []
 	for cell in terrain["blockers"]:
+		var type := _blocker_type(cell)
 		var s := Sprite2D.new()
-		s.texture = TERRAIN_TEX[_blocker_type(cell)]
+		s.texture = TERRAIN_TEX[type]
 		s.position = cell_center(cell)
 		s.scale = ART_SCALE
 		add_child(s)
 		nodes.append(s)
-		if _blocker_type(cell) == "vent":
+		_blocker_sprites[cell] = s
+		if type == "vent":
 			_vent_sprites[cell] = s
 	# The money sink must exist: promote the first blocker if no vent rolled.
 	if _vent_sprites.is_empty() and not terrain["blockers"].is_empty():
@@ -167,16 +181,12 @@ func _draw_markers(cells: Array[Vector2i], tex: Texture2D) -> Array[Sprite2D]:
 	return nodes
 
 
-func _setup_ambient(terrain: Dictionary) -> void:
+func _setup_ambient() -> void:
 	# Presentation-only particle emitters (internal randomness, never gameplay).
+	# Playtest 2026-10-02: vents only — crack/stain stay static so the map
+	# reads quieter and action effects stay the loudest thing on screen.
 	for cell in _vent_sprites:
 		_add_embers(cell)
-	for cell in terrain["decor"]:
-		match _decor_type(cell):
-			"crack":
-				_add_sparks(cell)
-			"stain":
-				_add_smoke(cell)
 
 
 func _add_embers(cell: Vector2i) -> void:
@@ -196,44 +206,6 @@ func _add_embers(cell: Vector2i) -> void:
 	p.scale_amount_min = 0.25
 	p.scale_amount_max = 0.55
 	p.color = Color(1.0, 0.7, 0.3, 0.85)
-	add_child(p)
-
-
-func _add_sparks(cell: Vector2i) -> void:
-	var p := CPUParticles2D.new()
-	p.position = cell_center(cell)
-	p.texture = EMBER_TEX
-	p.amount = 4
-	p.lifetime = 0.9
-	p.preprocess = 1.0
-	p.direction = Vector2(0, -1)
-	p.spread = 60.0
-	p.initial_velocity_min = 14.0
-	p.initial_velocity_max = 30.0
-	p.gravity = Vector2(0, 40)
-	p.scale_amount_min = 0.15
-	p.scale_amount_max = 0.3
-	p.color = Color(1.0, 0.85, 0.45, 0.9)
-	add_child(p)
-
-
-func _add_smoke(cell: Vector2i) -> void:
-	var p := CPUParticles2D.new()
-	p.position = cell_center(cell)
-	p.texture = EMBER_TEX  # soft dot, tinted dark
-	p.amount = 5
-	p.lifetime = 2.6
-	p.preprocess = 2.0
-	p.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
-	p.emission_rect_extents = Vector2(6.0, 4.0)
-	p.direction = Vector2(0, -1)
-	p.spread = 12.0
-	p.initial_velocity_min = 4.0
-	p.initial_velocity_max = 9.0
-	p.gravity = Vector2(0, -2)
-	p.scale_amount_min = 0.5
-	p.scale_amount_max = 1.0
-	p.color = Color(0.25, 0.2, 0.18, 0.35)
 	add_child(p)
 
 

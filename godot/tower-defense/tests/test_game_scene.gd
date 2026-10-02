@@ -26,6 +26,21 @@ func _telemetry_path(game) -> String:
 	return "user://run_%d.jsonl" % game.game_seed
 
 
+func _find_buildable(game, row: int = 2) -> Vector2i:
+	for offset in [0, -1, 1, -2, 2, -3, 3]:
+		var cell := Vector2i(9 + offset, row)
+		if game.maze.can_build(cell):
+			return cell
+	return Vector2i(-1, -1)
+
+
+func _find_clearable(game) -> Vector2i:
+	for cell in game.maze.blockers:
+		if not game._vents.has(cell):
+			return cell
+	return Vector2i(-1, -1)
+
+
 func test_wave_spawns_walks_and_gun_kills() -> void:
 	var game = _make_game()
 	game._start_wave(1)
@@ -234,13 +249,14 @@ func test_different_seeds_dress_different_maps() -> void:
 	assert_ne(first.maze.blockers, second.maze.blockers, "Seeds dress different terrain")
 
 
-func test_leak_leaves_a_decal_and_ambient_runs() -> void:
+func test_leak_leaves_a_decal_and_vent_only_ambient() -> void:
 	var game = _make_game()
 	var emitters := 0
 	for child in game._board.get_children():
 		if child is CPUParticles2D:
 			emitters += 1
-	assert_gt(emitters, 0, "Ambient emitters are set up")
+	assert_gt(game._vents.size(), 0, "Every map has at least one vent")
+	assert_eq(emitters, game._vents.size(), "Only vents emit; decor stays static")
 	var exit_only: Array[Vector2i] = [game.maze.exits[0]]
 	game._drones.append(Drone.spawn("normal", exit_only, 20.0, 1.0))
 	game._process(STEP)
@@ -423,3 +439,147 @@ func test_blackout_updates_existing_guns() -> void:
 	assert_almost_eq(
 		game._guns[Vector2i(1, 1)].range_bonus, 0.0, 0.001, "And it resets next wave"
 	)
+
+
+func test_try_build_places_gun_pays_and_puffs() -> void:
+	var game = _make_game()
+	var cell := _find_buildable(game)
+	assert_ne(cell, Vector2i(-1, -1), "Seed 1 has a buildable cell near the mid-column")
+	var money_before: int = game.economy.money
+	var fx_before: int = game._fx.get_child_count()
+	assert_true(game._try_build(cell), "Build succeeds")
+	assert_eq(game.economy.money, money_before - Economy.GUN_COST, "Build pays the gun cost")
+	assert_true(game.maze.built.has(cell), "Maze tracks the tower")
+	assert_true(game._guns.has(cell), "Gun exists")
+	assert_true(game._tower_nodes.has(cell), "Tower sprite exists")
+	assert_gt(game._fx.get_child_count(), fx_before, "Build puffs dust")
+	var build_lines := 0
+	for line in game.telemetry.lines:
+		if line.contains("\"t\":\"build\""):
+			build_lines += 1
+	assert_eq(build_lines, 1, "Build is logged once")
+	var money_after: int = game.economy.money
+	assert_false(game._try_build(cell), "Occupied cell is rejected")
+	assert_eq(game.economy.money, money_after, "Rejected build refunds")
+
+
+func test_try_build_rejects_drone_cell_and_broke_player() -> void:
+	var game = _make_game()
+	var cell := _find_buildable(game)
+	assert_ne(cell, Vector2i(-1, -1))
+	game._drones.append(Drone.spawn("normal", [cell], 20.0, 1.0))
+	var money_before: int = game.economy.money
+	assert_false(game._try_build(cell), "A drone on the cell blocks the build")
+	assert_eq(game.economy.money, money_before, "Blocked build refunds")
+	assert_false(game.maze.built.has(cell), "Nothing was placed")
+	game._drones.clear()
+	game.economy.money = Economy.GUN_COST - 1
+	assert_false(game._try_build(cell), "Unaffordable build is denied")
+	assert_eq(game.economy.money, Economy.GUN_COST - 1, "Denied build moves no money")
+
+
+func test_primary_dispatch_covers_sell_vent_and_build() -> void:
+	var game = _make_game()
+	var cell := _find_buildable(game)
+	assert_ne(cell, Vector2i(-1, -1))
+	game._dispatch_primary(cell)
+	assert_true(game.maze.built.has(cell), "Dispatch builds on a free cell")
+	game._sell_mode = true
+	var fx_before: int = game._fx.get_child_count()
+	game._dispatch_primary(cell)
+	assert_false(game.maze.built.has(cell), "Sell mode sells via dispatch")
+	assert_gt(game._fx.get_child_count(), fx_before, "Sell puffs dust")
+	game._sell_mode = false
+	var vent: Vector2i = game._vents.keys()[0]
+	var money_before: int = game.economy.money
+	game._dispatch_primary(vent)
+	assert_eq(game.economy.money, money_before, "Idle vent click does not overcharge")
+	assert_eq(game._vents[vent]["cooldown"], 0.0, "No overcharge cooldown in idle")
+	# Running phase: the same click must overcharge.
+	game._start_wave(1)
+	money_before = game.economy.money
+	game._dispatch_primary(vent)
+	assert_eq(
+		game.economy.money,
+		money_before - game.OVERCHARGE_COST,
+		"Running vent click spends the overcharge"
+	)
+	assert_eq(
+		game._vents[vent]["cooldown"],
+		game.OVERCHARGE_COOLDOWN,
+		"Overcharge starts its cooldown"
+	)
+	var overcharge_lines := 0
+	for line in game.telemetry.lines:
+		if line.contains("\"t\":\"overcharge\""):
+			overcharge_lines += 1
+	assert_eq(overcharge_lines, 1, "Overcharge is logged")
+
+
+func test_kill_spawns_shockwave() -> void:
+	var game = _make_game()
+	game._start_wave(1)
+	while not game._director.queue.is_empty():
+		game._process(STEP)
+	var victim: Drone = game._drones[0]
+	var fx_before: int = game._fx.get_child_count()
+	game._apply_damage(victim, 999.0)
+	assert_eq(
+		game._fx.get_child_count(), fx_before + 2,
+		"Kill spawns the explosion and the shockwave ring"
+	)
+
+
+func test_try_clear_rock_costs_opens_and_logs() -> void:
+	var game = _make_game()
+	var cell := _find_clearable(game)
+	assert_ne(cell, Vector2i(-1, -1), "Seed 1 has a clearable blocker")
+	var money_before: int = game.economy.money
+	var fx_before: int = game._fx.get_child_count()
+	assert_true(game._try_clear(cell), "Clear succeeds")
+	assert_eq(game.economy.money, money_before - game.ROCK_CLEAR_COST, "Clear costs money")
+	assert_false(game.maze.blockers.has(cell), "Blocker is gone")
+	assert_false(game.maze.pathfinder.is_solid(cell), "Cell is walkable now")
+	assert_true(game.maze.can_build(cell), "Cleared cell is buildable")
+	assert_false(game._board._blocker_sprites.has(cell), "Blocker sprite is removed")
+	assert_gt(game._fx.get_child_count(), fx_before, "Clear puffs dust")
+	var clear_line := ""
+	for line in game.telemetry.lines:
+		if line.contains("\"t\":\"clear\""):
+			clear_line = line
+	assert_true(clear_line.contains("\"cell\":[%d,%d]" % [cell.x, cell.y]), "Clear logs the cell")
+	assert_true(clear_line.contains("\"money\":%d" % game.economy.money), "Clear logs the money")
+
+
+func test_try_clear_rejects_vents_empty_and_broke() -> void:
+	var game = _make_game()
+	var vent: Vector2i = game._vents.keys()[0]
+	assert_false(game._try_clear(vent), "Vents are the money sink, not clearable")
+	assert_true(game.maze.blockers.has(vent), "Vent stays a blocker")
+	var empty := Vector2i(-1, -1)
+	for y in 3:
+		for x in 3:
+			var c := Vector2i(x, y)
+			if game.maze.is_inside(c) and not game.maze.blockers.has(c):
+				empty = c
+	assert_ne(empty, Vector2i(-1, -1), "Found a non-blocker cell")
+	var money_before: int = game.economy.money
+	assert_false(game._try_clear(empty), "Empty cells are ignored")
+	assert_eq(game.economy.money, money_before, "Ignored clear moves no money")
+	var rock := _find_clearable(game)
+	assert_ne(rock, Vector2i(-1, -1))
+	game.economy.money = game.ROCK_CLEAR_COST - 1
+	assert_false(game._try_clear(rock), "Cannot afford the clear")
+	assert_true(game.maze.blockers.has(rock), "Rock stays")
+	assert_eq(game.economy.money, game.ROCK_CLEAR_COST - 1, "No money moved")
+
+
+func test_leak_pulses_the_hud_flash() -> void:
+	var game = _make_game()
+	var flash := game.get_node_or_null("Hud/HudRoot/LeakFlash") as TextureRect
+	assert_not_null(flash, "Leak flash node exists")
+	assert_almost_eq(flash.modulate.a, 0.0, 0.001, "Flash starts dark")
+	var exit_only: Array[Vector2i] = [game.maze.exits[0]]
+	game._drones.append(Drone.spawn("normal", exit_only, 20.0, 1.0))
+	game._process(STEP)
+	assert_gt(flash.modulate.a, 0.0, "Leak flashes the screen edge")

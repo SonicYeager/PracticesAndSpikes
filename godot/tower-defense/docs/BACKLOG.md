@@ -45,14 +45,6 @@ followed by indented `Vision:` (pillar/prototype question + roadmap milestone), 
   - Vision: P3 (discovery — new behavior, not more hp); roadmap M2.
   - Kill: reads as more quantity instead of a new decision; counterplay must stay open (no lock & key).
   - Surfaces: `scripts/drone.gd`, `scripts/wave.gd`, `scripts/game.gd`, `tools/make_placeholders.py`, `tests/`.
-- [ ] **tower-defense-effect-budget** · priority: high · effort: low · area: visual — Playtest-Feedback: Aktion aufwerten, Karte beruhigen — nur Vent-Zellen behalten Partikel-Emitter (Crack/Stain bleiben statisch), dazu 3–4 konkrete Action-FX (z. B. Kill-Ring, Tracer-Trail, Build-Puff, Leak-Edge-Flash).
-  - Vision: P2 (living foundry — Effekte lesen Aktion, nicht Ambiente); Analyse: `context/tasks/tower-defense-feedback-polish/`.
-  - Kill: Aktion wird lauter, aber unleserlicher (Zoom-QA) oder die Karte wirkt tot.
-  - Surfaces: `scripts/board_view.gd`, `scripts/fx.gd`, `tests/test_game_scene.gd`, `art/STYLEGUIDE.md`.
-- [ ] **tower-defense-removable-rocks** · priority: high · effort: medium · area: logic — Playtest-Feedback: Felsen/Geröll per Rechtsklick kostenpflichtig entfernbar (`ROCK_CLEAR_COST`), Vents ausgenommen; `Maze.clear_blocker` + BoardView-Sprite-Räumung + Dust-Puff + Telemetrie `clear` + Tests.
-  - Vision: P1 (Maze-Werkbank — neue Entscheidung „lohnt diese Zelle?"); Analyse: `context/tasks/tower-defense-feedback-polish/`.
-  - Kill: Clear-Kosten erzeugen keine Entscheidung (immer/nie lohnend).
-  - Surfaces: `scripts/maze.gd`, `scripts/board_view.gd`, `scripts/game.gd`, `docs/BALANCE.md`, `tests/`.
 - [ ] **tower-defense-loop-extension** · priority: high · effort: xl · area: logic — Playtest-Befund: mit zugebauter Map endet die Entscheidung; Kandidaten (wellen-getriebene Terrain-Disruptionen, Commander-Fähigkeiten, Upgrades) in `docs/IDEAS.md` + `context/tasks/tower-defense-map-boredom/analysis.md` — **Richtungsentscheidung (VISION-Frage 6) steht vor dem Slice**.
   - Vision: P1/P3 (Frage 6 „Loop-Erhalt nach dem Zubauen").
   - Kill: drei Wellen ohne neue Re-Umplanung → Ansatz verwerfen.
@@ -61,6 +53,8 @@ followed by indented `Vision:` (pillar/prototype question + roadmap milestone), 
 ## Done
 
 - [x] **tower-defense-telemetry-enrichment** · priority: medium · effort: medium · area: logic — Add `kill` events (cell, kind, wave), a per-wave summary (kills/leaks/money start→end), `send`/`time_control` events, and a provenance marker in `run_start` (`source`, `harness` true/false); extend `tools/analyze_run.py`; move the legacy harness logs to `telemetry_local/legacy/` — done 2026-10-02 (`time_control` emission deferred to the TimeControl slice; the analyzer already accepts it).
+- [x] **tower-defense-effect-budget** · priority: high · effort: low · area: visual — Playtest-Feedback: Aktion aufwerten, Karte beruhigen — done 2026-10-02 via `tower-defense-feedback-polish` (vent-only ambient; kill shockwave ring; build/sell/clear dust puff; leak edge flash; tracer trail deliberately skipped — muzzle/impact already cover shots, add later if it still feels quiet).
+- [x] **tower-defense-removable-rocks** · priority: high · effort: medium · area: logic — Playtest-Feedback: Felsen/Geröll per Rechtsklick (15) entfernbar, Vents ausgenommen — done 2026-10-02 via `tower-defense-feedback-polish` (`Maze.clear_blocker`, BoardView sprite removal, dust puff, `clear` telemetry + analyzer, tests).
 
 ## Notes
 
