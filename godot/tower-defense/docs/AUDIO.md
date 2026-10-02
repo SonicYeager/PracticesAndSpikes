@@ -26,6 +26,7 @@ by hand-made recordings under the same filenames.
 | `denied.wav` | rejected build / no funds | low 150→120 Hz buzz | 0.14 s | −10 |
 | `wave.wav` | wave starts | two-note saw horn (330→440 Hz) | 0.38 s | −6 |
 | `gameover.wav` | run ends | descending sine (392/311/262 Hz) | 1.06 s | −4 |
+| `overcharge.wav` | vent overcharged | deep saw whoosh (120→44 Hz) + crackle | 0.50 s | −6 |
 
 Volume intent: `shoot` fires several times per second, so it is the quietest;
 `leak` and `gameover` are the most important signals and the loudest.
@@ -38,8 +39,8 @@ Volume intent: `shoot` fires several times per second, so it is the quietest;
   so rapid shots/hits overlap instead of cutting each other off
 - `_play("name")` — null-safe trigger, called from the event sites listed
   above (build/sell/denied in `_unhandled_input`, wave in `_start_wave`,
-  leak in `_on_leak`, hit/kill in `_resolve_hit`, shoot in `_fire`,
-  gameover in `_end_run`)
+  leak in `_on_leak`, hit/kill in `_apply_damage`, shoot in `_fire`,
+  overcharge in `_try_overcharge`, gameover in `_end_run`)
 
 There is no bus routing or music yet; the default Master bus is used.
 

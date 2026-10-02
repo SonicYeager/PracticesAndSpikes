@@ -27,3 +27,19 @@ func test_wave_one_defaults() -> void:
 	var w := WaveGen.composition(1, 1)
 	assert_eq(w["count"], 4, "Wave 1 spawns the base count")
 	assert_eq(w["wave"], 1)
+
+
+func test_modifiers_are_deterministic_and_gated() -> void:
+	for n in [1, 2]:
+		assert_eq(WaveGen.composition(n, 1)["modifier"], "", "No modifiers before wave 3")
+	var seen := false
+	for n in range(3, 30):
+		var a := WaveGen.composition(n, 42)
+		var b := WaveGen.composition(n, 42)
+		assert_eq(a["modifier"], b["modifier"], "Same seed → same modifier")
+		assert_true(
+			a["modifier"] == "" or WaveGen.MODIFIERS.has(a["modifier"]),
+			"Modifier comes from the known set"
+		)
+		seen = seen or a["modifier"] != ""
+	assert_true(seen, "Modifiers actually occur after wave 3")

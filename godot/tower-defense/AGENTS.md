@@ -78,6 +78,12 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
   generated vignette overlay (`art/vignette.png`, linear filter), barrel
   recoil (3 px tween), muzzle scale-pop + rotation jitter, impact pop.
   Presentation-only, no RNG.
+- **Pulse** (T10): wave modifiers from wave 3 (40% chance, deterministic in
+  `WaveGen`: rush/swarm/blackout/bounty), telegraphed in the HUD (running +
+  break preview) and logged in the wave event; vent overcharge as money sink
+  (20 money, 15 dmg in 2.5 cells, 6 s cooldown, ready-glow); decal per-cell
+  cap (2) keeps kill zones readable. Playtest note: the bright "decal smears"
+  were a fast-forward harness artifact (un-faded effects), not real decals.
 - **Meta**: skill tree is a stub (`SkillStub`, one dummy bonus,
   `user://skill_stub.cfg`). Real tree UI later, never in-match.
 - **Telemetry**: local JSONL writer (`Telemetry`), event-based only
@@ -121,13 +127,16 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
   redraw). Suite: 40 tests / 145 asserts green. T09: random run seed +
   `seed_override`, `TerrainGen` blockers/decor (greedy, never sealing),
   battle decals (scorch/skid/debris, cap 300), ambient emitters.
-  Suite: 49 tests / 384 asserts green.
+  Suite: 49 tests / 384 asserts green. T10 (Pulse): wave modifiers
+  (rush/swarm/blackout/bounty, HUD-telegraphed, logged in the wave event),
+  vent overcharge (money sink with ember burst + ready-glow), decal
+  per-cell cap (2), overcharge SFX. Suite: 58 tests / 472 asserts green.
 - Vision (2026-10-02): `docs/VISION.md` — pillars P1–P3 (workbench, living
   foundry, curiosity), values, anti-pillars; calibrations + next prototype
   questions (epilog twist, pressure curve, decal readability, meta, time
   control).
-- Open: epilog twist prototype, pressure curve, decal readability, meta
-  calibration, segments/more entry/exit sides, telemetry enrichment
+- Open: epilog twist prototype, meta calibration, time control, pressure
+  tuning via telemetry, segments/more entry/exit sides, telemetry enrichment
   (see `docs/IDEAS.md`).
 
 ## Commands

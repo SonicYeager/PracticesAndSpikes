@@ -25,12 +25,24 @@ const ART_SCALE := Vector2(2, 2)
 const SCATTER_SEED_MUL := 1000003
 const SCATTER_WAVE_MUL := 104729
 const DECAL_CAP := 300
+const DECAL_CELL_CAP := 2
+const OVERCHARGE_COST := 20
+const OVERCHARGE_DAMAGE := 15.0
+const OVERCHARGE_RADIUS := 2.5
+const OVERCHARGE_COOLDOWN := 6.0
+const MODIFIER_LABELS := {
+	"rush": "Ansturm",
+	"swarm": "Schwarm",
+	"blackout": "Blackout",
+	"bounty": "Kopfgeld",
+}
 const SPAWN_INTERVAL := 0.7
 const BREAK_SECONDS := 5.0
 const SHAKE_DECAY := 1.6         # trauma lost per second
 const SHAKE_MAX_OFFSET := 9.0    # px at full trauma
 const SHAKE_KILL := 0.12
 const SHAKE_LEAK := 0.3
+const SHAKE_OVERCHARGE := 0.35
 const SHAKE_GAME_OVER := 0.7
 const RECOIL_PX := 3.0
 const DRONE_FRAME_TIME := 0.15
@@ -72,6 +84,7 @@ const SFX := {
 	"denied": preload("res://audio/denied.wav"),
 	"wave": preload("res://audio/wave.wav"),
 	"gameover": preload("res://audio/gameover.wav"),
+	"overcharge": preload("res://audio/overcharge.wav"),
 }
 const SFX_DB := {
 	"shoot": -15.0,
@@ -83,6 +96,7 @@ const SFX_DB := {
 	"denied": -10.0,
 	"wave": -6.0,
 	"gameover": -4.0,
+	"overcharge": -6.0,
 }
 const TERRAIN_TEX := {
 	"rock": preload("res://art/rock.png"),
@@ -107,6 +121,12 @@ var economy: Economy
 var telemetry: Telemetry
 var origin := Vector2.ZERO
 var _decals: Array[Sprite2D] = []
+var _decals_by_cell: Dictionary = {}
+var _vents: Dictionary = {}
+var _spawn_interval := SPAWN_INTERVAL
+var _range_bonus := 0.0
+var _kill_reward := Economy.KILL_REWARD
+var _break_modifier := ""
 
 var _tower_nodes: Dictionary = {}
 var _guns: Dictionary = {}
@@ -204,10 +224,15 @@ func _unhandled_input(event: InputEvent) -> void:
 		# Camera-aware: maps to the cell under the cursor even while shaking.
 		var cell := _to_cell(get_global_mouse_position())
 		if event.button_index == MOUSE_BUTTON_LEFT:
+			if _vents.has(cell):
+				# Only during a wave: otherwise there are no drones to hit.
+				if _phase != Phase.RUNNING or not _try_overcharge(cell):
+					_play("denied")
 			# Rejected builds (maze would disconnect, drone in the way) refund.
-			if economy.spend(Economy.GUN_COST):
+			elif economy.spend(Economy.GUN_COST):
 				if not _drone_on_cell(cell) and maze.build(cell):
 					_guns[cell] = Gun.new(Drone.center_of(cell))
+					_guns[cell].range_bonus = _range_bonus
 					_show_tower(cell)
 					telemetry.event("build", {"cell": [cell.x, cell.y]})
 					_reroute_drones()
@@ -237,6 +262,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func _start_wave(n: int) -> void:
 	_wave = n
 	_wave_comp = WaveGen.composition(n, game_seed)
+	_apply_modifier(str(_wave_comp["modifier"]))
 	_phase = Phase.RUNNING
 	_break_timer = 0.0
 	_spawn_timer = 0.0
@@ -248,9 +274,34 @@ func _start_wave(n: int) -> void:
 		_spawn_queue.append("fast")
 	for i in int(_wave_comp["tanks"]):
 		_spawn_queue.append("tank")
-	telemetry.event("wave", {"wave": n, "count": _wave_comp["count"], "hp": _wave_comp["hp"]})
+	telemetry.event("wave", {
+		"wave": n,
+		"count": _wave_comp["count"],
+		"hp": _wave_comp["hp"],
+		"modifier": _wave_comp["modifier"],
+	})
 	_play("wave")
 	_update_hud()
+
+
+func _apply_modifier(modifier: String) -> void:
+	## Resets the per-wave knobs, then applies the event (T10). Swarm mutates
+	## the composition itself (more, weaker drones); the rest are game knobs.
+	_spawn_interval = SPAWN_INTERVAL
+	_range_bonus = 0.0
+	_kill_reward = Economy.KILL_REWARD
+	match modifier:
+		"rush":
+			_spawn_interval *= 0.6
+		"swarm":
+			_wave_comp["count"] = roundi(float(_wave_comp["count"]) * 1.5)
+			_wave_comp["hp"] = float(_wave_comp["hp"]) * 0.7
+		"blackout":
+			_range_bonus = -1.0
+		"bounty":
+			_kill_reward += 2
+	for gun in _guns.values():
+		gun.range_bonus = _range_bonus
 
 
 func _update_spawner(delta: float) -> void:
@@ -265,12 +316,14 @@ func _update_spawner(delta: float) -> void:
 		if _drones.is_empty():
 			_phase = Phase.BREAK
 			_break_timer = BREAK_SECONDS
+			# Cached once: the HUD break preview reads it every frame.
+			_break_modifier = str(WaveGen.composition(_wave + 1, game_seed)["modifier"])
 			_update_hud()
 		return
 	_spawn_timer -= delta
 	if _spawn_timer > 0.0:
 		return
-	_spawn_timer = SPAWN_INTERVAL
+	_spawn_timer = _spawn_interval
 	_spawn_drone(_spawn_queue.pop_front())
 
 
@@ -388,19 +441,70 @@ func _update_projectiles(delta: float) -> void:
 
 
 func _resolve_hit(p: Projectile) -> void:
-	var target := p.target
-	if target.take_damage(Gun.DAMAGE):
-		economy.on_kill()
+	_apply_damage(p.target, Gun.DAMAGE)
+
+
+func _apply_damage(target: Drone, amount: float) -> bool:
+	## Shared kill/hit consequences; returns true when the drone died.
+	if target.take_damage(amount):
+		economy.on_kill(_kill_reward)
 		_spawn_explosion(target.position)
 		_add_decal(SCORCH_TEX, target.position)
 		_play("kill")
 		_add_shake(SHAKE_KILL)
 		_remove_drone(target)
-	else:
-		_hit_flash[target] = HIT_FLASH_TIME
-		_spawn_impact(target.position)
-		_add_decal(DEBRIS_TEX, target.position)
-		_play("hit")
+		return true
+	_hit_flash[target] = HIT_FLASH_TIME
+	_spawn_impact(target.position)
+	_add_decal(DEBRIS_TEX, target.position)
+	_play("hit")
+	return false
+
+
+func _try_overcharge(cell: Vector2i) -> bool:
+	if not _vents.has(cell):
+		return false
+	var vent: Dictionary = _vents[cell]
+	if vent["cooldown"] > 0.0:
+		return false
+	if not economy.spend(OVERCHARGE_COST):
+		return false
+	vent["cooldown"] = OVERCHARGE_COOLDOWN
+	var center := Drone.center_of(cell)
+	for d in _drones.duplicate():
+		if center.distance_to(d.position) <= OVERCHARGE_RADIUS:
+			_apply_damage(d, OVERCHARGE_DAMAGE)
+	_spawn_ember_burst(center)
+	_add_shake(SHAKE_OVERCHARGE)
+	_play("overcharge")
+	telemetry.event("overcharge", {"cell": [cell.x, cell.y], "money": economy.money})
+	_update_hud()
+	return true
+
+
+func _spawn_ember_burst(grid_pos: Vector2) -> void:
+	var p := CPUParticles2D.new()
+	p.position = _grid_to_world(grid_pos)
+	p.texture = EMBER_TEX
+	p.amount = 28
+	p.lifetime = 1.1
+	p.one_shot = true
+	p.explosiveness = 1.0
+	p.direction = Vector2(0, -1)
+	p.spread = 180.0
+	p.initial_velocity_min = 30.0
+	p.initial_velocity_max = 90.0
+	p.gravity = Vector2(0, 60)
+	p.scale_amount_min = 0.6
+	p.scale_amount_max = 1.4
+	p.color = Color(1.0, 0.75, 0.35, 0.95)
+	add_child(p)
+	p.emitting = true
+	var t := create_tween()
+	t.tween_interval(1.5)
+	t.tween_callback(p.queue_free)
+	for i in 3:
+		_spawn_explosion(grid_pos + Vector2(_jitter(1.0), _jitter(1.0)))
 
 
 func _remove_drone(d: Drone) -> void:
@@ -478,6 +582,13 @@ func _sync_sprites(delta: float) -> void:
 		var direction := p.target.position - p.position
 		if direction.length() > 0.001:
 			sprite.rotation = direction.angle()
+	for cell in _vents:
+		var vent: Dictionary = _vents[cell]
+		vent["cooldown"] = maxf(vent["cooldown"] - delta, 0.0)
+		var node: Sprite2D = vent["node"]
+		node.modulate = (
+			Color(1.15, 1.05, 0.9) if vent["cooldown"] == 0.0 else Color(0.55, 0.55, 0.6)
+		)
 	for i in _entry_nodes.size():
 		_entry_nodes[i].scale = ART_SCALE * (1.0 + 0.05 * sin(_anim_time * 3.2 + i * 0.8))
 	for i in _exit_nodes.size():
@@ -581,17 +692,34 @@ func _spawn_explosion(grid_pos: Vector2) -> void:
 
 
 func _add_decal(tex: Texture2D, grid_pos: Vector2) -> void:
+	# Per-cell cap plus jitter: battle history stays readable in kill zones.
+	var cell := Vector2i(grid_pos.floor())
 	var s := Sprite2D.new()
 	s.texture = tex
-	s.position = _grid_to_world(grid_pos)
-	s.scale = ART_SCALE
-	s.rotation = _jitter(0.5)
+	s.position = _grid_to_world(grid_pos) + Vector2(_jitter(5.0), _jitter(5.0))
+	s.scale = ART_SCALE * (1.0 + _jitter(0.12))
+	s.rotation = _jitter(0.4)
 	s.z_index = -1  # above floor/decor, below the route preview
+	s.set_meta("cell", cell)
 	add_child(s)
 	_decals.append(s)
+	var cell_decals: Array = _decals_by_cell.get(cell, [])
+	cell_decals.append(s)
+	_decals_by_cell[cell] = cell_decals
+	if cell_decals.size() > DECAL_CELL_CAP:
+		_remove_decal(cell_decals.pop_front())
 	if _decals.size() > DECAL_CAP:
-		var old: Sprite2D = _decals.pop_front()
-		old.queue_free()
+		_remove_decal(_decals.pop_front())
+
+
+func _remove_decal(s: Sprite2D) -> void:
+	_decals.erase(s)
+	var cell: Vector2i = s.get_meta("cell")
+	var cell_decals: Array = _decals_by_cell.get(cell, [])
+	cell_decals.erase(s)
+	if cell_decals.is_empty():
+		_decals_by_cell.erase(cell)
+	s.queue_free()
 
 
 func _make_bar_texture() -> void:
@@ -680,12 +808,21 @@ func _draw_floor() -> void:
 
 
 func _draw_terrain(terrain: Dictionary) -> void:
+	var nodes: Array[Sprite2D] = []
 	for cell in terrain["blockers"]:
 		var s := Sprite2D.new()
 		s.texture = TERRAIN_TEX[_blocker_type(cell)]
 		s.position = _cell_center(cell)
 		s.scale = ART_SCALE
 		add_child(s)
+		nodes.append(s)
+		if _blocker_type(cell) == "vent":
+			_vents[cell] = {"node": s, "cooldown": 0.0}
+	# The money sink must exist: promote the first blocker if no vent rolled.
+	if _vents.is_empty() and not terrain["blockers"].is_empty():
+		var vent_cell: Vector2i = terrain["blockers"][0]
+		nodes[0].texture = TERRAIN_TEX["vent"]
+		_vents[vent_cell] = {"node": nodes[0], "cooldown": 0.0}
 	for cell in terrain["decor"]:
 		var d := Sprite2D.new()
 		d.texture = DECOR_TEX[_decor_type(cell)]
@@ -697,9 +834,8 @@ func _draw_terrain(terrain: Dictionary) -> void:
 
 func _setup_ambient(terrain: Dictionary) -> void:
 	# Presentation-only particle emitters (internal randomness, never gameplay).
-	for cell in terrain["blockers"]:
-		if _blocker_type(cell) == "vent":
-			_add_embers(cell)
+	for cell in _vents:
+		_add_embers(cell)
 	for cell in terrain["decor"]:
 		match _decor_type(cell):
 			"crack":
@@ -859,17 +995,32 @@ func _update_hud() -> void:
 		Phase.RUNNING:
 			_space_icon.hide()
 			_wave_icon.show()
-			_wave_label.text = "Welle %d: %d unterwegs, %d in Warteschlange" % [_wave, _drones.size(), _spawn_queue.size()]
+			_wave_label.text = "Welle %d: %d unterwegs, %d in Warteschlange%s" % [
+				_wave,
+				_drones.size(),
+				_spawn_queue.size(),
+				_modifier_label(str(_wave_comp.get("modifier", ""))),
+			]
 		Phase.BREAK:
 			_space_icon.show()
 			_wave_icon.hide()
-			_wave_label.text = "Welle %d in %.1f s" % [_wave + 1, _break_timer]
+			_wave_label.text = "Welle %d in %.1f s%s" % [
+				_wave + 1,
+				_break_timer,
+				_modifier_label(_break_modifier),
+			]
 		Phase.IDLE:
 			_space_icon.show()
 			_wave_icon.hide()
 			_wave_label.text = "Welle %d starten" % (_wave + 1)
 		_:
 			pass  # GAME_OVER: the overlay covers the HUD
+
+
+func _modifier_label(modifier: String) -> String:
+	if modifier == "":
+		return ""
+	return " · " + str(MODIFIER_LABELS.get(modifier, modifier))
 
 
 func _draw() -> void:

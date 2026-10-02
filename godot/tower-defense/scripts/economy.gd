@@ -14,8 +14,8 @@ func _init(start_money: int = 100) -> void:
 	money = start_money
 
 
-func on_kill() -> void:
-	money += KILL_REWARD
+func on_kill(amount: int = KILL_REWARD) -> void:
+	money += amount
 
 
 func on_leak() -> void:

@@ -88,6 +88,23 @@ by running `WaveGen` directly:
 
 The tanks/fast split changes with the seed; count/hp/speed do not.
 
+### Wave modifiers (T10)
+
+From wave 3, 40% of waves carry one event — deterministic per seed (the roll
+comes after the tanks/fast split, so those stay stable):
+
+| Modifier | Effect |
+|---|---|
+| `rush` | `SPAWN_INTERVAL` ×0.6 for the wave |
+| `swarm` | count ×1.5, hp ×0.7 |
+| `blackout` | gun range −1 cell for the wave |
+| `bounty` | kill reward +2 for the wave |
+
+Telegraphed in the HUD (during the wave and in the break preview) and logged
+in the `wave` telemetry event (effective post-swarm count; normals =
+count − fast − tanks). Overcharge (below) is the money sink that answers the
+modifiers.
+
 ## Scene pacing (`game.gd`)
 
 | Constant | Value | Meaning |
@@ -99,7 +116,9 @@ The tanks/fast split changes with the seed; count/hp/speed do not.
 | `SCATTER_SEED_MUL` / `SCATTER_WAVE_MUL` | 1000003 / 104729 | scatter seed: `game_seed * MUL + wave * MUL2 + index` (entry + exit) |
 | `BLOCKER_CLUSTERS` / `CLUSTER_MIN..MAX` | 7 / 1..3 | terrain clusters (`TerrainGen`) |
 | `DECOR_COUNT` | 26 | cosmetic decor cells |
-| `DECAL_CAP` | 300 | battle decals kept per run (FIFO) |
+| `DECAL_CAP` / `DECAL_CELL_CAP` | 300 / 2 | battle decals per run (FIFO) / per cell |
+| `OVERCHARGE_COST` / `OVERCHARGE_COOLDOWN` | 20 / 6 s | vent overcharge cost and cooldown |
+| `OVERCHARGE_DAMAGE` / `OVERCHARGE_RADIUS` | 15 / 2.5 cells | vent burst damage and radius |
 | `BREAK_SECONDS` | 5.0 s | intermission between waves (Space skips it) |
 | `SHAKE_DECAY` / `SHAKE_MAX_OFFSET` | 1.6 /s · 9 px | trauma decay / max camera offset |
 | `SHAKE_KILL` / `SHAKE_LEAK` / `SHAKE_GAME_OVER` | 0.12 / 0.3 / 0.7 | trauma per event |

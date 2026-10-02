@@ -9,13 +9,14 @@ telemetry for data-driven balancing.
 
 - Stack: Godot 4.7.2, GDScript (no .NET flow)
 - Entrypoint: `scenes/Main.tscn` (open/import the folder in the Godot editor)
-- Status: prototype complete + sides + dirty world (T01–T09) — see *Controls* and *Roadmap*
+- Status: prototype complete + sides + dirty world + pulse (T01–T10) — see *Controls* and *Roadmap*
 
 ## Controls
 
 | Input | Action |
 |---|---|
 | Left click | Build a gun (25) — rejected builds refund instantly |
+| Left click on a vent | Overcharge (20): ember burst, 15 dmg in 2.5 cells, 6 s cooldown |
 | Right click | Sell a gun (refund 12) |
 | Space | Start wave 1 / skip the break between waves |
 | R (or the button) | Restart after game over |
@@ -49,6 +50,9 @@ then auto-starts. Game over shows a run summary and restarts the scene.
 - Dirty World (T09): random run seed (logged for replay), seeded terrain
   blockers + decor, battle decals (scorch/skid/debris) that accumulate
   during the run, ambient embers/smoke/sparks.
+- Pulse (T10): per-wave events from wave 3 (Ansturm/Schwarm/Blackout/
+  Kopfgeld) telegraphed in the HUD, vent overcharge as money sink with an
+  ember burst, decal per-cell cap keeps kill zones readable.
 - Local telemetry: build/sell/wave/leak/run_end events →
   `user://run_<seed>.jsonl` (analysis: `tools/analyze_run.py`).
 - Meta stub: one persistent bonus (`SkillStub` → `user://skill_stub.cfg`).
@@ -70,11 +74,12 @@ GODOT_DISABLE_LEAK_CHECKS=1 godot --headless --path . \
   -s res://addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
 ```
 
-GUT 9.6.1 is vendored under `addons/gut/`. The suite (49 tests / 384 asserts)
+GUT 9.6.1 is vendored under `addons/gut/`. The suite (58 tests / 472 asserts)
 covers every core class plus one scene integration smoke test that steps the
 real `Main.tscn` (spawn → walk → shoot → kill with scattered entries and
 terrain, break → auto-chain, game over + log flush, restart wiring, camera
-shake decay, scatter determinism, nearest-exit fallback, decals/ambient).
+shake decay, scatter determinism, nearest-exit fallback, overcharge,
+modifiers, decal caps).
 
 ## Project structure
 
@@ -148,5 +153,6 @@ The parser has stdlib regression tests: `python tools/test_analyze_run.py`.
 | T07 | Docs pass | done |
 | T08 | Multi-entry/exit sides, scatter spawn, nearest-exit fallback | done |
 | T09 | Dirty World: run seed, terrain blockers/decor, decals, ambient | done |
+| T10 | Pulse: wave events, vent overcharge, decal per-cell cap | done |
 
 All slices done. Post-prototype directions are collected in `docs/IDEAS.md`.

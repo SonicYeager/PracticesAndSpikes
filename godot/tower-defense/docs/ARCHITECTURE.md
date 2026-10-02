@@ -26,11 +26,11 @@ controller owns every sprite, tween, audio player and HUD label.
 |---|---|---|
 | `Maze` | `scripts/maze.gd` | Buildable grid (`built: cell → tower_type`), entry/exit reservation, `can_build()` via hypothetical block + multi-source BFS (every entry keeps an exit), `build()`, `sell()` |
 | `Pathfinder` | `scripts/pathfinder.gd` | `AStarGrid2D` wrapper; `DIAGONAL_MODE_NEVER`, solid points, `find_path()` returns cell ids, `has_path()`, `reachable_from()` multi-source BFS |
-| `Economy` | `scripts/economy.gd` | Money-as-health: `on_kill()`, `on_leak()`, `spend()`, `is_game_over()` (strictly `< 0`) |
-| `WaveGen` | `scripts/wave.gd` | Static `composition(n, seed)` → `{wave, count, hp, speed, tanks, fast}` |
+| `Economy` | `scripts/economy.gd` | Money-as-health: `on_kill(amount)`, `on_leak()`, `spend()`, `is_game_over()` (strictly `< 0`) |
+| `WaveGen` | `scripts/wave.gd` | Static `composition(n, seed)` → `{wave, count, hp, speed, tanks, fast, modifier}` (T10 events from wave 3) |
 | `TerrainGen` | `scripts/terrain_gen.gd` | Static `generate(size, entries, exits, seed)` → `{blockers, decor}`; greedy placement that never seals an entry |
 | `Drone` | `scripts/drone.gd` | Grid-space walker: `advance(dt)` (returns `true` on leak), `take_damage()`, `reroute()`, `facing()`, `exit_cell()`, `distance_to_exit()`, `KIND_MODS` |
-| `Gun` | `scripts/gun.gd` | Range/cadence/targeting; `acquire()` picks the drone closest to base, `try_fire(dt, targets)` returns the target when a shot is due |
+| `Gun` | `scripts/gun.gd` | Range/cadence/targeting (`range_bonus` hook for wave modifiers); `acquire()` picks the drone closest to its exit, `try_fire(dt, targets)` returns the target when a shot is due |
 | `Projectile` | `scripts/projectile.gd` | Homing tracer; `advance(dt)` returns `true` on hit, fizzles when the target dies or leaks |
 | `Telemetry` | `scripts/telemetry.gd` | Buffers JSON events, `flush(path)` writes JSONL |
 | `SkillStub` | `scripts/skill_stub.gd` | Meta stub: one bonus persisted via `ConfigFile` |
@@ -73,9 +73,10 @@ are freed together with it in `_remove_drone()` / `_remove_projectile()`.
 
 ```
 Space ──► _start_wave(n)
-            WaveGen.composition(n, game_seed)
+            WaveGen.composition(n, game_seed) → _apply_modifier
+            (rush/swarm/blackout/bounty; knobs reset every wave)
             queue = normals… + fast… + tanks…      (fixed order)
-            telemetry "wave" · SFX "wave"
+            telemetry "wave" (+ modifier) · SFX "wave"
 
 Wave cleared ──► _break_timer = BREAK_SECONDS      (HUD countdown)
             timeout or Space ──► _start_wave(n + 1)   (auto-chain)
@@ -97,7 +98,10 @@ Projectile hit ──► _resolve_hit
             kill: Economy.on_kill() · explosion · SFX "kill" · scorch decal
             else: hit flash + impact spark · SFX "hit" · debris decal
 
-Left click ──► spend(25) → reject? refund + SFX "denied"
+Left click ──► vent? _try_overcharge(cell): spend(20) · cooldown 6 s
+                ember burst · damage (15 in 2.5 cells) via _apply_damage
+                telemetry "overcharge" · SFX "overcharge"
+              else: spend(25) → reject? refund + SFX "denied"
                         → build: Gun + tower sprite + telemetry "build" + SFX "build"
 Right click ─► Maze.sell → refund 12 + telemetry "sell" + SFX "sell"
 Both        ──► _reroute_drones(): each drone re-paths to its assigned exit,
@@ -129,6 +133,10 @@ Both        ──► _reroute_drones(): each drone re-paths to its assigned exi
 - After game over `_process` stops (frozen world); the only accepted input
   is restart.
 - Money changes only through `Economy`; the HUD reads it, never writes it.
+- Wave-modifier knobs (`_spawn_interval`, `_range_bonus`, `_kill_reward`)
+  reset at every `_start_wave`; only `swarm` mutates the composition itself.
+- Battle decals are capped per cell (`DECAL_CELL_CAP`) and globally
+  (`DECAL_CAP`); the per-cell cap keeps kill zones readable.
 
 ## Determinism
 
@@ -141,6 +149,8 @@ Gameplay RNG exists in exactly three places, all seeded from the run seed:
   `seed_override` pins it for tests/editor — a logged seed replays a run
 - spawn order: normals, then fast, then tanks (fixed)
 - spawn scatter: per-spawn RNG, deterministic given the run seed
+- wave modifiers: rolled after the tanks/fast split, so those stay stable
+  per seed; the modifier itself is part of the composition
 - terrain: deterministic given the run seed (greedy placement)
 - floor variety: `(x * 7 + y * 13) % 3` (stable pattern)
 - explosion frame alternation: `_fx_counter`
@@ -178,9 +188,9 @@ panel → game-over overlay, in that draw order).
   assertions are frame-rate independent; it covers spawn → walk → shoot →
   kill with scattered entries and terrain, the payout, break → auto-chain,
   the Space skip, scatter/terrain determinism, the nearest-exit fallback,
-  decals + ambient setup, the game-over screen incl. telemetry flush and
-  restart-button wiring, and the camera shake offset/decay (writes only
-  `user://`, then deletes the file).
+  overcharge, modifier knobs, decal caps + ambient setup, the game-over
+  screen incl. telemetry flush and restart-button wiring, and the camera
+  shake offset/decay (writes only `user://`, then deletes the file).
 - Gotcha: GUT's GUI panel covers the right half of the window, so
   screenshots taken from a GUT run are cropped. For visual QA use a
   temporary `SceneTree` script (`godot --path . -s tools/x.gd`,

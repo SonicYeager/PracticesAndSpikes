@@ -10,6 +10,7 @@ const INTERVAL := 0.6
 
 var position: Vector2
 var cooldown := 0.0
+var range_bonus := 0.0  # per-wave modifier hook (e.g. blackout), scene-set
 
 
 func _init(p_position: Vector2) -> void:
@@ -17,7 +18,7 @@ func _init(p_position: Vector2) -> void:
 
 
 func in_range(target: Drone) -> bool:
-	return position.distance_to(target.position) <= RANGE
+	return position.distance_to(target.position) <= RANGE + range_bonus
 
 
 func acquire(targets: Array) -> Drone:

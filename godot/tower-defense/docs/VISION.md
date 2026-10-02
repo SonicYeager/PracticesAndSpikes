@@ -74,9 +74,10 @@ Modifier, Überraschungen pro Run. Ruhig mit Puls, nie Reflexdruck.
 
 1. **Epilog-Twist** (P1/P3): Rache-Welle nach Game over — zieht die Symmetrie?
 2. **Druckkurve** (P3): Zwischenzustände statt binär — Senken und
-   Ereignisse/Modifier als Puls (Playtest-Befund: Schneeball vs. Abriss).
-3. **Lesbarkeit** (P2): Decal-Verschmierung entschärfen (Atmosphäre ohne
-   Suppe; Playtest-Befund W4+).
+   Ereignisse/Modifier als Puls. *Erste Antwort in T10 (Modifier +
+   Overcharge); Tuning via Telemetrie offen.*
+3. **Lesbarkeit** (P2): Decal-Verschmierung entschärfen. *T10: Per-Cell-Cap;
+   der ursprüngliche Befund war teils ein Schnellspul-Harness-Artefakt.*
 4. **Meta-Kalibrierung**: was genau zwischen Vielfalt und Progression?
 5. **Total Time Control** (P3): Pause/Speed als „ruhig mit Puls"-Werkzeug?
 

@@ -249,6 +249,111 @@ func test_seed_override_pins_the_run_seed() -> void:
 
 func test_decal_cap_evicts_oldest() -> void:
 	var game = _make_game()
-	for i in game.DECAL_CAP + 5:
+	# Spread across cells (per-cell cap 2) so the global cap is what evicts.
+	for i in game.DECAL_CAP + 10:
+		var cell := Vector2i(i % 20, (i / 20) % 12)
+		game._add_decal(game.DEBRIS_TEX, Vector2(cell))
+	assert_eq(game._decals.size(), game.DECAL_CAP, "Decals are capped globally")
+
+
+func test_decal_per_cell_cap() -> void:
+	var game = _make_game()
+	game._add_decal(game.DEBRIS_TEX, Vector2(5, 5))
+	var oldest: Sprite2D = game._decals[0]
+	for i in 4:
 		game._add_decal(game.DEBRIS_TEX, Vector2(5, 5))
-	assert_eq(game._decals.size(), game.DECAL_CAP, "Decals are capped")
+	assert_eq(
+		game._decals_by_cell[Vector2i(5, 5)].size(),
+		game.DECAL_CELL_CAP,
+		"A cell keeps only its cap"
+	)
+	assert_true(oldest.is_queued_for_deletion(), "The oldest decal is freed")
+	assert_false(
+		game._decals_by_cell[Vector2i(5, 5)].has(oldest),
+		"And removed from the cell list"
+	)
+	assert_eq(game._decals.size(), game.DECAL_CELL_CAP, "Overflow is freed")
+
+
+func test_overcharge_spends_and_damages_nearby_drones() -> void:
+	var game = _make_game()
+	assert_gt(game._vents.size(), 0, "Every map has at least one vent")
+	var vent: Vector2i = game._vents.keys()[0]
+	var drone := Drone.new("normal", [vent], 20.0, 1.0)
+	game._drones.append(drone)
+	var money_before: int = game.economy.money
+	assert_true(game._try_overcharge(vent), "Overcharge fires")
+	assert_eq(
+		game.economy.money,
+		money_before - game.OVERCHARGE_COST,
+		"Overcharge costs money"
+	)
+	assert_almost_eq(
+		drone.hp,
+		20.0 - game.OVERCHARGE_DAMAGE,
+		0.001,
+		"Nearby drones take damage"
+	)
+	assert_false(game._try_overcharge(vent), "Cooldown blocks a second burst")
+	assert_false(game._try_overcharge(Vector2i(9, 9)), "Non-vent cells are ignored")
+
+
+func test_modifier_application_sets_knobs() -> void:
+	var game = _make_game()
+	game._wave_comp = WaveGen.composition(5, 1)
+	game._apply_modifier("rush")
+	assert_almost_eq(
+		game._spawn_interval, game.SPAWN_INTERVAL * 0.6, 0.001, "Rush tightens the spawn interval"
+	)
+	game._apply_modifier("blackout")
+	assert_almost_eq(game._range_bonus, -1.0, 0.001, "Blackout shrinks gun range")
+	game._apply_modifier("bounty")
+	assert_eq(game._kill_reward, Economy.KILL_REWARD + 2, "Bounty raises the kill reward")
+	game._wave_comp = {"count": 4, "hp": 20.0, "fast": 0, "tanks": 0, "modifier": "swarm"}
+	game._apply_modifier("swarm")
+	assert_eq(game._wave_comp["count"], 6, "Swarm adds drones")
+	assert_almost_eq(game._wave_comp["hp"], 14.0, 0.001, "Swarm weakens them")
+	game._apply_modifier("")
+	assert_almost_eq(game._spawn_interval, game.SPAWN_INTERVAL, 0.001, "Knobs reset per wave")
+	assert_eq(game._kill_reward, Economy.KILL_REWARD, "Kill reward resets per wave")
+
+
+func test_wave_event_logs_the_modifier() -> void:
+	var game = _make_game()
+	game._start_wave(1)
+	var found := false
+	for line in game.telemetry.lines:
+		if line.contains("\"t\":\"wave\""):
+			found = true
+			assert_true(line.contains("\"modifier\""), "Wave event carries the modifier")
+	assert_true(found, "Wave event was logged")
+
+
+func test_start_wave_applies_the_seeded_modifier() -> void:
+	var rush = _make_game(121)
+	assert_eq(WaveGen.composition(7, 121)["modifier"], "rush")
+	rush._start_wave(7)
+	assert_almost_eq(
+		rush._spawn_interval, rush.SPAWN_INTERVAL * 0.6, 0.001, "Rush wave tightens pacing"
+	)
+	var blackout = _make_game(222)
+	assert_eq(WaveGen.composition(5, 222)["modifier"], "blackout")
+	blackout._start_wave(5)
+	assert_almost_eq(blackout._range_bonus, -1.0, 0.001, "Blackout wave shrinks range")
+	var bounty = _make_game(121)
+	assert_eq(WaveGen.composition(3, 121)["modifier"], "bounty")
+	bounty._start_wave(3)
+	assert_eq(bounty._kill_reward, Economy.KILL_REWARD + 2, "Bounty wave pays more")
+
+
+func test_blackout_updates_existing_guns() -> void:
+	var game = _make_game()
+	game._guns[Vector2i(1, 1)] = Gun.new(Vector2(1.5, 1.5))
+	game._apply_modifier("blackout")
+	assert_almost_eq(
+		game._guns[Vector2i(1, 1)].range_bonus, -1.0, 0.001, "Existing guns get the modifier"
+	)
+	game._apply_modifier("")
+	assert_almost_eq(
+		game._guns[Vector2i(1, 1)].range_bonus, 0.0, 0.001, "And it resets next wave"
+	)

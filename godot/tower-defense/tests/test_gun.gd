@@ -47,3 +47,11 @@ func test_ignores_dead_and_finished_targets() -> void:
 	var leaked := _drone_at(1)
 	leaked.finished = true
 	assert_null(gun.try_fire(0.0, [leaked]))
+
+
+func test_range_bonus_shrinks_coverage() -> void:
+	var gun := Gun.new(Vector2(0.5, 0.5))
+	var far := _drone_at(3)  # 3.0 cells away: inside 3.5, outside 2.5
+	assert_true(gun.in_range(far), "Within the base range")
+	gun.range_bonus = -1.0
+	assert_false(gun.in_range(far), "Blackout range shrinks coverage")

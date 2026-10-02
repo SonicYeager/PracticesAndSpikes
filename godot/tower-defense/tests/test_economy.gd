@@ -25,3 +25,11 @@ func test_spend_requires_funds() -> void:
 	assert_eq(e.money, 5, "Failed spend leaves money untouched")
 	assert_true(e.spend(5))
 	assert_eq(e.money, 0)
+
+
+func test_on_kill_accepts_a_reward_override() -> void:
+	var e := Economy.new(10)
+	e.on_kill(8)
+	assert_eq(e.money, 18, "Bounty modifier pays a custom reward")
+	e.on_kill()
+	assert_eq(e.money, 24, "Default reward unchanged")

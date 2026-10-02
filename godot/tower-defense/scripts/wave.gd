@@ -9,6 +9,10 @@ const BASE_HP := 20.0
 const HP_GROWTH := 1.15
 const BASE_SPEED := 42.0
 const MAX_SPEED_BONUS := 40.0
+## Per-wave events (T10): light pressure plus discovery, never lock & key.
+const MODIFIERS := ["rush", "swarm", "blackout", "bounty"]
+const MODIFIER_FROM_WAVE := 3
+const MODIFIER_CHANCE := 40  # percent per wave
 
 
 static func composition(wave_n: int, game_seed: int) -> Dictionary:
@@ -21,6 +25,10 @@ static func composition(wave_n: int, game_seed: int) -> Dictionary:
 	# Deterministic fast/tank split, grows with wave number.
 	var tanks := rng.randi_range(0, n / 2)
 	var fast := rng.randi_range(0, n / 3)
+	# Modifier roll comes last so the draws above stay stable per seed.
+	var modifier := ""
+	if n >= MODIFIER_FROM_WAVE and rng.randi_range(0, 99) < MODIFIER_CHANCE:
+		modifier = MODIFIERS[rng.randi_range(0, MODIFIERS.size() - 1)]
 	return {
 		"wave": n,
 		"count": count,
@@ -28,4 +36,5 @@ static func composition(wave_n: int, game_seed: int) -> Dictionary:
 		"speed": speed,
 		"tanks": mini(tanks, count),
 		"fast": mini(fast, count),
+		"modifier": modifier,
 	}

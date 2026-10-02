@@ -118,6 +118,13 @@ def build_sounds():
             sweep(311, 311, 0.28, 0.5, "sine", decay=4.0),
             sweep(262, 262, 0.50, 0.5, "sine", decay=3.0),
         ), 0.85),
+        # Vent overcharge (T10): deep whoosh plus crackle. Appended last so
+        # the RNG draw order of the existing sounds stays stable.
+        "overcharge": normalize(mix(
+            sweep(120, 44, 0.50, 0.7, "saw", decay=6.0, rng=rng),
+            sweep(240, 88, 0.35, 0.3, "sine", decay=8.0),
+            noise(0.50, 0.5, 7.0, rng),
+        ), 0.9),
     }
 
 
