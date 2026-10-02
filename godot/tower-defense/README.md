@@ -86,7 +86,7 @@ GODOT_DISABLE_LEAK_CHECKS=1 godot --headless --path . \
   -s res://addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
 ```
 
-GUT 9.6.1 is vendored under `addons/gut/`. The suite (68 tests / 510 asserts)
+GUT 9.6.1 is vendored under `addons/gut/`. The suite (75 tests / 533 asserts)
 covers every core class plus one scene integration smoke test that steps the
 real `Main.tscn` (spawn → walk → shoot → kill with scattered entries and
 terrain, break → auto-chain, game over + log flush, restart wiring, camera

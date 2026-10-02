@@ -7,7 +7,7 @@ and prints a per-run report plus an aggregate across runs.
 Events: run_start {seed,source,harness} · wave {wave,count,hp} · build {cell}
         · sell {cell} · kill {wave,cell,kind} · wave_end {wave,kills,leaks,
         money_start,money_end} · leak {wave,money} · send {wave} · time_control
-        · run_end {wave,money}
+        · overcharge {cell,money} · run_end {wave,money}
 
 Derived numbers:
   kills      = exact per wave: wave_end.kills once the wave was cleared, else the
@@ -109,6 +109,7 @@ def load_run(path):
         "harness": None,      # bool flag from run_start
         "sends": 0,           # player-initiated wave starts (send events)
         "time_controls": 0,   # pause/speed events (emitted by the TimeControl slice)
+        "overcharges": 0,     # vent overcharge casts (money-sink usage)
         "wave_ends": {},      # wave -> {kills, leaks, money_start, money_end}
         "kills_by_wave": {},  # wave -> kill-event count
         "kill_cells": {},     # (x, y) -> kill count
@@ -195,6 +196,8 @@ def load_run(path):
             elif kind == "time_control":
                 # Emitted by the future TimeControl slice; accepted, not scored yet.
                 run["time_controls"] += 1
+            elif kind == "overcharge":
+                run["overcharges"] += 1
             elif kind == "run_end":
                 run["run_ends"] += 1
                 run["run_end"] = {

@@ -89,7 +89,7 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
 - **Meta**: skill tree is a stub (`SkillStub`, one dummy bonus,
   `user://skill_stub.cfg`). Real tree UI later, never in-match.
 - **Telemetry**: local JSONL writer (`Telemetry`), event-based only
-  (build/sell/wave/leak/run_end), no per-frame logging, flushed on game over
+  (build/sell/wave/leak/kill/send + wave summaries), no per-frame logging, flushed on game over
   and on window close. Analysis: `tools/analyze_run.py` (stdlib) — per-run
   wave tables + aggregate; scans `telemetry_local/`, then the Godot user dir.
 - **Art (T11/T14)**: XT steel/lab look (see `art/STYLEGUIDE.md`): dark
@@ -110,7 +110,8 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
   `Drone`/`Gun`/`Projectile` core classes + tests, spawner on Space, drone
   walk/animation, barrel aiming (pivot via `Sprite2D.offset`), tracers,
   explosions, kill/leak economy, drone-aware build rejection, re-path on
-  maze change, telemetry events (build/sell/wave/leak/run_end) flushed to
+  maze change, telemetry events (build/sell/wave/leak/kill/send + wave_end
+  summaries) flushed to
   `user://run_<seed>.jsonl`, minimal game-over label. Juice pass: 9
   synthesized SFX (`tools/make_sounds.py` → `audio/`), muzzle-tip tracers +
   flash, hit spark/flash, HP bars, walk animation, spawn/base pulse + art
@@ -148,15 +149,17 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
   `scripts/board_view.gd`; the scene pushes routes and vent state in.
   Suite: 68 tests / 510 asserts green. T14: plasma-cannon turret + bug-style
   drones (generator redraw) and combat FX extracted into `scripts/fx.gd`
-  (shake, muzzle/impact/explosion, ember bursts, recoil). Suite: 68 tests /
-  510 asserts green.
+  (shake, muzzle/impact/explosion, ember bursts, recoil). T15 (Telemetry):
+  kill/send/wave_end events + run_start provenance; the analyzer renders exact
+  kills, money start→end and kill zones (legacy logs stay readable). Suite:
+  75 tests / 533 asserts green.
 - Vision (2026-10-02): `docs/VISION.md` — pillars P1–P3 (workbench, living
   foundry, curiosity), values, anti-pillars; calibrations + next prototype
   questions (epilog twist, pressure curve, decal readability, meta, time
   control).
 - Open: epilog twist prototype, meta calibration, time control, pressure
-  tuning via telemetry, segments/more entry/exit sides, telemetry enrichment
-  (see `docs/IDEAS.md`; candidate queue with priorities: `docs/BACKLOG.md`).
+  tuning via telemetry, segments/more entry/exit sides (see `docs/IDEAS.md`;
+  candidate queue with priorities: `docs/BACKLOG.md`).
 
 ## Commands
 

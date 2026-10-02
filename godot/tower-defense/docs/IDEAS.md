@@ -78,8 +78,10 @@ Each needs a slice decision; vision check noted.*
   in-match — see `AGENTS.md` "Meta".
 - **More tower types / drone kinds**: extension points documented in
   `docs/ARCHITECTURE.md`.
-- **Telemetry enrichment**: e.g. kill events or per-wave money snapshots if
-  `tools/analyze_run.py` needs more than leak/build/wave/run_end.
+- **Telemetry enrichment**: done (T15) — kill/send/wave_end events, run_start
+  provenance, exact kills + money curves + kill zones in the analyzer. Open
+  follow-ups (per-wave kill zones, terminal-wave summary on mid-wave death)
+  sit with the balance-harness slice.
 - **Late-wave perf sanity**: once runs scale past ~25 waves, have the balance
   harness (see `docs/BACKLOG.md`) watch entity/decal load — low risk at M1
   lengths.

@@ -110,6 +110,11 @@ func test_space_skips_break() -> void:
 	assert_eq(game._director.wave, 2, "Space starts the next wave during the break")
 	assert_eq(game._director.phase, WaveDirector.Phase.RUNNING, "Wave 2 is running")
 	assert_eq(game._director.break_timer, 0.0, "Break is over")
+	var sends := 0
+	for line in game.telemetry.lines:
+		if line.contains("\"t\":\"send\""):
+			sends += 1
+	assert_eq(sends, 1, "The Space skip sends the next wave")
 
 
 func test_double_leak_same_frame_records_single_run_end() -> void:
@@ -126,6 +131,7 @@ func test_double_leak_same_frame_records_single_run_end() -> void:
 	var path := _telemetry_path(game)
 	var content := FileAccess.get_file_as_string(path)
 	assert_eq(content.count("\"run_end\""), 1, "Exactly one run_end event is recorded")
+	assert_false(content.contains("\"wave_end\""), "No wave summary for a run that died mid-wave")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 
 
@@ -300,6 +306,21 @@ func test_overcharge_spends_and_damages_nearby_drones() -> void:
 	assert_false(game._try_overcharge(Vector2i(9, 9)), "Non-vent cells are ignored")
 
 
+func test_overcharge_kill_emits_kill_event() -> void:
+	var game = _make_game()
+	var vent: Vector2i = game._vents.keys()[0]
+	# A fast drone has 12 hp at wave-1 base hp — dies to the 15 overcharge damage.
+	var path: Array[Vector2i] = [vent]
+	var drone := Drone.spawn("fast", path, 20.0, 1.0)
+	game._drones.append(drone)
+	assert_true(game._try_overcharge(vent), "Overcharge fires")
+	var kill_line := ""
+	for line in game.telemetry.lines:
+		if line.contains("\"t\":\"kill\""):
+			kill_line = line
+	assert_true(kill_line.contains("\"kind\":\"fast\""), "Overcharge kill emits a kill event")
+
+
 func test_wave_event_logs_the_modifier() -> void:
 	var game = _make_game()
 	game._start_wave(1)
@@ -344,6 +365,20 @@ func test_kill_wave_summary_and_send_events() -> void:
 		if line.contains("\"t\":\"send\""):
 			sends += 1
 	assert_eq(sends, 1, "Only the player start sends; the auto-chain does not")
+	# Wave 2: per-wave counters must start from zero again (2 kills, not 3).
+	while not game._director.queue.is_empty():
+		game._process(STEP)
+	for i in 2:
+		game._apply_damage(game._drones[0], 999.0)
+	for d in game._drones.duplicate():
+		game._on_leak(d)
+	game._process(STEP)
+	var wave2_line := ""
+	for line in game.telemetry.lines:
+		if line.contains("\"t\":\"wave_end\"") and line.contains("\"wave\":2"):
+			wave2_line = line
+	assert_true(wave2_line.contains("\"kills\":2"), "Wave 2 counters reset (2 kills, not 3)")
+	assert_true(wave2_line.contains("\"leaks\":4"), "Wave 2 leak counter is fresh")
 
 
 func test_harness_run_provenance() -> void:
