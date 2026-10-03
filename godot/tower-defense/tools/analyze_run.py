@@ -11,6 +11,8 @@ Events: run_start {seed,source,harness} · wave {wave,count,hp}
         {wave} · time_control {action,speed,paused} · overcharge {cell,money}
         · mission_cleared {wave,money,kills,leaks}
         · run_end {wave,money,result,endless}
+        · harness_start {waves,money,dt,towers,walls}
+        · harness_end {wave,reason,money,kills,leaks,steps}
 
 Derived numbers:
   kills      = exact per wave: wave_end.kills once the wave was cleared, else the
@@ -136,6 +138,8 @@ def load_run(path):
         "overcharges_during": {},
         "run_end": None,
         "mission_cleared": None,
+        "harness_start": None,
+        "harness_end": None,
         "run_starts": 0,
         "run_ends": 0,
         "unknown": {},
@@ -240,6 +244,23 @@ def load_run(path):
                     "kills": event.get("kills"),
                     "leaks": event.get("leaks"),
                 }
+            elif kind == "harness_start":
+                run["harness_start"] = {
+                    "waves": as_int(event.get("waves")),
+                    "money": event.get("money"),
+                    "dt": event.get("dt"),
+                    "towers": event.get("towers"),
+                    "walls": event.get("walls"),
+                }
+            elif kind == "harness_end":
+                run["harness_end"] = {
+                    "wave": as_int(event.get("wave")),
+                    "reason": event.get("reason"),
+                    "money": event.get("money"),
+                    "kills": event.get("kills"),
+                    "leaks": event.get("leaks"),
+                    "steps": as_int(event.get("steps")),
+                }
             else:
                 run["unknown"][kind] = run["unknown"].get(kind, 0) + 1
     return run
@@ -258,6 +279,7 @@ def report_run(run):
     name = os.path.basename(run["path"])
     seed = run["seed"] if run["seed"] is not None else "?"
     mission = run["mission_cleared"]
+    harness = run["harness_end"]
     if run["run_end"]:
         if mission and run["run_end"].get("endless"):
             result = "mission cleared at wave %s; endless ended at wave %s (money %s)" % (
@@ -270,6 +292,16 @@ def report_run(run):
                 fmt_number(run["run_end"]["wave"]),
                 run["run_end"]["money"],
             )
+    elif harness:
+        reason = harness.get("reason") or "?"
+        if mission:
+            result = "mission cleared at wave %s; harness stopped at wave %s (%s)" % (
+                fmt_number(mission["wave"]),
+                fmt_number(harness["wave"]),
+                reason,
+            )
+        else:
+            result = "harness stopped at wave %s (%s)" % (fmt_number(harness["wave"]), reason)
     elif mission:
         last_wave = run["order"][-1] if run["order"] else mission["wave"]
         if last_wave is not None and last_wave > (mission["wave"] or 0):
@@ -421,19 +453,23 @@ def report_aggregate(runs):
                     fmt_number(kills, "%.1f"),
                 )
             )
-    ended = [run for run in runs if run["run_end"] or run["mission_cleared"]]
+    ended = [run for run in runs if run["run_end"] or run["mission_cleared"] or run["harness_end"]]
     if ended:
         reached = []
         for run in ended:
             # Session-end wave: the run_end if the session ended, else the
-            # furthest wave seen (mission clear or an endless segment that was
-            # cut off without a run_end).
+            # harness stop wave, else the furthest wave seen (mission clear or
+            # an endless segment that was cut off without a run_end).
             if run["run_end"]:
                 wave = run["run_end"]["wave"]
-            else:
+            elif run["harness_end"]:
+                wave = run["harness_end"]["wave"]
+            elif run["mission_cleared"]:
                 wave = run["mission_cleared"]["wave"]
                 if run["order"] and run["order"][-1] is not None:
                     wave = max(wave or 0, run["order"][-1])
+            else:
+                wave = None
             if wave is not None:
                 reached.append(wave)
         summary = "  runs ended: %d/%d" % (len(ended), len(runs))

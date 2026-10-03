@@ -77,7 +77,7 @@ Modifier, Überraschungen pro Run. Ruhig mit Puls, nie Reflexdruck.
 1. **Epilog-Twist** (P1/P3): Rache-Welle nach Game over — zieht die Symmetrie?
 2. **Druckkurve** (P3): Zwischenzustände statt binär — Senken und
    Ereignisse/Modifier als Puls. *Erste Antwort in T10 (Modifier +
-   Overcharge); Tuning via Telemetrie offen.*
+   Overcharge); Tuning via Telemetrie offen — Harness verfügbar seit T20.*
 3. **Lesbarkeit** (P2): Decal-Verschmierung entschärfen. *T10: Per-Cell-Cap;
    der ursprüngliche Befund war teils ein Schnellspul-Harness-Artefakt.*
 4. **Meta-Kalibrierung**: was genau zwischen Vielfalt und Progression?
@@ -92,7 +92,7 @@ Modifier, Überraschungen pro Run. Ruhig mit Puls, nie Reflexdruck.
    (Krater/Felsen/neue Front, mit Refund + Telegraphing), Commander-Fähigkeiten,
    Turm-Upgrades. Kill (amendiert 2026-10-03, ADR 0012): drei Wellen nach dem
    Bauplateau ohne Upgrade-Ausgabe bei steigendem Geld → Ansatz verwerfen;
-   Evidenz über Human-Runs, Harness sobald verfügbar.
+   Evidenz über Human-Runs + Harness (verfügbar seit T20).
 
 **Reihenfolge (Entscheidung 2026-10-02)**: Der Run-Frame (endliche Mission +
 Time Control, M1) kommt vor dem Epilog-Twist (M3) — Twists brauchen erst ein

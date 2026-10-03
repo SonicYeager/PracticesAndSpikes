@@ -171,3 +171,8 @@ modifiers.
    then the Godot user dir — copy `user://run_<seed>.jsonl` into
    `telemetry_local/` to keep it; pre-provenance runs live in
    `telemetry_local/legacy/` and can be analyzed by passing that dir).
+4. For controlled questions ("hält Build X Welle N?"), run the headless
+   harness: `godot --headless --path . -s tools/harness.gd -- --seed 7
+   --waves 30 --towers "9,3;10,3"` — pre-wave-1 builds, fixed cadence,
+   `--repeat 2` checks determinism, the log renders as `[harness]`.
+   Balance claims need ≥8 harness + 3 human runs (README working rules).

@@ -55,7 +55,7 @@ owns its panels and only sees pushed state.
 | `GunUpgrades` | `scripts/gun_upgrades.gd` | Five-level upgrade table (ADR 0012): cumulative prices, deltas, half refunds, names/descriptions; static helpers only |
 | `Pieces` | `scripts/pieces.gd` | Buildable kinds (T17): `Kind {GUN, WALL}` → cost/label/telemetry name; static, no instances |
 | `Projectile` | `scripts/projectile.gd` | Homing tracer carrying its damage (level-aware); `advance(dt)` returns `true` on hit, fizzles when the target dies or leaks |
-| `Telemetry` | `scripts/telemetry.gd` | Buffers JSON events (wave/build/sell/clear/upgrade/leak/kill/send/overcharge/time_control + `wave_end`/`mission_cleared`/`run_end` summaries), `flush(path)` writes JSONL; `run_start` carries `source`/`harness` provenance |
+| `Telemetry` | `scripts/telemetry.gd` | Buffers JSON events (wave/build/sell/clear/upgrade/leak/kill/send/overcharge/time_control/harness_start/harness_end + `wave_end`/`mission_cleared`/`run_end` summaries), `flush(path)` writes JSONL; `run_start` carries `source`/`harness` provenance |
 | `SkillStub` | `scripts/skill_stub.gd` | Meta stub: one bonus persisted via `ConfigFile` |
 
 ## Coordinates
@@ -211,6 +211,9 @@ Gameplay RNG exists in exactly three places, all seeded from the run seed:
 - terrain: deterministic given the run seed (greedy placement)
 - time control: pause/speed scale delta only — composition/order stay
   seed-stable; bit-identical timing across speeds is not guaranteed
+- balance harness: `tools/harness.gd` steps a fixed 1/60 s cadence manually
+  (`set_process(false)`, no engine frames in the sim); outcomes are
+  seed-stable, manual-run comparison is outcome-level
 - floor variety: `(x * 7 + y * 13) % 3` (stable pattern)
 - explosion frame alternation: `_fx_counter`
 - animation phases: spawn index (`_drone_phase`), not RNG
@@ -264,6 +267,10 @@ panels → game-over overlay).
   game-over
   screen incl. telemetry flush and restart-button wiring, and the camera
   shake offset/decay (writes only `user://`, then deletes the file).
+- Tooling: `tools/harness_run.gd` (`HarnessRun`) is covered by
+  `tests/test_harness_run.gd` against the real `Main.tscn` (cap/loss/
+  determinism/auto-endless/log cross-check/frame invariance); the
+  `tools/harness.gd` wrapper owns args/IO/exit and is verified manually.
 - Gotcha: GUT's GUI panel covers the right half of the window, so
   screenshots taken from a GUT run are cropped. For visual QA use
   `tools/shot.gd` (windowed; headless is refused): `Godot --path . -s

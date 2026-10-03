@@ -107,7 +107,7 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
 - **Telemetry**: local JSONL writer (`Telemetry`), event-based only
   (build/sell/clear/upgrade/wave/leak/kill/send + wave summaries; build/sell
   carry `kind`; `mission_cleared` marks the win, `run_end` carries
-  `result`/`endless`, `time_control` logs pause/speed), no per-frame logging, flushed on run end
+  `result`/`endless`, `time_control` logs pause/speed, `harness_start`/`harness_end` mark tool runs), no per-frame logging, flushed on run end
   and on window close. Analysis: `tools/analyze_run.py` (stdlib) — per-run
   wave tables + aggregate; scans `telemetry_local/`, then the Godot user dir.
 - **Art (T11/T14)**: XT steel/lab look (see `art/STYLEGUIDE.md`): dark
@@ -186,13 +186,17 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
   asserts green. T19 (Time control, 2026-10-04): `TimeControl` (P pause,
   T ×1/×2/×3), Engine.time_scale + explicit paused guard, planning actions
   stay available, wave start/overcharge denied, HUD indicator + wave-button
-  lock, analyzer `time` marker; suite: 136 tests / 875 asserts green.
+  lock, analyzer `time` marker; suite: 136 tests / 875 asserts green. T20
+  (Balance harness, 2026-10-04): `HarnessRun`-Kern + headless `tools/harness.gd`
+  (Seed + Pre-Wave-1-Builds, Cap/Guard, Auto-Endlos, Determinismus- und
+  Log-vs-Memory-Invarianten, `harness_start`/`harness_end`, Analyzer-Render +
+  Aggregat); suite: 143 tests / 910 asserts green.
 - Vision (2026-10-02): `docs/VISION.md` — pillars P1–P3 (workbench, living
   foundry, curiosity), values, anti-pillars; calibrations + next prototype
   questions (epilog twist, pressure curve, decal readability, meta, time
   control, loop maintenance).
 - Open: epilog twist prototype, meta calibration, pressure tuning via
-  telemetry, segments/more entry/exit sides (see `docs/IDEAS.md`;
+  telemetry (harness available, T20), segments/more entry/exit sides (see `docs/IDEAS.md`;
   candidate queue with priorities: `docs/BACKLOG.md`).
 
 ## Commands
@@ -206,6 +210,7 @@ Project has no CI; run from the project dir:
   (+ `GODOT_DISABLE_LEAK_CHECKS=1` so exit code reflects tests, not leaks)
 - Assets: `python tools/make_placeholders.py` (art), `python tools/make_sounds.py` (SFX)
 - Analysis: `python tools/analyze_run.py [file ...]` (run logs → per-wave tables); parser tests: `python tools/test_analyze_run.py`
+- Balance harness: `godot --headless --path . -s tools/harness.gd -- --seed 7 --waves 30 --towers "9,3;10,3"` (add `--repeat 2`, `--out reports/x.jsonl`)
 
 ## Conventions
 

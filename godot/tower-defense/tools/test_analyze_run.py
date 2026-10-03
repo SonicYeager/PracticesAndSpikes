@@ -151,6 +151,37 @@ class LoadRunTest(unittest.TestCase):
         self.assertIn("runs ended: 1/1", text)
         self.assertIn("  1     1     1", text, "The goal wave counts as cleared")
 
+    def test_harness_events_are_known(self):
+        run = self.load(
+            '{"t":"harness_start","waves":2,"money":100,"dt":0.0166,"towers":"9,3","walls":""}\n'
+            '{"t":"harness_end","wave":2,"reason":"cap","money":62,"kills":7,"leaks":3,"steps":3081}\n'
+        )
+        self.assertEqual(run["unknown"], {})
+        self.assertEqual(run["harness_end"]["wave"], 2)
+        self.assertEqual(run["harness_end"]["reason"], "cap")
+        text = "\n".join(ar.report_run(run))
+        self.assertIn("harness stopped at wave 2 (cap)", text)
+
+    def test_mission_plus_harness_render(self):
+        run = self.load(
+            '{"t":"wave","wave":20,"count":42,"hp":285.0}\n'
+            '{"t":"wave_end","wave":20,"kills":40,"leaks":0,"money_start":300,"money_end":320}\n'
+            '{"t":"mission_cleared","wave":20,"money":320,"kills":214,"leaks":3}\n'
+            '{"t":"harness_end","wave":30,"reason":"cap","money":350,"kills":400,"leaks":9,"steps":999}\n'
+        )
+        text = "\n".join(ar.report_run(run))
+        self.assertIn("mission cleared at wave 20; harness stopped at wave 30 (cap)", text)
+
+    def test_aggregate_counts_harness_runs(self):
+        run = self.load(
+            '{"t":"wave","wave":1,"count":4,"hp":20.0}\n'
+            '{"t":"wave_end","wave":1,"kills":4,"leaks":0,"money_start":100,"money_end":120}\n'
+            '{"t":"harness_end","wave":1,"reason":"cap","money":120,"kills":4,"leaks":0,"steps":100}\n'
+        )
+        text = "\n".join(ar.report_aggregate([run]))
+        self.assertIn("runs ended: 1/1", text)
+        self.assertIn("avg reached wave 1.0", text)
+
     def test_kill_and_wave_end_parsed(self):
         run = self.load(
             '{"t":"wave","wave":1,"count":4,"hp":20.0}\n'

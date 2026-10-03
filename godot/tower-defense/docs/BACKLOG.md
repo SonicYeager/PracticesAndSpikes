@@ -21,10 +21,6 @@ followed by indented `Vision:` (pillar/prototype question + roadmap milestone), 
 
 ## Open
 
-- [ ] **tower-defense-balance-harness** · priority: medium · effort: medium · area: logic — Headless fast-forward: pinned seed (`seed_override`) + build script, N waves, invariant + metric output (leaks/money/kills); basis for controlled balance questions.
-  - Vision: pressure tuning via telemetry (VISION Q2); data-reality plan step 3.
-  - Kill: harness results diverge from manual runs → fix or drop.
-  - Surfaces: new `tools/` script + tests, thin `scripts/game.gd` headless hooks if needed.
 - [ ] **tower-defense-entry-exit-segments** · priority: medium · effort: medium · area: logic — Generalize T08 entries/exits from whole sides to `(side, cell range)` segments (default stays full side); validation, scatter and nearest-exit fallback stay deterministic.
   - Vision: P1 (workbench — several fronts); roadmap M2 (difficulty topology).
   - Kill: segments add config surface without enabling a new maze decision in a playtest.
@@ -46,6 +42,7 @@ followed by indented `Vision:` (pillar/prototype question + roadmap milestone), 
 - [x] **tower-defense-wall-piece** · priority: medium · effort: low · area: logic — Cheap wall blocker als zweite baubare Rolle — done 2026-10-03 via `tower-defense-wall-piece`/T17 (`Pieces`-Tabelle, `WALL_COST` 10, `B`-Toggle, `_walls`/`_wall_nodes`, HUD-Caption/Cost/Icon, `build/sell {kind}`-Telemetrie + Analyzer `walls`/`n(wm)`, Platzhalter `wall.png`; **kein ADR** — Breadth-first war in README/VISION entschieden, kein Musterwechsel). Kill bleibt Playtest-Frage (Substitution, nicht Nutzung).
 - [x] **tower-defense-run-frame** · priority: medium · effort: medium · area: logic — Finite run frame — done 2026-10-03 via `tower-defense-run-frame`/T18 (`RunState`: Ziel-Welle 20, SIEG/GAME OVER, optionale Endlos-Verlängerung; Ein-`run_end`-Modell + `mission_cleared`; Run-Summary mit Kills/Leaks; Analyzer-Render-Formen + Aggregat-`cleared`-Fix). Kill offen: Playtest (fühlt sich der endliche Run wie ein Spiel an?).
 - [x] **tower-defense-time-control** · priority: medium · effort: medium · area: logic — done 2026-10-04 via `tower-defense-time-control`/T19 (`TimeControl`: P Pause/T ×1–×3, `Engine.time_scale` + Paused-Guard, Planungs-Aktionen im Pause erlaubt, Wellenstart/Overcharge denied, HUD-Indicator + Button-Lock, Analyzer ` - time`-Marker). Surfaces: `scripts/time_control.gd`, `scripts/game.gd`, `scripts/hud.gd`/`scenes/Hud.tscn`, `tools/analyze_run.py`.
+- [x] **tower-defense-balance-harness** · priority: medium · effort: medium · area: logic — done 2026-10-04 via `tower-defense-balance-harness`/T20 (`HarnessRun`-Kern + headless `tools/harness.gd`: Seed + Pre-Wave-1-Builds, Cap/Guard, Auto-Endlos, Determinismus-/Log-vs-Memory-Invarianten, `harness_start`/`harness_end`, Analyzer-Render + Aggregat, `nodes`/`entities`/`fx`/`decals`-Metrik). Grenzen: keine Per-Wave-Bauplanung, feste Kadence (outcome-level). Kill offen: erster 8-Harness-Corpus vs. Handläufe.
 
 ## Notes
 

@@ -106,7 +106,9 @@ Nicht Teil dieser Liste: weitere Gegner-/Turm-Varianten ohne Loop-Mechanik.
 - **Telemetry enrichment**: done (T15) — kill/send/wave_end events, run_start
   provenance, exact kills + money curves + kill zones in the analyzer. Open
   follow-ups (per-wave kill zones, terminal-wave summary on mid-wave death)
-  sit with the balance-harness slice.
+  remain open; the balance-harness slice (T20) added `harness_start`/
+  `harness_end` + tool provenance and the ` - time` marker.
 - **Late-wave perf sanity**: once runs scale past ~25 waves, have the balance
-  harness (see `docs/BACKLOG.md`) watch entity/decal load — low risk at M1
-  lengths.
+  harness (see `docs/BACKLOG.md`) watch entity/decal load — delivered (T20:
+  `nodes`/`entities`/`fx`/`decals` metrics in the harness output); low risk at
+  M1 lengths.
