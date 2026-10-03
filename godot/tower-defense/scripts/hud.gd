@@ -9,6 +9,7 @@ signal wave_pressed
 signal sell_toggled(active: bool)
 signal restart_pressed
 signal upgrade_pressed
+signal continue_pressed
 
 const COLOR_CYAN := Color(0.624, 0.847, 1.0)
 const LEAK_FLASH_ALPHA := 0.45
@@ -41,7 +42,10 @@ var _flash_tween: Tween
 @onready var _wave_bar: GameHudBar = $WavePanel/Row/Bar
 @onready var _wave_button: Button = $WavePanel/Row/WaveButton
 @onready var _game_over: Control = $GameOver
-@onready var _game_over_stats: Label = $GameOver/Center/Stats
+@onready var _run_end_title: Label = $GameOver/Center/Title
+@onready var _run_end_stats: Label = $GameOver/Center/Stats
+@onready var _run_end_note: Label = $GameOver/Center/Note
+@onready var _continue_button: Button = $GameOver/Center/Continue
 @onready var _restart_button: Button = $GameOver/Center/Restart
 
 
@@ -49,6 +53,7 @@ func _ready() -> void:
 	_wave_button.pressed.connect(_on_wave_pressed)
 	_sell_button.toggled.connect(func(active: bool) -> void: sell_toggled.emit(active))
 	_restart_button.pressed.connect(func() -> void: restart_pressed.emit())
+	_continue_button.pressed.connect(func() -> void: continue_pressed.emit())
 	_upgrade_button.pressed.connect(_on_upgrade_pressed)
 	_game_over.hide()
 
@@ -79,12 +84,30 @@ func update_state(state: Dictionary) -> void:
 		_wave_bar.set_progress(_resolved(state), int(state.get("total", 0)))
 
 
-func show_game_over(wave: int, money: int) -> void:
-	_game_over_stats.text = "WELLE %d — GELD %d" % [wave, money]
+func show_run_end(
+	result: String,
+	wave: int,
+	money: int,
+	kills: int,
+	leaks: int,
+	mission_wave := 0
+) -> void:
+	## End screen for both outcomes. `mission_wave > 0` marks an endless
+	## segment that ended after the mission was already cleared.
+	var endless_end := mission_wave > 0
+	_run_end_title.text = "SIEG" if result == "win" and not endless_end else "GAME OVER"
+	_run_end_stats.text = "WELLE %d — GELD %d — %d KILLS · %d LEAKS" % [wave, money, kills, leaks]
+	_run_end_note.text = "MISSION GEWONNEN (WELLE %d)" % mission_wave
+	_run_end_note.visible = endless_end
+	_continue_button.visible = result == "win" and not endless_end
 	_game_over.show()
 
 
-func is_game_over_visible() -> bool:
+func hide_run_end() -> void:
+	_game_over.hide()
+
+
+func is_run_end_visible() -> bool:
 	return _game_over.visible
 
 
@@ -97,8 +120,8 @@ func flash_leak() -> void:
 	_flash_tween.tween_property(_leak_flash, "modulate:a", 0.0, LEAK_FLASH_FADE)
 
 
-func game_over_text() -> String:
-	return _game_over_stats.text
+func run_end_text() -> String:
+	return _run_end_stats.text
 
 
 func _update_status(wave: int, phase: String, modifier_id: String, modifier_label: String) -> void:

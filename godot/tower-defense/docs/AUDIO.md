@@ -24,7 +24,7 @@ by hand-made recordings under the same filenames.
 | `build.wav` | gun built | click + 660/990 Hz coin | 0.17 s | −8 |
 | `sell.wav` | gun sold | 880/1320 Hz coin | 0.14 s | −8 |
 | `denied.wav` | rejected build / no funds | low 130→95 Hz buzz | 0.14 s | −10 |
-| `wave.wav` | wave starts | two-note saw horn (330→440 Hz) | 0.38 s | −6 |
+| `wave.wav` | wave starts (also the win sting, T18) | two-note saw horn (330→440 Hz) | 0.38 s | −6 |
 | `gameover.wav` | run ends | descending sine (392/311/262 Hz) | 1.06 s | −4 |
 | `overcharge.wav` | vent overcharged | deep saw whoosh (120→44 Hz) + crackle | 0.50 s | −6 |
 

@@ -163,8 +163,8 @@ func test_game_over_shows_screen_and_flushes_telemetry() -> void:
 	game.economy.money = -1
 	game._end_run()
 	assert_eq(game._director.phase, WaveDirector.Phase.GAME_OVER)
-	assert_true(game._hud.is_game_over_visible(), "Game-over screen is shown")
-	assert_true(game._hud.game_over_text().contains("GELD"), "Summary shows the run stats")
+	assert_true(game._hud.is_run_end_visible(), "End screen is shown")
+	assert_true(game._hud.run_end_text().contains("GELD"), "Summary shows the run stats")
 	assert_true(
 		game._hud.restart_pressed.is_connected(game._restart),
 		"Restart intent is wired to _restart"
@@ -853,3 +853,101 @@ func test_dispatch_on_wall_denies_without_deselect() -> void:
 	game._dispatch_primary(wall_cell)
 	assert_eq(game._selected, gun_cell, "Clicking a wall keeps the selection")
 	assert_eq(game.economy.money, money_before, "No spend on a wall click")
+
+
+func test_mission_cleared_at_goal() -> void:
+	var game = _make_game()
+	game._run_state.goal = 1
+	game.economy.money = 500
+	game._start_wave(1)
+	_spawn_all_and_clear(game)
+	game._process(STEP)
+	assert_eq(game._director.phase, WaveDirector.Phase.GAME_OVER, "The win freezes the run")
+	assert_eq(game._run_state.result, RunState.Result.WIN)
+	assert_true(game._hud.is_run_end_visible(), "Win screen is shown")
+	assert_eq(game._hud._run_end_title.text, "SIEG")
+	assert_true(game._hud._continue_button.visible, "Endless continue is offered")
+	var has_cleared := false
+	var cleared_count := 0
+	var run_ends := 0
+	for line in game.telemetry.lines:
+		if line.contains("\"t\":\"mission_cleared\""):
+			has_cleared = true
+			cleared_count += 1
+		if line.contains("\"t\":\"run_end\""):
+			run_ends += 1
+	assert_true(has_cleared, "Mission clear is logged")
+	assert_eq(cleared_count, 1, "Mission clear is logged exactly once")
+	assert_eq(run_ends, 0, "A win-stop logs no run_end")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(_telemetry_path(game)))
+
+
+func test_endless_continue_then_loss_logs_win_result() -> void:
+	var game = _make_game()
+	game._run_state.goal = 1
+	game.economy.money = 500
+	game._start_wave(1)
+	_spawn_all_and_clear(game)
+	game._process(STEP)
+	assert_eq(game._run_state.result, RunState.Result.WIN)
+	game._continue_endless()
+	assert_eq(game._director.phase, WaveDirector.Phase.BREAK, "Continue returns to the break")
+	assert_true(game._run_state.endless)
+	assert_false(game._hud.is_run_end_visible(), "Win screen is hidden")
+	game._start_wave(2)
+	_spawn_all_and_clear(game)
+	game.economy.money = -1
+	var exit_only: Array[Vector2i] = [game.maze.exits[0]]
+	game._drones.append(Drone.spawn("normal", exit_only, 20.0, 1.0))
+	game._process(STEP)
+	assert_eq(game._director.phase, WaveDirector.Phase.GAME_OVER)
+	assert_eq(game._hud._run_end_title.text, "GAME OVER")
+	assert_true(game._hud._run_end_note.visible, "Endless loss shows the mission note")
+	assert_false(game._hud._continue_button.visible)
+	var run_end := ""
+	var run_ends := 0
+	for line in game.telemetry.lines:
+		if line.contains("\"t\":\"run_end\""):
+			run_ends += 1
+			run_end = line
+	assert_eq(run_ends, 1, "Exactly one run_end for the endless segment")
+	assert_true(run_end.contains("\"result\":\"win\""), "Mission result stays win")
+	assert_true(run_end.contains("\"endless\":true"))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(_telemetry_path(game)))
+
+
+func test_loss_marks_result_and_run_end() -> void:
+	var game = _make_game()
+	game.economy.money = -1
+	game._end_run()
+	assert_eq(game._run_state.result, RunState.Result.LOSS)
+	assert_eq(game._hud._run_end_title.text, "GAME OVER")
+	assert_false(game._hud._run_end_note.visible)
+	assert_false(game._hud._continue_button.visible)
+	var run_end := ""
+	for line in game.telemetry.lines:
+		if line.contains("\"t\":\"run_end\""):
+			run_end = line
+	assert_true(run_end.contains("\"result\":\"loss\""))
+	assert_true(run_end.contains("\"endless\":false"))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(_telemetry_path(game)))
+
+
+func test_bankruptcy_beats_goal_clear() -> void:
+	var game = _make_game()
+	game._run_state.goal = 1
+	game._start_wave(1)
+	_spawn_all_and_clear(game)
+	game.economy.money = -1
+	var exit_only: Array[Vector2i] = [game.maze.exits[0]]
+	game._drones.append(Drone.spawn("normal", exit_only, 20.0, 1.0))
+	game._process(STEP)
+	assert_eq(game._director.phase, WaveDirector.Phase.GAME_OVER)
+	assert_eq(game._run_state.result, RunState.Result.LOSS, "Bankruptcy beats the goal clear")
+	assert_ne(game._hud._run_end_title.text, "SIEG", "No win screen")
+	var has_cleared := false
+	for line in game.telemetry.lines:
+		if line.contains("\"t\":\"mission_cleared\""):
+			has_cleared = true
+	assert_false(has_cleared, "No mission_cleared after bankruptcy")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(_telemetry_path(game)))

@@ -11,6 +11,7 @@ the map to them.
 | Economy (costs, rewards, game-over rule, incl. `WALL_COST`) | `scripts/economy.gd` |
 | Gun levels (prices, stats, refunds) | `scripts/gun_upgrades.gd` (`GunUpgrades`, ADR 0012) |
 | Piece kinds (cost/label/telemetry mapping) | `scripts/pieces.gd` (`Pieces`, T17) |
+| Run frame (goal wave, result) | `scripts/run_state.gd` (`RunState`, T18) |
 | Drone kinds (hp/speed multipliers) | `scripts/drone.gd` (`KIND_MODS`) |
 | Wave scaling + composition | `scripts/wave.gd` (`WaveGen`) |
 | Wave pacing (spawn/break, modifier knobs) | `scripts/wave_director.gd` (`WaveDirector`) |
@@ -33,6 +34,10 @@ Derived: one gun costs ~4.2 kills; a wall costs ~1.7 kills (2 walls < 1 gun);
 one leak eats ~1.7 kills. Selling returns half of the cumulative invest
 (L1 → 48% of the build cost; wall refund 5), so maze rebuilding is cheap but
 not free — wall churn (5) is cheaper than gun churn (13).
+
+Run frame: mission goal = wave 20 (≈ 42 drones / ~285 HP at that point);
+win-rate and endless depth are derivable from `mission_cleared` /
+`run_end.result` — the tuning signal for the goal.
 
 ## Gun levels (`gun_upgrades.gd`, ADR 0012)
 

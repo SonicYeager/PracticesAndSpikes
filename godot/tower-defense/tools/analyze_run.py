@@ -8,7 +8,9 @@ Events: run_start {seed,source,harness} · wave {wave,count,hp}
         · build {cell,kind} · sell {cell,kind} · clear {cell,money}
         · upgrade {cell,from,to,cost,money} · kill {wave,cell,kind} · wave_end
         {wave,kills,leaks,money_start,money_end} · leak {wave,money} · send
-        {wave} · time_control · overcharge {cell,money} · run_end {wave,money}
+        {wave} · time_control · overcharge {cell,money}
+        · mission_cleared {wave,money,kills,leaks}
+        · run_end {wave,money,result,endless}
 
 Derived numbers:
   kills      = exact per wave: wave_end.kills once the wave was cleared, else the
@@ -133,6 +135,7 @@ def load_run(path):
         "walls_during": {},
         "overcharges_during": {},
         "run_end": None,
+        "mission_cleared": None,
         "run_starts": 0,
         "run_ends": 0,
         "unknown": {},
@@ -227,6 +230,15 @@ def load_run(path):
                 run["run_end"] = {
                     "wave": as_int(event.get("wave")),
                     "money": event.get("money"),
+                    "result": event.get("result"),
+                    "endless": bool(event.get("endless")),
+                }
+            elif kind == "mission_cleared":
+                run["mission_cleared"] = {
+                    "wave": as_int(event.get("wave")),
+                    "money": event.get("money"),
+                    "kills": event.get("kills"),
+                    "leaks": event.get("leaks"),
                 }
             else:
                 run["unknown"][kind] = run["unknown"].get(kind, 0) + 1
@@ -245,11 +257,32 @@ def report_run(run):
     lines = []
     name = os.path.basename(run["path"])
     seed = run["seed"] if run["seed"] is not None else "?"
+    mission = run["mission_cleared"]
     if run["run_end"]:
-        result = "game over at wave %s (money %s)" % (
-            fmt_number(run["run_end"]["wave"]),
-            run["run_end"]["money"],
-        )
+        if mission and run["run_end"].get("endless"):
+            result = "mission cleared at wave %s; endless ended at wave %s (money %s)" % (
+                fmt_number(mission["wave"]),
+                fmt_number(run["run_end"]["wave"]),
+                run["run_end"]["money"],
+            )
+        else:
+            result = "game over at wave %s (money %s)" % (
+                fmt_number(run["run_end"]["wave"]),
+                run["run_end"]["money"],
+            )
+    elif mission:
+        last_wave = run["order"][-1] if run["order"] else mission["wave"]
+        if last_wave is not None and last_wave > (mission["wave"] or 0):
+            result = (
+                "mission cleared at wave %s; endless reached wave %s "
+                "(no run_end - window closed?)"
+                % (fmt_number(mission["wave"]), fmt_number(last_wave))
+            )
+        else:
+            result = "mission cleared at wave %s (money %s) - stopped at win screen" % (
+                fmt_number(mission["wave"]),
+                mission["money"],
+            )
     else:
         result = "INCOMPLETE (no run_end - window closed?)"
     total_leaks = sum(len(m) for m in run["leaks"].values())
@@ -367,7 +400,7 @@ def report_aggregate(runs):
             subset = [run for run in runs if n in run["waves"]]
             if not subset:
                 continue
-            cleared = [run for run in subset if n != run["order"][-1]]
+            cleared = [run for run in subset if n != run["order"][-1] or n in run["wave_ends"]]
             count = sum(run["waves"][n]["count"] for run in subset) / len(subset)
             leaks = sum(len(run["leaks"].get(n, [])) for run in subset) / len(subset)
             known = [wave_kills(run, n) for run in subset]
@@ -384,9 +417,21 @@ def report_aggregate(runs):
                     fmt_number(kills, "%.1f"),
                 )
             )
-    ended = [run for run in runs if run["run_end"]]
+    ended = [run for run in runs if run["run_end"] or run["mission_cleared"]]
     if ended:
-        reached = [run["run_end"]["wave"] for run in ended if run["run_end"]["wave"] is not None]
+        reached = []
+        for run in ended:
+            # Session-end wave: the run_end if the session ended, else the
+            # furthest wave seen (mission clear or an endless segment that was
+            # cut off without a run_end).
+            if run["run_end"]:
+                wave = run["run_end"]["wave"]
+            else:
+                wave = run["mission_cleared"]["wave"]
+                if run["order"] and run["order"][-1] is not None:
+                    wave = max(wave or 0, run["order"][-1])
+            if wave is not None:
+                reached.append(wave)
         summary = "  runs ended: %d/%d" % (len(ended), len(runs))
         if reached:
             summary += " - avg reached wave %.1f" % (sum(reached) / len(reached))

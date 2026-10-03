@@ -78,15 +78,36 @@ func test_progress_bar_freezes_on_game_over() -> void:
 	assert_eq(hud._wave_bar._done, 5, "Bar keeps its last state at game over")
 
 
-func test_game_over_overlay() -> void:
+func test_run_end_overlay() -> void:
 	var hud = _make_hud()
-	assert_false(hud.is_game_over_visible(), "Overlay starts hidden")
-	hud.show_game_over(2, -1)
-	assert_true(hud.is_game_over_visible(), "Overlay is shown")
-	assert_true(hud.game_over_text().contains("GELD"), "Summary shows the run stats")
+	assert_false(hud.is_run_end_visible(), "Overlay starts hidden")
+	hud.show_run_end("loss", 2, -1, 3, 1)
+	assert_true(hud.is_run_end_visible(), "Overlay is shown")
+	assert_eq(hud._run_end_title.text, "GAME OVER")
+	assert_true(hud.run_end_text().contains("GELD"), "Summary shows the run stats")
+	assert_false(hud._continue_button.visible, "No continue on a loss")
+	assert_false(hud._run_end_note.visible, "No mission note on a plain loss")
 	watch_signals(hud)
 	hud._restart_button.pressed.emit()
 	assert_signal_emitted(hud, "restart_pressed")
+
+
+func test_run_end_variants() -> void:
+	var hud = _make_hud()
+	hud.show_run_end("win", 20, 350, 214, 3)
+	assert_eq(hud._run_end_title.text, "SIEG")
+	assert_true(hud._continue_button.visible, "Win offers the endless continue")
+	assert_false(hud._run_end_note.visible)
+	assert_true(hud.run_end_text().contains("KILLS"), "Summary carries the kills")
+	assert_true(hud.run_end_text().contains("LEAKS"), "Summary carries the leaks")
+	watch_signals(hud)
+	hud._continue_button.pressed.emit()
+	assert_signal_emitted(hud, "continue_pressed")
+	hud.show_run_end("win", 34, -2, 400, 9, 20)
+	assert_eq(hud._run_end_title.text, "GAME OVER", "Endless loss reads as game over")
+	assert_true(hud._run_end_note.visible, "Mission note is shown")
+	assert_true(hud._run_end_note.text.contains("WELLE 20"))
+	assert_false(hud._continue_button.visible, "No inert continue after endless")
 
 
 func test_upgrade_row_follows_selection_and_affordability() -> void:

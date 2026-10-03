@@ -4,12 +4,12 @@
 
 Sci-Fi 2D maze tower defense prototype (GDScript, Godot 4.7.2). Free maze
 building with AStarGrid2D pathfinding, money-is-HP economy (game over below
-zero), endless deterministic waves, meta skill-tree stub, local JSONL
-telemetry for data-driven balancing.
+zero), a finite mission (goal wave 20) with an endless mode, meta skill-tree
+stub, local JSONL telemetry for data-driven balancing.
 
 - Stack: Godot 4.7.2, GDScript (no .NET flow)
 - Entrypoint: `scenes/Main.tscn` (open/import the folder in the Godot editor)
-- Status: prototype complete + sides + dirty world + pulse + XT look + HUD + telemetry + upgrades + wall (T01–T17) — see *Controls* and *Roadmap*
+- Status: prototype complete + sides + dirty world + pulse + XT look + HUD + telemetry + upgrades + wall + run frame (T01–T18) — see *Controls* and *Roadmap*
 
 ## Controls
 
@@ -23,23 +23,27 @@ telemetry for data-driven balancing.
 | Right click | Sell a gun or wall (refund = half; L1: 12, wall: 5) · clear a rock/rubble blocker for 15 (vents stay); the HUD VERKAUFEN toggle sells via left click while active |
 | Space (or the wave button) | Start wave 1 / skip the break between waves |
 | R (or the button) | Restart after game over |
+| WEITER (win screen) | Continue into the endless segment after clearing the mission |
 
 Rules: money **is** health — kills earn +6, leaks cost −10, game over strictly
-below zero. Selling refunds half of the cumulative tower invest (level 1 → 12;
+below zero. Clearing the goal wave (20) wins the run; the win screen can
+continue into endless. Selling refunds half of the cumulative tower invest
+(level 1 → 12;
 wall → 5). Walls block like guns but never shoot.
 Builds that would leave an entry without a reachable exit (or
 land on a tile a drone currently occupies) are rejected. Drones re-route when
 the maze changes. Rock/rubble blockers can be cleared for 15 (right click);
 vents stay.
 After a wave is cleared, a 5 s break runs (`BREAK_SECONDS`); the next wave
-then auto-starts. Game over shows a run summary and restarts the scene.
+then auto-starts. The end screen shows a run summary (win or loss) and
+restarts the scene; a win can continue endless.
 
 ## Features (current)
 
 - Variable grid (20×12, TILE 32), free maze building, live route preview of
   active drones.
 - 4-directional AStarGrid2D pathfinding, no corner slipping.
-- Deterministic endless waves: `WaveGen.composition(n, seed)`, no unseeded
+- Deterministic waves: `WaveGen.composition(n, seed)`, no unseeded
   RNG anywhere in gameplay — same seed + same builds = same run.
 - Wave flow: auto-chaining after a 5 s break with HUD countdown (Space
   skips); game-over screen with run summary + restart.
@@ -50,6 +54,8 @@ then auto-starts. Game over shows a run summary and restarts the scene.
   level pips + signature tint.
 - Wall piece (T17): a 10-money blocker with no attack — cheap maze shaping;
   `B` toggles the build kind and the HUD slot follows (caption, cost, icon).
+- Finite mission (T18): clear the goal wave (20) to win — SIEG screen with
+  the run summary (wave, money, kills, leaks); WEITER continues endless.
 - Three drone kinds (shape + color coded): normal, fast, tank.
 - Feedback: 10 synthesized SFX, muzzle flash, hit sparks, explosions +
   kill shockwave ring, build/sell/clear dust puffs, leak edge flash, HP bars,
@@ -76,8 +82,9 @@ then auto-starts. Game over shows a run summary and restarts the scene.
 - T14: plasma-cannon turret (side prongs, cyan core) and bug-style drones
   (head + legs, 2-frame gait); combat FX (shake, muzzle/impact/explosion,
   ring/puff, ember bursts, recoil) live in `scripts/fx.gd`.
-- Local telemetry: build/sell/clear/wave/leak/kill/send events + per-wave summaries
-  (`wave_end`) → `user://run_<seed>.jsonl` (analysis:
+- Local telemetry: build/sell/clear/upgrade/wave/leak/kill/send events +
+  per-wave summaries (`wave_end`), `mission_cleared` and `run_end`
+  (`result`/`endless`) → `user://run_<seed>.jsonl` (analysis:
   `tools/analyze_run.py`); `run_start` carries provenance (`source`,
   `harness`) so harness runs stay distinguishable from human ones.
 - Meta stub: one persistent bonus (`SkillStub` → `user://skill_stub.cfg`).
@@ -99,13 +106,13 @@ GODOT_DISABLE_LEAK_CHECKS=1 godot --headless --path . \
   -s res://addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
 ```
 
-GUT 9.6.1 is vendored under `addons/gut/`. The suite (115 tests / 761 asserts)
+GUT 9.6.1 is vendored under `addons/gut/`. The suite (125 tests / 821 asserts)
 covers every core class plus one scene integration smoke test that steps the
 real `Main.tscn` (spawn → walk → shoot → kill with scattered entries and
 terrain, break → auto-chain, game over + log flush, restart wiring, camera
 shake decay, scatter determinism, nearest-exit fallback, overcharge,
 modifiers, decal caps, terrain clearing, build/sell FX wiring, upgrades +
-selection, wall builds).
+selection, wall builds, run frame).
 
 ## Project structure
 
@@ -117,6 +124,7 @@ selection, wall builds).
 | `scripts/hud_bar.gd` | Segmented wave-progress bar |
 | `scripts/game.gd` | Scene controller: input, orchestration, sprites, effects, audio, HUD push |
 | `scripts/wave_director.gd` | Wave flow state machine: phase, queue, timers, modifier knobs |
+| `scripts/run_state.gd` | Finite-run frame: goal, result, endless flag, summary counters (T18) |
 | `scripts/board_view.gd` | Board rendering: floor/terrain/markers/decals, ambient, route preview, grid math |
 | `scripts/fx.gd` | Combat FX: screen shake, muzzle/impact/explosion, ring/puff, ember bursts, recoil |
 | `scripts/maze.gd` | Buildable grid + connectivity validation (`Maze`) |
@@ -205,8 +213,9 @@ The parser has stdlib regression tests: `python tools/test_analyze_run.py`.
 | T15 | Telemetry enrichment: kill/send/wave_end events, run provenance, analyzer | done |
 | T16 | Upgrades: five-level `GunUpgrades` path, panel/pips, `upgrade` telemetry (ADR 0012) | done |
 | T17 | Wall piece: second buildable role, `B` toggle, `Pieces` table, analyzer `walls` | done |
+| T18 | Run frame: goal wave 20, SIEG/GAME OVER, endless continue, `mission_cleared` | done |
 
-All slices done (T01–T17). Post-prototype directions are collected in `docs/IDEAS.md`;
+All slices done (T01–T18). Post-prototype directions are collected in `docs/IDEAS.md`;
 the concrete candidate queue is `docs/BACKLOG.md`.
 
 ### From prototype to game

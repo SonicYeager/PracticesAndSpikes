@@ -96,6 +96,60 @@ class LoadRunTest(unittest.TestCase):
         self.assertIn("Aggregate (1 run)", text)
         self.assertIn("runs ended: 1/1", text)
 
+    def test_run_end_result_and_endless_parsed(self):
+        run = self.load(
+            '{"t":"run_end","wave":34,"money":-2,"result":"win","endless":true}\n'
+        )
+        self.assertEqual(run["run_end"]["result"], "win")
+        self.assertTrue(run["run_end"]["endless"])
+        text = "\n".join(ar.report_run(run))
+        self.assertIn("game over at wave 34 (money -2)", text)
+
+    def test_mission_cleared_render_forms(self):
+        run = self.load(
+            '{"t":"wave","wave":20,"count":42,"hp":285.0}\n'
+            '{"t":"wave_end","wave":20,"kills":40,"leaks":0,"money_start":300,"money_end":320}\n'
+            '{"t":"mission_cleared","wave":20,"money":320,"kills":214,"leaks":3}\n'
+        )
+        text = "\n".join(ar.report_run(run))
+        self.assertIn("mission cleared at wave 20 (money 320) - stopped at win screen", text)
+        self.assertTrue(all(ord(c) < 128 for c in text), "Render output stays ASCII")
+        endless_closed = self.load(
+            '{"t":"wave","wave":20,"count":42,"hp":285.0}\n'
+            '{"t":"wave","wave":34,"count":60,"hp":500.0}\n'
+            '{"t":"mission_cleared","wave":20,"money":320,"kills":214,"leaks":3}\n'
+        )
+        text = "\n".join(ar.report_run(endless_closed))
+        self.assertIn("endless reached wave 34 (no run_end - window closed?)", text)
+        endless = self.load(
+            '{"t":"wave","wave":20,"count":42,"hp":285.0}\n'
+            '{"t":"wave_end","wave":20,"kills":40,"leaks":0,"money_start":300,"money_end":320}\n'
+            '{"t":"mission_cleared","wave":20,"money":320,"kills":214,"leaks":3}\n'
+            '{"t":"run_end","wave":34,"money":-2,"result":"win","endless":true}\n'
+        )
+        text = "\n".join(ar.report_run(endless))
+        self.assertIn(
+            "mission cleared at wave 20; endless ended at wave 34 (money -2)", text
+        )
+
+    def test_duplicate_run_end_warns(self):
+        run = self.load(
+            '{"t":"run_end","wave":1,"money":-1,"result":"loss","endless":false}\n'
+            '{"t":"run_end","wave":1,"money":-1,"result":"loss","endless":false}\n'
+        )
+        text = "\n".join(ar.report_run(run))
+        self.assertIn("WARNING", text)
+
+    def test_aggregate_counts_win_stop_goal_wave_as_cleared(self):
+        run = self.load(
+            '{"t":"wave","wave":1,"count":4,"hp":20.0}\n'
+            '{"t":"wave_end","wave":1,"kills":4,"leaks":0,"money_start":100,"money_end":120}\n'
+            '{"t":"mission_cleared","wave":1,"money":120,"kills":4,"leaks":0}\n'
+        )
+        text = "\n".join(ar.report_aggregate([run]))
+        self.assertIn("runs ended: 1/1", text)
+        self.assertIn("  1     1     1", text, "The goal wave counts as cleared")
+
     def test_kill_and_wave_end_parsed(self):
         run = self.load(
             '{"t":"wave","wave":1,"count":4,"hp":20.0}\n'

@@ -75,13 +75,17 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
   samples) into `audio/*.wav`; one `AudioStreamPlayer` per sound with
   `max_polyphony = 8`, volumes in `game.gd` `SFX_DB`. Hand sounds drop in
   under the same filenames, no code changes.
-- **Waves**: endless + deterministic: `WaveGen.composition(n, seed)`,
-  no unseeded RNG. Same seed + same builds = same run (replay via log).
-  T04: waves auto-chain — after a wave is cleared, a `BREAK_SECONDS` (5 s)
-  intermission runs with a HUD countdown; Space skips it. Wave 1 stays
-  manual (build phase); restart draws a fresh run seed (T09).
-- **Game over** (T04): dimmed full-screen overlay with run summary (wave,
-  money); restart via R or the button = `get_tree().reload_current_scene()`.
+- **Waves**: deterministic: `WaveGen.composition(n, seed)`, no unseeded RNG.
+  Same seed + same builds = same run (replay via log). Finite mission (T18):
+  clearing the goal wave (`RunState.DEFAULT_GOAL` 20) wins; the win screen
+  offers WEITER (endless segment) or restart. T04: waves auto-chain — after a
+  wave is cleared, a `BREAK_SECONDS` (5 s) intermission runs with a HUD
+  countdown; Space skips it. Wave 1 stays manual (build phase); restart draws
+  a fresh run seed (T09).
+- **Run end** (T04/T18): dimmed full-screen overlay with the run summary
+  (wave, money, kills, leaks); title SIEG on mission clear, GAME OVER
+  otherwise; restart via R or the button = `get_tree().reload_current_scene()`;
+  after a win, WEITER continues into the endless segment.
 - **Polish** (T06): trauma-based screen shake on kill/leak/game-over
   (Camera2D offset, deterministic sine noise, still decays after game over),
   generated vignette overlay (`art/vignette.png`, linear filter), barrel
@@ -97,7 +101,8 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
   `user://skill_stub.cfg`). Real tree UI later, never in-match.
 - **Telemetry**: local JSONL writer (`Telemetry`), event-based only
   (build/sell/clear/upgrade/wave/leak/kill/send + wave summaries; build/sell
-  carry `kind`), no per-frame logging, flushed on game over
+  carry `kind`; `mission_cleared` marks the win, `run_end` carries
+  `result`/`endless`), no per-frame logging, flushed on run end
   and on window close. Analysis: `tools/analyze_run.py` (stdlib) — per-run
   wave tables + aggregate; scans `telemetry_local/`, then the Godot user dir.
 - **Art (T11/T14)**: XT steel/lab look (see `art/STYLEGUIDE.md`): dark
@@ -169,7 +174,11 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
   tint, `upgrade` telemetry; suite: 103 tests / 710 asserts green. T17 (Wall,
   2026-10-03): wall piece (10, blocker, no attack) as the second buildable
   role, `B` toggles the build kind, `Pieces` kind table, `build/sell {kind}`
-  telemetry + analyzer `walls`; suite: 115 tests / 761 asserts green.
+  telemetry + analyzer `walls`; suite: 115 tests / 761 asserts green. T18
+  (Run-Frame, 2026-10-03): finite mission — goal wave 20 (`RunState`), SIEG/
+  GAME OVER, `mission_cleared` + `run_end {result,endless}`, win screen with
+  WEITER (endless segment), run summary (kills/leaks); suite: 125 tests / 821
+  asserts green.
 - Vision (2026-10-02): `docs/VISION.md` — pillars P1–P3 (workbench, living
   foundry, curiosity), values, anti-pillars; calibrations + next prototype
   questions (epilog twist, pressure curve, decal readability, meta, time
@@ -193,7 +202,7 @@ Project has no CI; run from the project dir:
 ## Conventions
 
 - Core logic as `class_name` RefCounteds (`Maze`, `Pathfinder`, `Economy`,
-  `WaveGen`, `Drone`, `Gun`, `GunUpgrades`, `Pieces`, `Projectile`, `Telemetry`, `SkillStub`) —
+  `WaveGen`, `RunState`, `Drone`, `Gun`, `GunUpgrades`, `Pieces`, `Projectile`, `Telemetry`, `SkillStub`) —
   unit-testable without scenes; grid-space coordinates, see ARCHITECTURE.md.
 - GUT tests in `tests/test_*.gd`, pure asserts, no FS writes except
   `user://` (telemetry/skill tests if added).

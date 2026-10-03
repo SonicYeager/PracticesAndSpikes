@@ -61,7 +61,8 @@ Each needs a slice decision; vision check noted.*
   damage; XT's freeze was the answer to "reversing the field". Vision: P1/P3.
 - **Endurance goals**: XT missions ran 20–100 waves. Ours could offer light
   "containment milestones" (e.g. clear N waves without a leak) — goals, not
-  a meta grind.
+  a meta grind. **Teilweise umgesetzt 2026-10-03** (T18: Ziel-Welle 20 +
+  Endlos-Verlängerung; 20–100-Wellen-Missionen/Milestones bleiben Kandidaten).
 - **Send Next Wave (Early-Send-Bonus)**: XT paid money for calling the next
   wave early (25/35 + Level/5, cap 50) — an active pressure dial. We already
   skip breaks with Space; a bonus variant would make it a conscious "pulse"

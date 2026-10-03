@@ -22,8 +22,8 @@ scenes/Main.tscn
                  └─ panels (status/build/wave/game-over)
 
 scripts/*.gd (class_name RefCounted)     ← core logic, no scene access
-  Maze · Pathfinder · Economy · WaveGen · WaveDirector · Drone · Gun
-  GunUpgrades · Pieces · Projectile · Telemetry · SkillStub
+  Maze · Pathfinder · Economy · WaveGen · WaveDirector · RunState · Drone
+  Gun · GunUpgrades · Pieces · Projectile · Telemetry · SkillStub
 
 UI scripts (Control-based, no gameplay access)
   GameHud (scripts/hud.gd) · GameHudBar (scripts/hud_bar.gd)
@@ -47,6 +47,7 @@ owns its panels and only sees pushed state.
 | `Economy` | `scripts/economy.gd` | Money-as-health: `on_kill(amount)`, `on_leak()`, `spend()`, `is_game_over()` (strictly `< 0`) |
 | `WaveGen` | `scripts/wave.gd` | Static `composition(n, seed)` → `{wave, count, hp, speed, tanks, fast, modifier}` (T10 events from wave 3) |
 | `WaveDirector` | `scripts/wave_director.gd` | Wave flow state machine (T12.5): phase, composition, spawn queue, spawn/break timers, per-wave modifier knobs; `start()`, `begin_break()`, `tick_spawn()`, `tick_break()`, `end_run()` |
+| `RunState` | `scripts/run_state.gd` | Finite-run frame (T18): wave goal, `Result {NONE, WIN, LOSS}`, endless flag, summary counters; `register_wave_cleared()` (guarded), `register_loss()`, `register_kill/leak()` |
 | `TerrainGen` | `scripts/terrain_gen.gd` | Static `generate(size, entries, exits, seed)` → `{blockers, decor}`; greedy placement that never seals an entry |
 | `Drone` | `scripts/drone.gd` | Grid-space walker: `advance(dt)` (returns `true` on leak), `take_damage()`, `reroute()`, `facing()`, `exit_cell()`, `distance_to_exit()`, `KIND_MODS` |
 | `Gun` | `scripts/gun.gd` | Level-based range/cadence/damage (`GunUpgrades`, ADR 0012) + targeting (`range_bonus` hook for wave modifiers); `acquire()` picks the drone closest to its exit, `try_fire(dt, targets)` returns the target when a shot is due |
@@ -77,7 +78,8 @@ only).
 0. `_fx.update` — trauma decay + camera offset (also runs after game over)
 1. `_update_spawner` — asks `WaveDirector` for the next spawn / break timeout
    (`tick_break`, `tick_spawn`); `_spawn_drone` scatters the entry cell and
-   draws the assigned exit; empty queue + clear field → `begin_break()`
+   draws the assigned exit; empty queue + clear field → win check
+   (`RunState.register_wave_cleared`) → win screen or `begin_break()`
 2. `_update_drones` — advance along the path, handle leaks
 3. `_update_guns` — acquire target, aim barrel, fire (muzzle tracer + flash)
 4. `_update_projectiles` — advance, resolve hits (damage/kill)
@@ -102,7 +104,8 @@ Space/HUD button ──► _on_wave_pressed: telemetry "send" · _start_wave(n)
             queue = normals… + fast… + tanks…      (fixed order)
             scene: gun range ← director · telemetry "wave" · SFX "wave"
 
-Wave cleared ──► telemetry "wave_end" · WaveDirector.begin_break()  (HUD countdown)
+Wave cleared ──► telemetry "wave_end" · goal reached? → win screen
+            ("mission_cleared" + flush) · else WaveDirector.begin_break()
             timeout (tick_break) or Space ──► _start_wave(n + 1)   (auto-chain)
 
 spawner ──► _spawn_drone(kind)
@@ -113,9 +116,11 @@ spawner ──► _spawn_drone(kind)
 Drone.advance(dt) == true ──► _on_leak
             Economy.on_leak() · telemetry "leak" (+ exit cell) · SFX "leak"
             skid decal at the leak cell
-            money < 0 ──► _end_run (game-over screen, "gameover" SFX, log flush)
+            money < 0 ──► _end_run (end screen, "gameover" SFX, log flush,
+            "run_end" with result/endless)
 
-R / restart button (game over) ──► _restart: reload_current_scene()
+R / restart button (end screen) ──► _restart: reload_current_scene()
+WEITER (win screen only) ──► _continue_endless: endless segment (begin_break)
 HUD wave button ─► _on_wave_pressed (IDLE/BREAK only) → _start_wave(n + 1)
 HUD sell toggle ─► _sell_mode: LMB sells towers (RMB always sells)
 HUD state       ◄─ GameHud.update_state({money, wave, phase, alive, queued,
@@ -168,13 +173,15 @@ Both        ──► _reroute_drones(): each drone re-paths to its assigned exi
   reachable exit (assignment holds only while valid).
 - A drone that reaches the base leaks exactly once and is removed immediately
   (kills likewise), so `_drones` never contains dead or leaked drones.
-- Game over is strictly `money < 0`, checked only after a leak.
+- The run ends strictly below zero (`money < 0`, checked only after a leak)
+  or when the goal wave is cleared (`RunState`); `run_end.result` mirrors the
+  mission outcome (win stays win through an endless segment).
 - The wave phase is a single explicit state (`WaveDirector.Phase`: IDLE →
   RUNNING → BREAK → RUNNING … → GAME_OVER); the director owns the queue and
   the BREAK countdown. A wave only ends when its spawn queue and the field
   are both empty.
-- After game over `_process` stops (frozen world); the only accepted input
-  is restart.
+- After a run end `_process` stops (frozen world); the accepted inputs are
+  restart and WEITER (endless, win screen only).
 - Money changes only through `Economy`; the HUD reads it, never writes it.
 - Telemetry is write-only: events never feed back into the simulation;
   `run_source` only tags the log (harness vs human provenance).
@@ -232,8 +239,8 @@ panels → game-over overlay).
 
 - Core classes: pure GUT tests in `tests/test_*.gd`, no scene needed
   (`test_maze`, `test_path`, `test_economy`, `test_wave`,
-  `test_wave_director`, `test_drone`, `test_gun`, `test_gun_upgrades`,
-  `test_pieces`, `test_projectile`, `test_terrain_gen`).
+  `test_wave_director`, `test_run_state`, `test_drone`, `test_gun`,
+  `test_gun_upgrades`, `test_pieces`, `test_projectile`, `test_terrain_gen`).
 - HUD: `tests/test_hud.gd` instantiates `Hud.tscn` and drives the state API
   and intents (labels, chip, button gating, sell toggle, upgrade row,
   game-over overlay, bar freeze on game over) without the game scene.

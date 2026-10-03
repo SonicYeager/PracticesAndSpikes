@@ -357,6 +357,27 @@ theme_override_font_sizes/font_size = 24
 text = "WELLE 0 — GELD 0"
 horizontal_alignment = 1
 
+[node name="Note" type="Label" parent="GameOver/Center"]
+visible = false
+theme_override_colors/font_color = Color(1, 0.843137, 0.368627, 1)
+theme_override_font_sizes/font_size = 18
+text = "MISSION GEWONNEN (WELLE 0)"
+horizontal_alignment = 1
+
+[node name="Continue" type="Button" parent="GameOver/Center"]
+visible = false
+focus_mode = 0
+theme_override_colors/font_color = Color(0.847059, 0.870588, 0.901961, 1)
+theme_override_colors/font_hover_color = Color(0.623529, 0.847059, 1, 1)
+theme_override_colors/font_pressed_color = Color(0.623529, 0.847059, 1, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/focus = SubResource("StyleBox_btn_focus")
+theme_override_styles/normal = SubResource("StyleBox_btn_normal")
+theme_override_styles/hover = SubResource("StyleBox_btn_hover")
+theme_override_styles/pressed = SubResource("StyleBox_btn_pressed")
+theme_override_styles/disabled = SubResource("StyleBox_btn_disabled")
+text = "WEITER (ENDLOS)"
+
 [node name="Restart" type="Button" parent="GameOver/Center"]
 focus_mode = 0
 theme_override_colors/font_color = Color(0.847059, 0.870588, 0.901961, 1)

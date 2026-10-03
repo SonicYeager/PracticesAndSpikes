@@ -94,7 +94,9 @@ Modifier, Überraschungen pro Run. Ruhig mit Puls, nie Reflexdruck.
 
 **Reihenfolge (Entscheidung 2026-10-02)**: Der Run-Frame (endliche Mission +
 Time Control, M1) kommt vor dem Epilog-Twist (M3) — Twists brauchen erst ein
-Ende, das sich lohnt. Verortung: README „From prototype to game". *Nachtrag
+Ende, das sich lohnt. **Run-Frame geliefert 2026-10-03** (T18: Ziel-Welle 20,
+Sieg/Niederlage + optionale Endlos-Verlängerung, `mission_cleared`); Time
+Control bleibt offen. Verortung: README „From prototype to game". *Nachtrag
 (Playtest 2026-10-02): Der Loop-Erhalt (Frage 6) ist die wichtigste offene
 Richtungsentscheidung nach M1; Kandidaten in `docs/IDEAS.md`, Analyse unter
 `context/tasks/tower-defense-map-boredom/`. *Entschieden 2026-10-03: Upgrades

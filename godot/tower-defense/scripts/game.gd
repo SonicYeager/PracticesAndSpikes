@@ -118,6 +118,7 @@ var _sell_mode := false
 var _selected := Vector2i(-1, -1)
 var _build_kind: int = Pieces.Kind.GUN
 var _director: WaveDirector
+var _run_state: RunState
 var _wave_kills := 0
 var _wave_leaks := 0
 var _wave_money_start := 0
@@ -138,6 +139,7 @@ func _ready() -> void:
 	economy = Economy.new(100)
 	telemetry = Telemetry.new(game_seed, run_source)
 	_director = WaveDirector.new(game_seed)
+	_run_state = RunState.new()
 	_camera.position = Vector2(get_viewport_rect().size) * 0.5
 	_camera.make_current()
 	_fx.setup(_camera)
@@ -145,6 +147,7 @@ func _ready() -> void:
 	_hud.sell_toggled.connect(_on_sell_toggled)
 	_hud.upgrade_pressed.connect(_on_upgrade_pressed)
 	_hud.restart_pressed.connect(_restart)
+	_hud.continue_pressed.connect(_continue_endless)
 	_make_bar_texture()
 	_setup_audio()
 	_board.setup(MAP_SIZE, maze.entries, maze.exits, terrain)
@@ -424,6 +427,9 @@ func _update_spawner(delta: float) -> void:
 			"money_start": _wave_money_start,
 			"money_end": economy.money,
 		})
+		if _run_state.register_wave_cleared(_director.wave):
+			_win_run()
+			return
 		_director.begin_break()
 		_update_hud()
 		return
@@ -486,6 +492,7 @@ func _update_drones(delta: float) -> void:
 func _on_leak(d: Drone) -> void:
 	economy.on_leak()
 	_wave_leaks += 1
+	_run_state.register_leak()
 	var exit := d.exit_cell()
 	telemetry.event("leak", {"wave": _director.wave, "money": economy.money, "exit": [exit.x, exit.y]})
 	_play("leak")
@@ -555,6 +562,7 @@ func _apply_damage(target: Drone, amount: float) -> bool:
 	if target.take_damage(amount):
 		economy.on_kill(_director.kill_reward)
 		_wave_kills += 1
+		_run_state.register_kill()
 		telemetry.event("kill", {
 			"wave": _director.wave,
 			"cell": [target.cell().x, target.cell().y],
@@ -617,14 +625,55 @@ func _remove_projectile(p: Projectile) -> void:
 	_projectile_sprites.erase(p)
 
 
+func _win_run() -> void:
+	## Mission clear: the goal wave is down — win screen + mission_cleared.
+	## Precondition: `register_wave_cleared` already returned true for this wave.
+	_director.end_run()
+	_hud.show_run_end("win", _director.wave, economy.money, _run_state.kills, _run_state.leaks, 0)
+	_play("wave")
+	_fx.shake(SHAKE_GAME_OVER)
+	telemetry.event("mission_cleared", {
+		"wave": _director.wave,
+		"money": economy.money,
+		"kills": _run_state.kills,
+		"leaks": _run_state.leaks,
+	})
+	telemetry.flush(TELEMETRY_PATH % game_seed)
+	_update_hud()
+
+
+func _continue_endless() -> void:
+	## Win screen → endless segment: same run, back into the break.
+	if not _run_state.is_mission_won() or _run_state.endless:
+		return
+	_run_state.endless = true
+	_hud.hide_run_end()
+	_director.begin_break()
+	_update_hud()
+
+
 func _end_run() -> void:
 	if _director.phase == WaveDirector.Phase.GAME_OVER:
 		return
+	_run_state.register_loss()
 	_director.end_run()
-	_hud.show_game_over(_director.wave, economy.money)
+	var result := "win" if _run_state.is_mission_won() else "loss"
+	_hud.show_run_end(
+		result,
+		_director.wave,
+		economy.money,
+		_run_state.kills,
+		_run_state.leaks,
+		_run_state.cleared_wave
+	)
 	_play("gameover")
 	_fx.shake(SHAKE_GAME_OVER)
-	telemetry.event("run_end", {"wave": _director.wave, "money": economy.money})
+	telemetry.event("run_end", {
+		"wave": _director.wave,
+		"money": economy.money,
+		"result": result,
+		"endless": _run_state.endless,
+	})
 	telemetry.flush(TELEMETRY_PATH % game_seed)
 	_update_hud()
 

@@ -21,10 +21,6 @@ followed by indented `Vision:` (pillar/prototype question + roadmap milestone), 
 
 ## Open
 
-- [ ] **tower-defense-run-frame** · priority: medium · effort: medium · area: logic — Finite run frame: wave goal (M1: 15–25), win/lose states, `run_end{result}`, run-summary data; extracted as `RunState`/`WaveDirector` RefCounted classes (not more `game.gd`).
-  - Vision: D1 decision (mission + optional endless after clear); roadmap M1.
-  - Kill: a finite run still doesn't feel like a game → revisit endless/meta.
-  - Surfaces: `scripts/wave_director.gd` (exists), new `scripts/run_state.gd`, `scripts/game.gd` (thin integration), `scripts/telemetry.gd`, `tests/`.
 - [ ] **tower-defense-time-control** · priority: medium · effort: medium · area: logic — Pause/speed as a `TimeControl` RefCounted: engine time scale, actions allowed while paused, determinism preserved; tests.
   - Vision: VISION Q5 (Total Time Control); roadmap M1.
   - Kill: pause/speed goes unused in playtests → simplify.
@@ -52,6 +48,7 @@ followed by indented `Vision:` (pillar/prototype question + roadmap milestone), 
 - [x] **tower-defense-removable-rocks** · priority: high · effort: medium · area: logic — Playtest-Feedback: Felsen/Geröll per Rechtsklick (15) entfernbar, Vents ausgenommen — done 2026-10-02 via `tower-defense-feedback-polish` (`Maze.clear_blocker`, BoardView sprite removal, dust puff, `clear` telemetry + analyzer, tests).
 - [x] **tower-defense-loop-extension** · priority: high · effort: xl · area: logic — Playtest-Befund: mit zugebauter Map endet die Entscheidung — Richtung entschieden 2026-10-03 (Upgrades) und Upgrade-Slice geliefert via `tower-defense-map-boredom`/T16 (ADR 0012: `GunUpgrades` 5 Stufen, Delta-Kauf, Halb-Refund, Upgrade-Panel + Pips, `upgrade`-Telemetrie); Terrain-Disruptionen/Commander-Fähigkeiten bleiben IDEAS-Kandidaten.
 - [x] **tower-defense-wall-piece** · priority: medium · effort: low · area: logic — Cheap wall blocker als zweite baubare Rolle — done 2026-10-03 via `tower-defense-wall-piece`/T17 (`Pieces`-Tabelle, `WALL_COST` 10, `B`-Toggle, `_walls`/`_wall_nodes`, HUD-Caption/Cost/Icon, `build/sell {kind}`-Telemetrie + Analyzer `walls`/`n(wm)`, Platzhalter `wall.png`; **kein ADR** — Breadth-first war in README/VISION entschieden, kein Musterwechsel). Kill bleibt Playtest-Frage (Substitution, nicht Nutzung).
+- [x] **tower-defense-run-frame** · priority: medium · effort: medium · area: logic — Finite run frame — done 2026-10-03 via `tower-defense-run-frame`/T18 (`RunState`: Ziel-Welle 20, SIEG/GAME OVER, optionale Endlos-Verlängerung; Ein-`run_end`-Modell + `mission_cleared`; Run-Summary mit Kills/Leaks; Analyzer-Render-Formen + Aggregat-`cleared`-Fix). Kill offen: Playtest (fühlt sich der endliche Run wie ein Spiel an?).
 
 ## Notes
 
