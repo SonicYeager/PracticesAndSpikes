@@ -12,7 +12,9 @@ func _make_hud():
 func _running_state() -> Dictionary:
 	return {
 		"money": 160,
-		"gun_cost": 25,
+		"build_cost": 25,
+		"build_label": "KANONE",
+		"build_kind": "gun",
 		"wave": 3,
 		"phase": "running",
 		"alive": 4,
@@ -127,3 +129,27 @@ func test_upgrade_button_disabled_states_and_signal() -> void:
 	state["phase"] = "game_over"
 	hud.update_state(state)
 	assert_false(hud._upgrade_row.visible, "Game over hides the row")
+
+
+func test_build_slot_follows_the_build_kind() -> void:
+	var hud = _make_hud()
+	var state := _running_state()
+	hud.update_state(state)
+	assert_eq(hud._slot_caption.text, "KANONE")
+	assert_eq(hud._cost_label.text, "25")
+	assert_eq(hud._slot_icon.texture, GameHud.GUN_ICON, "Gun icon by default")
+	state["build_kind"] = "wall"
+	state["build_label"] = "MAUER"
+	state["build_cost"] = 10
+	hud.update_state(state)
+	assert_eq(hud._slot_caption.text, "MAUER")
+	assert_eq(hud._cost_label.text, "10")
+	assert_eq(hud._slot_icon.texture, GameHud.WALL_ICON, "Wall icon in wall mode")
+
+
+func test_update_state_defaults_without_build_keys() -> void:
+	var hud = _make_hud()
+	hud.update_state({"money": 50, "wave": 0, "phase": "idle"})
+	assert_eq(hud._cost_label.text, "0")
+	assert_eq(hud._slot_caption.text, "KANONE")
+	assert_eq(hud._slot_icon.texture, GameHud.GUN_ICON, "Defaults to the gun icon")

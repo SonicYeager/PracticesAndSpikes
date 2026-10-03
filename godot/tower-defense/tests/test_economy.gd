@@ -33,3 +33,8 @@ func test_on_kill_accepts_a_reward_override() -> void:
 	assert_eq(e.money, 18, "Bounty modifier pays a custom reward")
 	e.on_kill()
 	assert_eq(e.money, 24, "Default reward unchanged")
+
+
+func test_wall_costs_less_than_the_gun() -> void:
+	assert_eq(Economy.WALL_COST, 10, "First balance pass")
+	assert_lt(Economy.WALL_COST, Economy.GUN_COST, "The wall is the cheap role")

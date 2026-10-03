@@ -141,6 +141,7 @@ Quelle: Titel-/Help-Screen, Kachel-/Effekt-Sprites, eingebettete Texte.
 | `rock` | 32×32 | Terrain-Blocker: Fels (solid, nie bebaubar) |
 | `rubble` | 32×32 | Terrain-Blocker: Geröll |
 | `vent` | 32×32 | Terrain-Blocker: Glut-Vent (glüht, Partikel-Emitter) |
+| `wall` | 32×32 | Spieler-Mauer (T17): Player-Blau + Cyan-Band + Hazard-Streifen — klar unterscheidbar von Fels/Geröll; Slot-Icon im HUD wechselt mit |
 | `decor_crack` | 32×32 | Deko: Riss (kosmetisch, z −1) |
 | `decor_stain` | 32×32 | Deko: Fleck (kosmetisch, z −1) |
 | `scorch` | 32×32 | Decal: Brandfleck (Kill, z −1) |

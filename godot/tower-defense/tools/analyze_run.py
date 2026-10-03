@@ -4,11 +4,11 @@
 Reads the JSONL files written by scripts/telemetry.gd (`user://run_<seed>.jsonl`)
 and prints a per-run report plus an aggregate across runs.
 
-Events: run_start {seed,source,harness} · wave {wave,count,hp} · build {cell}
-        · sell {cell} · clear {cell,money} · upgrade {cell,from,to,cost,money}
-        · kill {wave,cell,kind} · wave_end {wave,kills,leaks,money_start,
-        money_end} · leak {wave,money} · send {wave} · time_control
-        · overcharge {cell,money} · run_end {wave,money}
+Events: run_start {seed,source,harness} · wave {wave,count,hp}
+        · build {cell,kind} · sell {cell,kind} · clear {cell,money}
+        · upgrade {cell,from,to,cost,money} · kill {wave,cell,kind} · wave_end
+        {wave,kills,leaks,money_start,money_end} · leak {wave,money} · send
+        {wave} · time_control · overcharge {cell,money} · run_end {wave,money}
 
 Derived numbers:
   kills      = exact per wave: wave_end.kills once the wave was cleared, else the
@@ -17,8 +17,10 @@ Derived numbers:
                cleared waves; the legacy final wave stays "-".
   build/sell = activity while that wave was the current one (its run plus the
                following break); pre-wave-1 building is shown separately.
-               `upgrade`, `clear` and `overcharge` counts feed the per-wave
-               `spend` column (any spending action that wave).
+               `builds` counts all pieces (guns and walls); `walls` is the
+               subset, rendered as `n(wm)` in the wave table. `upgrade`,
+               `clear` and `overcharge` counts feed the per-wave `spend`
+               column (any spending action that wave).
   money      = wave_end money_start -> money_end when present; legacy logs show
                the balance at the wave's last leak instead (leak events carry it).
 
@@ -123,10 +125,12 @@ def load_run(path):
         "sells": 0,
         "clears": 0,          # pay-to-clear rock removals
         "upgrades": 0,        # in-match tower upgrades
+        "walls": 0,           # subset of builds (kind == "wall")
         "builds_during": {},  # wave -> builds while it was the current wave
         "sells_during": {},
         "clears_during": {},
         "upgrades_during": {},
+        "walls_during": {},
         "overcharges_during": {},
         "run_end": None,
         "run_starts": 0,
@@ -167,6 +171,9 @@ def load_run(path):
             elif kind == "build":
                 run["builds"] += 1
                 run["builds_during"][current] = run["builds_during"].get(current, 0) + 1
+                if (event.get("kind") or "gun") == "wall":
+                    run["walls"] += 1
+                    run["walls_during"][current] = run["walls_during"].get(current, 0) + 1
             elif kind == "sell":
                 run["sells"] += 1
                 run["sells_during"][current] = run["sells_during"].get(current, 0) + 1
@@ -253,9 +260,10 @@ def report_run(run):
     if any(value is not None for value in kill_values):
         total_kills = sum(value for value in kill_values if value is not None)
         lines.append(
-            "  builds %d, sells %d, clears %d, upgrades %d, leaks %d, kills %d"
+            "  builds %d (walls %d), sells %d, clears %d, upgrades %d, leaks %d, kills %d"
             % (
                 run["builds"],
+                run["walls"],
                 run["sells"],
                 run["clears"],
                 run["upgrades"],
@@ -265,8 +273,15 @@ def report_run(run):
         )
     else:
         lines.append(
-            "  builds %d, sells %d, clears %d, upgrades %d, leaks %d"
-            % (run["builds"], run["sells"], run["clears"], run["upgrades"], total_leaks)
+            "  builds %d (walls %d), sells %d, clears %d, upgrades %d, leaks %d"
+            % (
+                run["builds"],
+                run["walls"],
+                run["sells"],
+                run["clears"],
+                run["upgrades"],
+                total_leaks,
+            )
         )
 
     if run["run_starts"] != 1:
@@ -285,10 +300,10 @@ def report_run(run):
     pre_builds = run["builds_during"].get(0, 0)
     pre_sells = run["sells_during"].get(0, 0)
     pre_upgrades = run["upgrades_during"].get(0, 0)
-    if pre_builds or pre_sells or pre_upgrades:
+    if pre_builds or pre_sells or pre_upgrades or run["walls_during"].get(0, 0):
         lines.append(
-            "  before wave 1: builds %d, sells %d, upgrades %d"
-            % (pre_builds, pre_sells, pre_upgrades)
+            "  before wave 1: builds %d (walls %d), sells %d, upgrades %d"
+            % (pre_builds, run["walls_during"].get(0, 0), pre_sells, pre_upgrades)
         )
 
     lines.append("  wave  count  hp       kills  leaks  money        build  sell   upg  spend")
@@ -309,8 +324,11 @@ def report_run(run):
             + run["clears_during"].get(n, 0)
             + run["overcharges_during"].get(n, 0)
         )
+        builds = run["builds_during"].get(n, 0)
+        walls = run["walls_during"].get(n, 0)
+        build_col = "%d(w%d)" % (builds, walls) if walls else str(builds)
         lines.append(
-            "  %-5d %-6d %-8s %-6s %-6d %-12s %-6d %-6d %-5d %d"
+            "  %-5d %-6d %-8s %-6s %-6d %-12s %-6s %-6d %-5d %d"
             % (
                 n,
                 wave["count"],
@@ -318,7 +336,7 @@ def report_run(run):
                 fmt_number(wave_kills(run, n)),
                 leaks,
                 money,
-                run["builds_during"].get(n, 0),
+                build_col,
                 run["sells_during"].get(n, 0),
                 run["upgrades_during"].get(n, 0),
                 spend,

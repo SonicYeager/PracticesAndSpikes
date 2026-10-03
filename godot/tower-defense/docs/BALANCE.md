@@ -8,8 +8,9 @@ the map to them.
 
 | Area | File |
 |---|---|
-| Economy (costs, rewards, game-over rule) | `scripts/economy.gd` |
+| Economy (costs, rewards, game-over rule, incl. `WALL_COST`) | `scripts/economy.gd` |
 | Gun levels (prices, stats, refunds) | `scripts/gun_upgrades.gd` (`GunUpgrades`, ADR 0012) |
+| Piece kinds (cost/label/telemetry mapping) | `scripts/pieces.gd` (`Pieces`, T17) |
 | Drone kinds (hp/speed multipliers) | `scripts/drone.gd` (`KIND_MODS`) |
 | Wave scaling + composition | `scripts/wave.gd` (`WaveGen`) |
 | Wave pacing (spawn/break, modifier knobs) | `scripts/wave_director.gd` (`WaveDirector`) |
@@ -22,14 +23,16 @@ the map to them.
 |---|---|---|
 | start money | 100 | `Economy.new(100)` in `game.gd` |
 | `GUN_COST` | 25 | left-click build (= level-1 price) |
+| `WALL_COST` | 10 | wall build (`B` toggles the kind); refund 5 |
 | sell refund | `GunUpgrades.refund(level)` | half of the cumulative invest (L1 → 12) |
 | `KILL_REWARD` | 6 | per drone killed |
 | `LEAK_COST` | 10 | per drone reaching the base |
 | game over | `money < 0` | zero is still alive |
 
-Derived: one gun costs ~4.2 kills; one leak eats ~1.7 kills. Selling returns
-half of the cumulative invest (L1 → 48% of the build cost), so maze rebuilding
-is cheap but not free.
+Derived: one gun costs ~4.2 kills; a wall costs ~1.7 kills (2 walls < 1 gun);
+one leak eats ~1.7 kills. Selling returns half of the cumulative invest
+(L1 → 48% of the build cost; wall refund 5), so maze rebuilding is cheap but
+not free — wall churn (5) is cheaper than gun churn (13).
 
 ## Gun levels (`gun_upgrades.gd`, ADR 0012)
 

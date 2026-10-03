@@ -52,6 +52,8 @@ Each needs a slice decision; vision check noted.*
 - **Wall piece** (cheap blocker): a dedicated wall tower without attack
   (e.g. 8–10 money) deepens mazing without paying the full gun price. XT
   added walls late and players loved them. Vision: pure P1 (workbench).
+  **Umgesetzt 2026-10-03** (T17: 10 money, `B`-Toggle, `Pieces`-Tabelle;
+  HUD-Selektor als Folge-Item `tower-defense-build-selector`).
 - **Splitters**: on death spawn two weak offspring — a new enemy behavior
   (Discovery) that rewards wide kill coverage. Caution: keep counterplay
   open (no lock & key).

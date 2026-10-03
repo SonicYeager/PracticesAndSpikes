@@ -13,6 +13,8 @@ signal upgrade_pressed
 const COLOR_CYAN := Color(0.624, 0.847, 1.0)
 const LEAK_FLASH_ALPHA := 0.45
 const LEAK_FLASH_FADE := 0.45
+const GUN_ICON := preload("res://art/gun_base.png")
+const WALL_ICON := preload("res://art/wall.png")
 const MODIFIER_COLORS := {
 	"rush": Color(1.0, 0.541, 0.231),
 	"swarm": Color(0.557, 0.878, 0.29),
@@ -29,6 +31,8 @@ var _flash_tween: Tween
 @onready var _chip: PanelContainer = $Status/Row/Chip
 @onready var _chip_label: Label = $Status/Row/Chip/Label
 @onready var _cost_label: Label = $Build/Box/Actions/Slot/SlotRow/Cost
+@onready var _slot_icon: TextureRect = $Build/Box/Actions/Slot/SlotRow/Gun
+@onready var _slot_caption: Label = $Build/Box/Actions/Slot/SlotRow/Caption
 @onready var _sell_button: Button = $Build/Box/Actions/Sell
 @onready var _upgrade_row: HBoxContainer = $Build/Box/UpgradeRow
 @onready var _upgrade_info: Label = $Build/Box/UpgradeRow/UpgradeInfo
@@ -63,7 +67,11 @@ func update_state(state: Dictionary) -> void:
 	var wave := int(state.get("wave", 0))
 	var phase := str(state.get("phase", "idle"))
 	_set_label(_money_label, str(int(state.get("money", 0))))
-	_set_label(_cost_label, str(int(state.get("gun_cost", 0))))
+	_set_label(_cost_label, str(int(state.get("build_cost", 0))))
+	_set_label(_slot_caption, str(state.get("build_label", "KANONE")))
+	_slot_icon.texture = (
+		WALL_ICON if str(state.get("build_kind", "gun")) == "wall" else GUN_ICON
+	)
 	_update_status(wave, phase, str(state.get("modifier_id", "")), str(state.get("modifier_label", "")))
 	_update_wave_row(wave, phase, state)
 	_update_upgrade_row(phase, state)

@@ -21,10 +21,6 @@ followed by indented `Vision:` (pillar/prototype question + roadmap milestone), 
 
 ## Open
 
-- [ ] **tower-defense-wall-piece** · priority: medium · effort: low · area: logic — Cheap wall blocker (no attack) as the second buildable role; build/economy logic + placeholder sprite + tests.
-  - Vision: P1 (workbench); roadmap M1 (tower breadth first).
-  - Kill: the wall adds no new decision (just a cheaper gun stand-in).
-  - Surfaces: `scripts/economy.gd`, `scripts/game.gd`, `tools/make_placeholders.py`, `tests/`.
 - [ ] **tower-defense-run-frame** · priority: medium · effort: medium · area: logic — Finite run frame: wave goal (M1: 15–25), win/lose states, `run_end{result}`, run-summary data; extracted as `RunState`/`WaveDirector` RefCounted classes (not more `game.gd`).
   - Vision: D1 decision (mission + optional endless after clear); roadmap M1.
   - Kill: a finite run still doesn't feel like a game → revisit endless/meta.
@@ -45,6 +41,9 @@ followed by indented `Vision:` (pillar/prototype question + roadmap milestone), 
   - Vision: P3 (discovery — new behavior, not more hp); roadmap M2.
   - Kill: reads as more quantity instead of a new decision; counterplay must stay open (no lock & key).
   - Surfaces: `scripts/drone.gd`, `scripts/wave.gd`, `scripts/game.gd`, `tools/make_placeholders.py`, `tests/`.
+- [ ] **tower-defense-build-selector** · priority: low · effort: low · area: visual — Klickbarer Zwei-Slot-Selektor (KANONE/MAUER) im Build-Panel ersetzt den `B`-Toggle als Primär-Eingabe; Icon+Caption+Cost je Slot.
+  - Vision: P1 (workbench) / M1; Kill: Selektor fügt Fläche hinzu, ohne eine Entscheidung zu ändern.
+  - Surfaces: `scenes/Hud.tscn`, `scripts/hud.gd`, `tests/`.
 
 ## Done
 
@@ -52,6 +51,7 @@ followed by indented `Vision:` (pillar/prototype question + roadmap milestone), 
 - [x] **tower-defense-effect-budget** · priority: high · effort: low · area: visual — Playtest-Feedback: Aktion aufwerten, Karte beruhigen — done 2026-10-02 via `tower-defense-feedback-polish` (vent-only ambient; kill shockwave ring; build/sell/clear dust puff; leak edge flash; tracer trail deliberately skipped — muzzle/impact already cover shots, add later if it still feels quiet).
 - [x] **tower-defense-removable-rocks** · priority: high · effort: medium · area: logic — Playtest-Feedback: Felsen/Geröll per Rechtsklick (15) entfernbar, Vents ausgenommen — done 2026-10-02 via `tower-defense-feedback-polish` (`Maze.clear_blocker`, BoardView sprite removal, dust puff, `clear` telemetry + analyzer, tests).
 - [x] **tower-defense-loop-extension** · priority: high · effort: xl · area: logic — Playtest-Befund: mit zugebauter Map endet die Entscheidung — Richtung entschieden 2026-10-03 (Upgrades) und Upgrade-Slice geliefert via `tower-defense-map-boredom`/T16 (ADR 0012: `GunUpgrades` 5 Stufen, Delta-Kauf, Halb-Refund, Upgrade-Panel + Pips, `upgrade`-Telemetrie); Terrain-Disruptionen/Commander-Fähigkeiten bleiben IDEAS-Kandidaten.
+- [x] **tower-defense-wall-piece** · priority: medium · effort: low · area: logic — Cheap wall blocker als zweite baubare Rolle — done 2026-10-03 via `tower-defense-wall-piece`/T17 (`Pieces`-Tabelle, `WALL_COST` 10, `B`-Toggle, `_walls`/`_wall_nodes`, HUD-Caption/Cost/Icon, `build/sell {kind}`-Telemetrie + Analyzer `walls`/`n(wm)`, Platzhalter `wall.png`; **kein ADR** — Breadth-first war in README/VISION entschieden, kein Musterwechsel). Kill bleibt Playtest-Frage (Substitution, nicht Nutzung).
 
 ## Notes
 

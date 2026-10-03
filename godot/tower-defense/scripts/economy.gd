@@ -6,6 +6,7 @@ extends RefCounted
 const KILL_REWARD := 6
 const LEAK_COST := 10
 const GUN_COST := 25
+const WALL_COST := 10
 
 var money: int
 

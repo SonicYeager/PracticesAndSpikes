@@ -333,6 +333,21 @@ def rubble():
     return c
 
 
+def wall():
+    # Player-built blocker: player blue + cyan band + hazard stripe, so it
+    # never reads as the grey rock/rubble terrain (T17).
+    c = Canvas()
+    c.rect(2, 3, 29, 28, C["blue_dark"])
+    c.rect(4, 5, 27, 26, C["blue"])
+    c.rect(4, 5, 27, 8, C["cyan"])
+    c.rect(6, 24, 25, 26, C["hazard"])
+    for x, y in ((7, 12), (24, 12), (7, 21), (24, 21)):
+        c.disc(x, y, 1, C["rivet"])
+    c.bevel(0.2, 0.25)
+    c.outline()
+    return c
+
+
 def vent():
     c = Canvas()
     c.rect(4, 4, 27, 27, C["gunmetal"])
@@ -546,6 +561,7 @@ SPRITES = {
     "hud_mouse_right": hud_mouse(False),
     "rock": rock(),
     "rubble": rubble(),
+    "wall": wall(),
     "vent": vent(),
     "decor_crack": decor_crack(),
     "decor_stain": decor_stain(),

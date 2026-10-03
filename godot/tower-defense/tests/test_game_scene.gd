@@ -764,3 +764,92 @@ func test_show_tower_with_preleveled_gun() -> void:
 	game._show_tower(cell)
 	var pips := game._tower_nodes[cell].get_node_or_null("LevelPips") as Node2D
 	assert_eq(_visible_pips(pips), 3, "Pre-leveled towers render their pips")
+
+
+func test_build_kind_toggles_with_b() -> void:
+	var game = _make_game()
+	assert_eq(game._build_kind, Pieces.Kind.GUN, "Starts as gun")
+	var money_before: int = game.economy.money
+	var ev := InputEventKey.new()
+	ev.keycode = KEY_B
+	ev.pressed = true
+	game._unhandled_input(ev)
+	assert_eq(game._build_kind, Pieces.Kind.WALL, "B flips to wall")
+	game._unhandled_input(ev)
+	assert_eq(game._build_kind, Pieces.Kind.GUN, "B flips back")
+	assert_eq(game.economy.money, money_before, "Toggling spends nothing")
+
+
+func test_build_wall_costs_and_blocks() -> void:
+	var game = _make_game()
+	var cell := _find_buildable(game)
+	assert_ne(cell, Vector2i(-1, -1))
+	var money_before: int = game.economy.money
+	assert_true(game._try_build(cell, Pieces.Kind.WALL))
+	assert_eq(game.economy.money, money_before - 10, "Wall costs 10")
+	assert_true(game._walls.has(cell), "Wall is tracked")
+	assert_eq(game.maze.tower_at(cell), "wall", "Built map knows the type")
+	assert_true(game._wall_nodes.has(cell), "Wall sprite exists")
+	assert_eq(
+		(game._wall_nodes[cell] as Sprite2D).texture,
+		game.WALL_TEX,
+		"Wall uses the wall sprite"
+	)
+	var line := ""
+	for entry in game.telemetry.lines:
+		if entry.contains("\"t\":\"build\""):
+			line = entry
+	assert_true(line.contains("\"kind\":\"wall\""), "Build logs the kind")
+	assert_false(game._try_upgrade(cell), "Walls have no upgrade path")
+	assert_eq(game._guns.size(), 0, "No gun was created")
+
+
+func test_wall_reroutes_drones() -> void:
+	var game = _make_game()
+	# Clean maze so the path is predictable (mirror of the fallback test).
+	game.maze = Maze.new(game.MAP_SIZE, game.maze.entries, game.maze.exits)
+	var entry := Vector2i(0, 5)
+	var target := Vector2i(10, 6)
+	var cells: Array[Vector2i] = []
+	for p in game.maze.pathfinder.find_path(entry, target):
+		cells.append(Vector2i(p))
+	game._drones.append(Drone.spawn("normal", cells, 20.0, 1.0))
+	var d: Drone = game._drones[0]
+	var old_path: Array[Vector2i] = d.path.duplicate()
+	var wall_cell := cells[2]
+	assert_true(game._try_build(wall_cell, Pieces.Kind.WALL))
+	assert_ne(d.path, old_path, "The wall re-routes the drone")
+	assert_false(d.path.has(wall_cell), "The wall cell is off the new path")
+
+
+func test_sell_wall_refunds_half_and_sell_mode_works() -> void:
+	var game = _make_game()
+	var cell := _find_buildable(game)
+	assert_ne(cell, Vector2i(-1, -1))
+	var money_before: int = game.economy.money
+	assert_true(game._try_build(cell, Pieces.Kind.WALL))
+	game._sell_mode = true
+	game._dispatch_primary(cell)
+	assert_eq(game.economy.money, money_before - 10 + 5, "Sell mode sells the wall for half")
+	assert_false(game._walls.has(cell), "Wall bookkeeping is cleared")
+	assert_false(game._wall_nodes.has(cell), "Wall sprite is gone")
+	var line := ""
+	for entry in game.telemetry.lines:
+		if entry.contains("\"t\":\"sell\""):
+			line = entry
+	assert_true(line.contains("\"kind\":\"wall\""), "Sell logs the kind")
+
+
+func test_dispatch_on_wall_denies_without_deselect() -> void:
+	var game = _make_game()
+	var gun_cell := _find_buildable(game)
+	assert_ne(gun_cell, Vector2i(-1, -1))
+	assert_true(game._try_build(gun_cell))
+	game._select_tower(gun_cell)
+	var wall_cell := _find_buildable(game, 4)
+	assert_ne(wall_cell, Vector2i(-1, -1))
+	assert_true(game._try_build(wall_cell, Pieces.Kind.WALL))
+	var money_before: int = game.economy.money
+	game._dispatch_primary(wall_cell)
+	assert_eq(game._selected, gun_cell, "Clicking a wall keeps the selection")
+	assert_eq(game.economy.money, money_before, "No spend on a wall click")

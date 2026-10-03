@@ -186,6 +186,42 @@ class LoadRunTest(unittest.TestCase):
         self.assertIn("upgrades 1", text)
         self.assertIn("spend", text)
 
+    def test_wall_builds_are_counted(self):
+        run = self.load(
+            '{"t":"wave","wave":1,"count":4}\n'
+            '{"t":"build","cell":[3,4],"kind":"wall"}\n'
+            '{"t":"build","cell":[5,4],"kind":"gun"}\n'
+            '{"t":"build","cell":[7,4]}\n'
+        )
+        self.assertEqual(run["builds"], 3)
+        self.assertEqual(run["walls"], 1)
+        self.assertEqual(run["walls_during"], {1: 1})
+        self.assertEqual(run["unknown"], {})
+        text = "\n".join(ar.report_run(run))
+        self.assertIn("builds 3 (walls 1)", text)
+        self.assertIn("3(w1)", text)
+
+    def test_unknown_build_kind_falls_back_to_gun(self):
+        run = self.load(
+            '{"t":"wave","wave":1,"count":4}\n'
+            '{"t":"build","cell":[3,4],"kind":"tower"}\n'
+        )
+        self.assertEqual(run["builds"], 1)
+        self.assertEqual(run["walls"], 0, "Unknown kinds count as guns")
+
+    def test_walls_before_wave_1_and_across_waves(self):
+        run = self.load(
+            '{"t":"build","cell":[1,1],"kind":"wall"}\n'
+            '{"t":"wave","wave":1,"count":4}\n'
+            '{"t":"build","cell":[2,2],"kind":"wall"}\n'
+            '{"t":"wave","wave":2,"count":5}\n'
+        )
+        self.assertEqual(run["walls"], 2)
+        self.assertEqual(run["walls_during"], {0: 1, 1: 1})
+        text = "\n".join(ar.report_run(run))
+        self.assertIn("before wave 1: builds 1 (walls 1)", text)
+        self.assertIn("1(w1)", text)
+
     def test_bad_kill_and_wave_end_counted(self):
         run = self.load(
             '{"t":"kill","wave":null,"cell":[1,1]}\n'

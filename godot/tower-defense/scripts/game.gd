@@ -52,6 +52,7 @@ const TELEMETRY_PATH := "user://run_%d.jsonl"
 
 const GUN_BASE_TEX := preload("res://art/gun_base.png")
 const GUN_BARREL_TEX := preload("res://art/gun_barrel.png")
+const WALL_TEX := preload("res://art/wall.png")
 const PROJECTILE_TEX := preload("res://art/projectile.png")
 const DRONE_TEX := {
 	"normal": [preload("res://art/drone_0.png"), preload("res://art/drone_1.png")],
@@ -100,7 +101,9 @@ var telemetry: Telemetry
 var _vents: Dictionary = {}
 
 var _tower_nodes: Dictionary = {}
+var _wall_nodes: Dictionary = {}
 var _guns: Dictionary = {}
+var _walls: Dictionary = {}
 var _drones: Array[Drone] = []
 var _drone_sprites: Dictionary = {}
 var _drone_bars: Dictionary = {}
@@ -113,6 +116,7 @@ var _bar_tex: ImageTexture
 var _spawn_counter := 0
 var _sell_mode := false
 var _selected := Vector2i(-1, -1)
+var _build_kind: int = Pieces.Kind.GUN
 var _director: WaveDirector
 var _wave_kills := 0
 var _wave_leaks := 0
@@ -196,10 +200,13 @@ func _unhandled_input(event: InputEvent) -> void:
 		_on_wave_pressed()
 	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_ESCAPE:
 		_deselect_tower()
+	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_B:
+		_toggle_build_kind()
 
 
 func _dispatch_primary(cell: Vector2i) -> void:
-	## LMB dispatch: sell-mode sells, vents overcharge, towers select, else build.
+	## LMB dispatch: sell-mode sells, vents overcharge, towers select, other
+	## built cells deny, everything else builds the current kind.
 	if _sell_mode:
 		_try_sell(cell)
 	elif _vents.has(cell):
@@ -208,25 +215,33 @@ func _dispatch_primary(cell: Vector2i) -> void:
 			_play("denied")
 	elif _guns.has(cell):
 		_select_tower(cell)
+	elif maze.built.has(cell):
+		# Wall: nothing to select or upgrade — feedback only, no spend.
+		_play("denied")
 	else:
 		_deselect_tower()
-		_try_build(cell)
+		_try_build(cell, _build_kind)
 
 
-func _try_build(cell: Vector2i) -> bool:
+func _try_build(cell: Vector2i, kind: int = Pieces.Kind.GUN) -> bool:
 	## One build attempt: spend, validate (drone/maze), place; failures refund.
-	if not economy.spend(Economy.GUN_COST):
+	var cost := Pieces.cost(kind)
+	if not economy.spend(cost):
 		_play("denied")
 		return false
-	if _drone_on_cell(cell) or not maze.build(cell):
-		economy.earn(Economy.GUN_COST)
+	if _drone_on_cell(cell) or not maze.build(cell, Pieces.telemetry_name(kind)):
+		economy.earn(cost)
 		_play("denied")
 		return false
-	_guns[cell] = Gun.new(Drone.center_of(cell))
-	_guns[cell].range_bonus = _director.range_bonus
-	_show_tower(cell)
+	if kind == Pieces.Kind.WALL:
+		_walls[cell] = true
+		_show_wall(cell)
+	else:
+		_guns[cell] = Gun.new(Drone.center_of(cell))
+		_guns[cell].range_bonus = _director.range_bonus
+		_show_tower(cell)
 	_fx.puff(_board.grid_to_world(Drone.center_of(cell)))
-	telemetry.event("build", {"cell": [cell.x, cell.y]})
+	telemetry.event("build", {"cell": [cell.x, cell.y], "kind": Pieces.telemetry_name(kind)})
 	_reroute_drones()
 	_play("build")
 	return true
@@ -271,6 +286,12 @@ func _deselect_tower() -> void:
 	_update_hud()
 
 
+func _toggle_build_kind() -> void:
+	## `B` flips the build kind; the HUD caption/cost follow via _update_hud.
+	_build_kind = Pieces.Kind.WALL if _build_kind == Pieces.Kind.GUN else Pieces.Kind.GUN
+	_update_hud()
+
+
 func _refresh_tower(cell: Vector2i) -> void:
 	## Level visuals: signature tint here, pips via `_refresh_pips` (visual step).
 	var root := _tower_nodes.get(cell) as Node2D
@@ -303,16 +324,25 @@ func _refresh_pips(root: Node2D, level: int) -> void:
 
 
 func _try_sell(cell: Vector2i) -> bool:
+	var kind := maze.tower_at(cell)
 	if not maze.sell(cell):
 		return false
-	var gun: Gun = _guns.get(cell)
-	_guns.erase(cell)
-	_hide_tower(cell)
+	var refund := 0
+	if kind == "wall":
+		refund = Pieces.cost(Pieces.Kind.WALL) / 2
+		_walls.erase(cell)
+		_hide_wall(cell)
+	else:
+		var gun: Gun = _guns.get(cell)
+		if gun != null:
+			refund = GunUpgrades.refund(gun.level)
+			_guns.erase(cell)
+			_hide_tower(cell)
 	_fx.puff(_board.grid_to_world(Drone.center_of(cell)), Color(0.66, 0.7, 0.78))
-	economy.earn(GunUpgrades.refund(gun.level) if gun != null else 0)
+	economy.earn(refund)
 	if _selected == cell:
 		_deselect_tower()
-	telemetry.event("sell", {"cell": [cell.x, cell.y]})
+	telemetry.event("sell", {"cell": [cell.x, cell.y], "kind": kind})
 	_reroute_drones()
 	_play("sell")
 	return true
@@ -793,6 +823,22 @@ func _hide_tower(cell: Vector2i) -> void:
 		_tower_nodes.erase(cell)
 
 
+func _show_wall(cell: Vector2i) -> void:
+	var node := Sprite2D.new()
+	node.texture = WALL_TEX
+	node.scale = ART_SCALE
+	node.position = _board.cell_center(cell)
+	add_child(node)
+	_wall_nodes[cell] = node
+
+
+func _hide_wall(cell: Vector2i) -> void:
+	var node := _wall_nodes.get(cell) as Node
+	if node != null:
+		node.queue_free()
+		_wall_nodes.erase(cell)
+
+
 func _update_hud() -> void:
 	var modifier_id := ""
 	match _director.phase:
@@ -815,7 +861,9 @@ func _update_hud() -> void:
 		_selected = Vector2i(-1, -1)  # stale selection (tower gone)
 	_hud.update_state({
 		"money": economy.money,
-		"gun_cost": Economy.GUN_COST,
+		"build_cost": Pieces.cost(_build_kind),
+		"build_label": Pieces.label(_build_kind),
+		"build_kind": Pieces.telemetry_name(_build_kind),
 		"wave": _director.wave,
 		"phase": _phase_name(),
 		"alive": _drones.size(),
