@@ -9,7 +9,7 @@ stub, local JSONL telemetry for data-driven balancing.
 
 - Stack: Godot 4.7.2, GDScript (no .NET flow)
 - Entrypoint: `scenes/Main.tscn` (open/import the folder in the Godot editor)
-- Status: prototype complete + sides + dirty world + pulse + XT look + HUD + telemetry + upgrades + wall + run frame (T01–T18) — see *Controls* and *Roadmap*
+- Status: prototype complete + sides + dirty world + pulse + XT look + HUD + telemetry + upgrades + wall + run frame + time control (T01–T19) — see *Controls* and *Roadmap*
 
 ## Controls
 
@@ -17,6 +17,8 @@ stub, local JSONL telemetry for data-driven balancing.
 |---|---|
 | Left click | Build a gun (25) or wall (10) — rejected builds refund instantly |
 | B | Toggle the build kind (KANONE ↔ MAUER); the HUD slot follows (caption, cost, icon) |
+| P | Pause/resume — planning actions stay available |
+| T | Cycle speed ×1 → ×2 → ×3 |
 | Left click on a tower | Select it; the HUD shows name, next level and an UPGRADE button (ESC deselects) |
 | UPGRADE (HUD) | Upgrade the selected tower one level (delta price; level 5 = LANZE) |
 | Left click on a vent | Overcharge (20): ember burst, 15 dmg in 2.5 cells, 6 s cooldown |
@@ -56,6 +58,8 @@ restarts the scene; a win can continue endless.
   `B` toggles the build kind and the HUD slot follows (caption, cost, icon).
 - Finite mission (T18): clear the goal wave (20) to win — SIEG screen with
   the run summary (wave, money, kills, leaks); WEITER continues endless.
+- Time control (T19): P pauses (planning actions stay available), T cycles
+  ×1 → ×2 → ×3; the HUD shows PAUSE/×N and the wave button locks while paused.
 - Three drone kinds (shape + color coded): normal, fast, tank.
 - Feedback: 10 synthesized SFX, muzzle flash, hit sparks, explosions +
   kill shockwave ring, build/sell/clear dust puffs, leak edge flash, HP bars,
@@ -82,7 +86,7 @@ restarts the scene; a win can continue endless.
 - T14: plasma-cannon turret (side prongs, cyan core) and bug-style drones
   (head + legs, 2-frame gait); combat FX (shake, muzzle/impact/explosion,
   ring/puff, ember bursts, recoil) live in `scripts/fx.gd`.
-- Local telemetry: build/sell/clear/upgrade/wave/leak/kill/send events +
+- Local telemetry: build/sell/clear/upgrade/wave/leak/kill/send/time_control events +
   per-wave summaries (`wave_end`), `mission_cleared` and `run_end`
   (`result`/`endless`) → `user://run_<seed>.jsonl` (analysis:
   `tools/analyze_run.py`); `run_start` carries provenance (`source`,
@@ -106,13 +110,13 @@ GODOT_DISABLE_LEAK_CHECKS=1 godot --headless --path . \
   -s res://addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
 ```
 
-GUT 9.6.1 is vendored under `addons/gut/`. The suite (125 tests / 821 asserts)
+GUT 9.6.1 is vendored under `addons/gut/`. The suite (136 tests / 875 asserts)
 covers every core class plus one scene integration smoke test that steps the
 real `Main.tscn` (spawn → walk → shoot → kill with scattered entries and
 terrain, break → auto-chain, game over + log flush, restart wiring, camera
 shake decay, scatter determinism, nearest-exit fallback, overcharge,
 modifiers, decal caps, terrain clearing, build/sell FX wiring, upgrades +
-selection, wall builds, run frame).
+selection, wall builds, run frame, time control).
 
 ## Project structure
 
@@ -125,6 +129,7 @@ selection, wall builds, run frame).
 | `scripts/game.gd` | Scene controller: input, orchestration, sprites, effects, audio, HUD push |
 | `scripts/wave_director.gd` | Wave flow state machine: phase, queue, timers, modifier knobs |
 | `scripts/run_state.gd` | Finite-run frame: goal, result, endless flag, summary counters (T18) |
+| `scripts/time_control.gd` | Pause/speed state: `SPEEDS`, scale, toggle/cycle (T19) |
 | `scripts/board_view.gd` | Board rendering: floor/terrain/markers/decals, ambient, route preview, grid math |
 | `scripts/fx.gd` | Combat FX: screen shake, muzzle/impact/explosion, ring/puff, ember bursts, recoil |
 | `scripts/maze.gd` | Buildable grid + connectivity validation (`Maze`) |
@@ -214,8 +219,9 @@ The parser has stdlib regression tests: `python tools/test_analyze_run.py`.
 | T16 | Upgrades: five-level `GunUpgrades` path, panel/pips, `upgrade` telemetry (ADR 0012) | done |
 | T17 | Wall piece: second buildable role, `B` toggle, `Pieces` table, analyzer `walls` | done |
 | T18 | Run frame: goal wave 20, SIEG/GAME OVER, endless continue, `mission_cleared` | done |
+| T19 | Time control: `TimeControl`, P pause, T ×1–×3, planning while paused, HUD indicator | done |
 
-All slices done (T01–T18). Post-prototype directions are collected in `docs/IDEAS.md`;
+All slices done (T01–T19). Post-prototype directions are collected in `docs/IDEAS.md`;
 the concrete candidate queue is `docs/BACKLOG.md`.
 
 ### From prototype to game

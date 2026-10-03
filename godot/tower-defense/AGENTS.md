@@ -86,6 +86,11 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
   (wave, money, kills, leaks); title SIEG on mission clear, GAME OVER
   otherwise; restart via R or the button = `get_tree().reload_current_scene()`;
   after a win, WEITER continues into the endless segment.
+- **Time control** (T19): `TimeControl` — P pauses, T cycles ×1/×2/×3 via
+  `Engine.time_scale`; planning actions (build/sell/clear/upgrade/select) stay
+  available while paused, wave start and vent overcharge are denied; the HUD
+  shows PAUSE/×N and locks the wave button; `time_control` telemetry per
+  change; `_ready` resets the scale.
 - **Polish** (T06): trauma-based screen shake on kill/leak/game-over
   (Camera2D offset, deterministic sine noise, still decays after game over),
   generated vignette overlay (`art/vignette.png`, linear filter), barrel
@@ -102,7 +107,7 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
 - **Telemetry**: local JSONL writer (`Telemetry`), event-based only
   (build/sell/clear/upgrade/wave/leak/kill/send + wave summaries; build/sell
   carry `kind`; `mission_cleared` marks the win, `run_end` carries
-  `result`/`endless`), no per-frame logging, flushed on run end
+  `result`/`endless`, `time_control` logs pause/speed), no per-frame logging, flushed on run end
   and on window close. Analysis: `tools/analyze_run.py` (stdlib) — per-run
   wave tables + aggregate; scans `telemetry_local/`, then the Godot user dir.
 - **Art (T11/T14)**: XT steel/lab look (see `art/STYLEGUIDE.md`): dark
@@ -178,13 +183,16 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
   (Run-Frame, 2026-10-03): finite mission — goal wave 20 (`RunState`), SIEG/
   GAME OVER, `mission_cleared` + `run_end {result,endless}`, win screen with
   WEITER (endless segment), run summary (kills/leaks); suite: 125 tests / 821
-  asserts green.
+  asserts green. T19 (Time control, 2026-10-04): `TimeControl` (P pause,
+  T ×1/×2/×3), Engine.time_scale + explicit paused guard, planning actions
+  stay available, wave start/overcharge denied, HUD indicator + wave-button
+  lock, analyzer `time` marker; suite: 136 tests / 875 asserts green.
 - Vision (2026-10-02): `docs/VISION.md` — pillars P1–P3 (workbench, living
   foundry, curiosity), values, anti-pillars; calibrations + next prototype
   questions (epilog twist, pressure curve, decal readability, meta, time
   control, loop maintenance).
-- Open: epilog twist prototype, meta calibration, time control, pressure
-  tuning via telemetry, segments/more entry/exit sides (see `docs/IDEAS.md`;
+- Open: epilog twist prototype, meta calibration, pressure tuning via
+  telemetry, segments/more entry/exit sides (see `docs/IDEAS.md`;
   candidate queue with priorities: `docs/BACKLOG.md`).
 
 ## Commands

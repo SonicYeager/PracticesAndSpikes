@@ -8,7 +8,7 @@ Events: run_start {seed,source,harness} · wave {wave,count,hp}
         · build {cell,kind} · sell {cell,kind} · clear {cell,money}
         · upgrade {cell,from,to,cost,money} · kill {wave,cell,kind} · wave_end
         {wave,kills,leaks,money_start,money_end} · leak {wave,money} · send
-        {wave} · time_control · overcharge {cell,money}
+        {wave} · time_control {action,speed,paused} · overcharge {cell,money}
         · mission_cleared {wave,money,kills,leaks}
         · run_end {wave,money,result,endless}
 
@@ -218,7 +218,7 @@ def load_run(path):
                     continue
                 run["sends"] += 1
             elif kind == "time_control":
-                # Emitted by the future TimeControl slice; accepted, not scored yet.
+                # TimeControl (T19): pause/resume/speed; counted and rendered.
                 run["time_controls"] += 1
             elif kind == "overcharge":
                 run["overcharges"] += 1
@@ -288,7 +288,11 @@ def report_run(run):
     total_leaks = sum(len(m) for m in run["leaks"].values())
     provenance = " [%s]" % run["source"] if run["source"] and run["source"] != "local" else ""
     sends = " - sends %d" % run["sends"] if run["sends"] else ""
-    lines.append("%s - seed %s%s - %s%s" % (name, seed, provenance, result, sends))
+    time_controls = " - time %d" % run["time_controls"] if run["time_controls"] else ""
+    lines.append(
+        "%s - seed %s%s - %s%s%s"
+        % (name, seed, provenance, result, sends, time_controls)
+    )
     kill_values = [wave_kills(run, n) for n in run["order"]]
     if any(value is not None for value in kill_values):
         total_kills = sum(value for value in kill_values if value is not None)

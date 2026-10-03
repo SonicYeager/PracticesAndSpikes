@@ -174,3 +174,30 @@ func test_update_state_defaults_without_build_keys() -> void:
 	assert_eq(hud._cost_label.text, "0")
 	assert_eq(hud._slot_caption.text, "KANONE")
 	assert_eq(hud._slot_icon.texture, GameHud.GUN_ICON, "Defaults to the gun icon")
+
+
+func test_time_row_and_paused_wave_button() -> void:
+	var hud = _make_hud()
+	var state := _running_state()
+	hud.update_state(state)
+	assert_false(hud._time_label.visible, "×1 unpaused shows nothing")
+	state["speed"] = 2.0
+	hud.update_state(state)
+	assert_true(hud._time_label.visible)
+	assert_eq(hud._time_label.text, "×2")
+	state["paused"] = true
+	hud.update_state(state)
+	assert_eq(hud._time_label.text, "PAUSE", "Pause wins over the speed label")
+	var idle := _running_state()
+	idle["phase"] = "idle"
+	idle["wave"] = 0
+	idle["modifier_label"] = ""
+	idle["paused"] = true
+	hud.update_state(idle)
+	assert_false(hud._chip.visible, "No chip in the idle case")
+	assert_eq(hud._time_label.text, "PAUSE", "Indicator survives the no-chip path")
+	assert_true(hud._wave_button.disabled, "Paused disables the wave button")
+	idle["paused"] = false
+	hud.update_state(idle)
+	assert_false(hud._wave_button.disabled)
+	assert_false(hud._time_label.visible)

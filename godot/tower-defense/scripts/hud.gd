@@ -12,6 +12,7 @@ signal upgrade_pressed
 signal continue_pressed
 
 const COLOR_CYAN := Color(0.624, 0.847, 1.0)
+const COLOR_GOLD := Color(1.0, 0.843137, 0.368627)
 const LEAK_FLASH_ALPHA := 0.45
 const LEAK_FLASH_FADE := 0.45
 const GUN_ICON := preload("res://art/gun_base.png")
@@ -31,6 +32,7 @@ var _flash_tween: Tween
 @onready var _wave_label: Label = $Status/Row/Wave
 @onready var _chip: PanelContainer = $Status/Row/Chip
 @onready var _chip_label: Label = $Status/Row/Chip/Label
+@onready var _time_label: Label = $Status/Row/Time
 @onready var _cost_label: Label = $Build/Box/Actions/Slot/SlotRow/Cost
 @onready var _slot_icon: TextureRect = $Build/Box/Actions/Slot/SlotRow/Gun
 @onready var _slot_caption: Label = $Build/Box/Actions/Slot/SlotRow/Caption
@@ -78,6 +80,7 @@ func update_state(state: Dictionary) -> void:
 		WALL_ICON if str(state.get("build_kind", "gun")) == "wall" else GUN_ICON
 	)
 	_update_status(wave, phase, str(state.get("modifier_id", "")), str(state.get("modifier_label", "")))
+	_update_time_row(state)
 	_update_wave_row(wave, phase, state)
 	_update_upgrade_row(phase, state)
 	if phase != "game_over":
@@ -142,19 +145,36 @@ func _update_status(wave: int, phase: String, modifier_id: String, modifier_labe
 	_chip.add_theme_stylebox_override("panel", style)
 
 
+func _update_time_row(state: Dictionary) -> void:
+	## Pause/speed indicator; pause wins over the speed label.
+	var paused := bool(state.get("paused", false))
+	var speed := float(state.get("speed", 1.0))
+	if paused:
+		_set_label(_time_label, "PAUSE")
+		_time_label.add_theme_color_override("font_color", COLOR_GOLD)
+		_time_label.visible = true
+	elif speed > 1.0:
+		_set_label(_time_label, "×%d" % int(speed))
+		_time_label.add_theme_color_override("font_color", COLOR_CYAN)
+		_time_label.visible = true
+	else:
+		_time_label.visible = false
+
+
 func _update_wave_row(wave: int, phase: String, state: Dictionary) -> void:
 	var alive := int(state.get("alive", 0))
 	var queued := int(state.get("queued", 0))
+	var paused := bool(state.get("paused", false))
 	match phase:
 		"running":
 			_set_label(_wave_text, "WELLE %d · %d UNTERWEGS · %d WARTESCHLANGE" % [wave, alive, queued])
 			_set_wave_button("LÄUFT", false)
 		"break":
 			_set_label(_wave_text, "NÄCHSTE WELLE IN %.1f S" % float(state.get("break_left", 0.0)))
-			_set_wave_button("JETZT STARTEN", true)
+			_set_wave_button("JETZT STARTEN", not paused)
 		"idle":
 			_set_label(_wave_text, "BEREIT ZUM START")
-			_set_wave_button("WELLE %d STARTEN" % (wave + 1), true)
+			_set_wave_button("WELLE %d STARTEN" % (wave + 1), not paused)
 		_:
 			_set_label(_wave_text, "LAUF BEENDET")
 			_set_wave_button("—", false)

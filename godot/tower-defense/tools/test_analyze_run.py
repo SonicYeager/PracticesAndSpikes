@@ -89,6 +89,7 @@ class LoadRunTest(unittest.TestCase):
         self.assertIn("game over at wave 2 (money -2)", text)
         self.assertIn("hp       kills", text)
         self.assertIn("leaks per wave: W1 0    W2 1 #", text)
+        self.assertNotIn(" - time ", text, "No time marker without time_control events")
 
     def test_aggregate_smoke(self):
         run = self.load('{"t":"wave","wave":1,"count":4}\n{"t":"run_end","wave":1,"money":-1}\n')
@@ -207,6 +208,8 @@ class LoadRunTest(unittest.TestCase):
         )
         self.assertEqual(run["time_controls"], 2)
         self.assertEqual(run["unknown"], {})
+        text = "\n".join(ar.report_run(run))
+        self.assertIn(" - time 2", text)
 
     def test_overcharge_is_known(self):
         run = self.load(

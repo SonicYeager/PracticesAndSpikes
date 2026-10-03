@@ -181,6 +181,13 @@ theme_override_font_sizes/font_size = 15
 text = "SCHWARM"
 vertical_alignment = 1
 
+[node name="Time" type="Label" parent="Status/Row"]
+visible = false
+theme_override_colors/font_color = Color(1, 0.843137, 0.368627, 1)
+theme_override_font_sizes/font_size = 15
+text = "PAUSE"
+vertical_alignment = 1
+
 [node name="Build" type="PanelContainer" parent="."]
 anchor_left = 1.0
 anchor_right = 1.0
@@ -266,7 +273,7 @@ text = "UPGRADE"
 [node name="Hints" type="Label" parent="Build/Box"]
 theme_override_colors/font_color = Color(0.501961, 0.54902, 0.6, 1)
 theme_override_font_sizes/font_size = 14
-text = "LMB BAUEN · B: MAUER/KANONE\nRMB VERKAUFEN · SPACE WELLE"
+text = "LMB BAUEN · B: MAUER/KANONE\nRMB VERKAUFEN · SPACE WELLE\nP PAUSE · T TEMPO"
 horizontal_alignment = 2
 
 [node name="WavePanel" type="PanelContainer" parent="."]

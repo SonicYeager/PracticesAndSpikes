@@ -21,10 +21,6 @@ followed by indented `Vision:` (pillar/prototype question + roadmap milestone), 
 
 ## Open
 
-- [ ] **tower-defense-time-control** · priority: medium · effort: medium · area: logic — Pause/speed as a `TimeControl` RefCounted: engine time scale, actions allowed while paused, determinism preserved; tests.
-  - Vision: VISION Q5 (Total Time Control); roadmap M1.
-  - Kill: pause/speed goes unused in playtests → simplify.
-  - Surfaces: new `scripts/time_control.gd`, `scripts/wave_director.gd` (break/spawn timing), `scripts/game.gd` (thin integration), `tests/`.
 - [ ] **tower-defense-balance-harness** · priority: medium · effort: medium · area: logic — Headless fast-forward: pinned seed (`seed_override`) + build script, N waves, invariant + metric output (leaks/money/kills); basis for controlled balance questions.
   - Vision: pressure tuning via telemetry (VISION Q2); data-reality plan step 3.
   - Kill: harness results diverge from manual runs → fix or drop.
@@ -49,6 +45,7 @@ followed by indented `Vision:` (pillar/prototype question + roadmap milestone), 
 - [x] **tower-defense-loop-extension** · priority: high · effort: xl · area: logic — Playtest-Befund: mit zugebauter Map endet die Entscheidung — Richtung entschieden 2026-10-03 (Upgrades) und Upgrade-Slice geliefert via `tower-defense-map-boredom`/T16 (ADR 0012: `GunUpgrades` 5 Stufen, Delta-Kauf, Halb-Refund, Upgrade-Panel + Pips, `upgrade`-Telemetrie); Terrain-Disruptionen/Commander-Fähigkeiten bleiben IDEAS-Kandidaten.
 - [x] **tower-defense-wall-piece** · priority: medium · effort: low · area: logic — Cheap wall blocker als zweite baubare Rolle — done 2026-10-03 via `tower-defense-wall-piece`/T17 (`Pieces`-Tabelle, `WALL_COST` 10, `B`-Toggle, `_walls`/`_wall_nodes`, HUD-Caption/Cost/Icon, `build/sell {kind}`-Telemetrie + Analyzer `walls`/`n(wm)`, Platzhalter `wall.png`; **kein ADR** — Breadth-first war in README/VISION entschieden, kein Musterwechsel). Kill bleibt Playtest-Frage (Substitution, nicht Nutzung).
 - [x] **tower-defense-run-frame** · priority: medium · effort: medium · area: logic — Finite run frame — done 2026-10-03 via `tower-defense-run-frame`/T18 (`RunState`: Ziel-Welle 20, SIEG/GAME OVER, optionale Endlos-Verlängerung; Ein-`run_end`-Modell + `mission_cleared`; Run-Summary mit Kills/Leaks; Analyzer-Render-Formen + Aggregat-`cleared`-Fix). Kill offen: Playtest (fühlt sich der endliche Run wie ein Spiel an?).
+- [x] **tower-defense-time-control** · priority: medium · effort: medium · area: logic — done 2026-10-04 via `tower-defense-time-control`/T19 (`TimeControl`: P Pause/T ×1–×3, `Engine.time_scale` + Paused-Guard, Planungs-Aktionen im Pause erlaubt, Wellenstart/Overcharge denied, HUD-Indicator + Button-Lock, Analyzer ` - time`-Marker). Surfaces: `scripts/time_control.gd`, `scripts/game.gd`, `scripts/hud.gd`/`scenes/Hud.tscn`, `tools/analyze_run.py`.
 
 ## Notes
 

@@ -119,6 +119,7 @@ var _selected := Vector2i(-1, -1)
 var _build_kind: int = Pieces.Kind.GUN
 var _director: WaveDirector
 var _run_state: RunState
+var _time_control := TimeControl.new()
 var _wave_kills := 0
 var _wave_leaks := 0
 var _wave_money_start := 0
@@ -140,6 +141,7 @@ func _ready() -> void:
 	telemetry = Telemetry.new(game_seed, run_source)
 	_director = WaveDirector.new(game_seed)
 	_run_state = RunState.new()
+	_apply_time_scale()
 	_camera.position = Vector2(get_viewport_rect().size) * 0.5
 	_camera.make_current()
 	_fx.setup(_camera)
@@ -168,6 +170,10 @@ func _notification(what: int) -> void:
 
 
 func _process(delta: float) -> void:
+	if _time_control.is_paused():
+		# Explicit freeze (tests + the delta-0 spawn edge); the engine scale
+		# already yields delta 0 in the real loop.
+		return
 	_anim_time += delta
 	_fx.update(delta)
 	if _director.phase == WaveDirector.Phase.GAME_OVER:
@@ -205,6 +211,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		_deselect_tower()
 	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_B:
 		_toggle_build_kind()
+	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_P:
+		_toggle_pause()
+	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_T:
+		_cycle_speed()
 
 
 func _dispatch_primary(cell: Vector2i) -> void:
@@ -374,6 +384,9 @@ func _try_clear(cell: Vector2i) -> bool:
 
 
 func _on_wave_pressed() -> void:
+	if _time_control.is_paused():
+		_play("denied")
+		return
 	if (
 		_director.phase == WaveDirector.Phase.IDLE
 		or _director.phase == WaveDirector.Phase.BREAK
@@ -583,6 +596,8 @@ func _apply_damage(target: Drone, amount: float) -> bool:
 
 
 func _try_overcharge(cell: Vector2i) -> bool:
+	if _time_control.is_paused():
+		return false
 	if not _vents.has(cell):
 		return false
 	var vent: Dictionary = _vents[cell]
@@ -623,6 +638,33 @@ func _remove_projectile(p: Projectile) -> void:
 	if sprite != null:
 		sprite.queue_free()
 	_projectile_sprites.erase(p)
+
+
+func _apply_time_scale() -> void:
+	## Engine-level scale (tweens/particles included); pause = 0.
+	Engine.time_scale = _time_control.scale()
+
+
+func _toggle_pause() -> void:
+	_time_control.toggle_pause()
+	_apply_time_scale()
+	telemetry.event("time_control", {
+		"action": "pause" if _time_control.is_paused() else "resume",
+		"speed": _time_control.speed(),
+		"paused": _time_control.is_paused(),
+	})
+	_update_hud()
+
+
+func _cycle_speed() -> void:
+	_time_control.cycle_speed()
+	_apply_time_scale()
+	telemetry.event("time_control", {
+		"action": "speed",
+		"speed": _time_control.speed(),
+		"paused": _time_control.is_paused(),
+	})
+	_update_hud()
 
 
 func _win_run() -> void:
@@ -921,6 +963,8 @@ func _update_hud() -> void:
 		"break_left": _director.break_timer,
 		"modifier_id": modifier_id,
 		"modifier_label": _modifier_text(modifier_id),
+		"paused": _time_control.is_paused(),
+		"speed": _time_control.speed(),
 		"selected": selected,
 	})
 

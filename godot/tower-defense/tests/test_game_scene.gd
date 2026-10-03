@@ -49,6 +49,19 @@ func _visible_pips(pips: Node2D) -> int:
 	return count
 
 
+func _press_key(game, code) -> void:
+	var ev := InputEventKey.new()
+	ev.keycode = code
+	ev.pressed = true
+	game._unhandled_input(ev)
+
+
+func after_each() -> void:
+	# Pause tests drive Engine.time_scale; a leftover 0 would hang GUT's
+	# per-run SceneTimer await (gut.gd:890) and test-local scaled waits.
+	Engine.time_scale = 1.0
+
+
 func test_wave_spawns_walks_and_gun_kills() -> void:
 	var game = _make_game()
 	game._start_wave(1)
@@ -950,4 +963,101 @@ func test_bankruptcy_beats_goal_clear() -> void:
 		if line.contains("\"t\":\"mission_cleared\""):
 			has_cleared = true
 	assert_false(has_cleared, "No mission_cleared after bankruptcy")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(_telemetry_path(game)))
+
+
+func test_pause_key_freezes_and_denies_wave_start() -> void:
+	var game = _make_game()
+	_press_key(game, KEY_P)
+	assert_true(game._time_control.is_paused())
+	assert_almost_eq(Engine.time_scale, 0.0, 0.001, "Engine scale is applied")
+	assert_eq(game._hud._time_label.text, "PAUSE", "HUD follows the pause")
+	assert_true(game._hud._time_label.visible)
+	game._on_wave_pressed()
+	assert_eq(game._director.phase, WaveDirector.Phase.IDLE, "Wave start is denied while paused")
+	assert_eq(game._director.wave, 0)
+	_press_key(game, KEY_P)
+	assert_false(game._time_control.is_paused())
+	assert_almost_eq(Engine.time_scale, 1.0, 0.001)
+	assert_false(game._hud._time_label.visible)
+	var time_lines := 0
+	var payload_ok := false
+	for line in game.telemetry.lines:
+		if line.contains("\"t\":\"time_control\""):
+			time_lines += 1
+			if line.contains("\"action\":\"pause\"") and line.contains("\"paused\":true"):
+				payload_ok = true
+	assert_eq(time_lines, 2, "Pause and resume are logged")
+	assert_true(payload_ok, "Payload carries the paused state")
+
+
+func test_pause_freezes_the_break_timer_and_allows_building() -> void:
+	var game = _make_game()
+	game._start_wave(1)
+	_spawn_all_and_clear(game)
+	game._process(STEP)
+	assert_eq(game._director.phase, WaveDirector.Phase.BREAK)
+	assert_gt(game._director.break_timer, 0.0, "Break is running before the pause")
+	_press_key(game, KEY_P)
+	var left: float = game._director.break_timer
+	game._process(STEP)
+	assert_eq(game._director.break_timer, left, "Paused break does not tick")
+	var cell := _find_buildable(game)
+	assert_ne(cell, Vector2i(-1, -1))
+	var money_before: int = game.economy.money
+	assert_true(game._try_build(cell), "Building stays available while paused")
+	assert_eq(game.economy.money, money_before - 25)
+
+
+func test_pause_denies_overcharge_and_speed_cycles() -> void:
+	var game = _make_game()
+	var vent: Vector2i = game._vents.keys()[0]
+	_press_key(game, KEY_P)
+	game.economy.money = 500
+	assert_false(game._try_overcharge(vent), "Overcharge is denied while paused")
+	assert_eq(game.economy.money, 500, "No spend on a denied overcharge")
+	_press_key(game, KEY_P)
+	_press_key(game, KEY_T)
+	assert_almost_eq(Engine.time_scale, 2.0, 0.001)
+	_press_key(game, KEY_T)
+	assert_almost_eq(Engine.time_scale, 3.0, 0.001)
+	_press_key(game, KEY_T)
+	assert_almost_eq(Engine.time_scale, 1.0, 0.001, "Speed wraps back to ×1")
+	var speed_lines := 0
+	for line in game.telemetry.lines:
+		if line.contains("\"action\":\"speed\""):
+			speed_lines += 1
+	assert_eq(speed_lines, 3)
+
+
+func test_ready_resets_a_leftover_time_scale() -> void:
+	Engine.time_scale = 0.0
+	var game = _make_game()
+	assert_almost_eq(Engine.time_scale, 1.0, 0.001, "A fresh scene applies ×1")
+
+
+func test_pause_during_running_freezes_drones() -> void:
+	var game = _make_game()
+	game._start_wave(1)
+	for i in 60:
+		game._process(STEP)
+	assert_gt(game._drones.size(), 0, "Wave 1 is on the field")
+	var pos: Vector2 = game._drones[0].position
+	_press_key(game, KEY_P)
+	game._process(STEP)
+	assert_eq(game._drones[0].position, pos, "Paused drones do not move")
+	_press_key(game, KEY_P)
+	game._process(STEP)
+	assert_ne(game._drones[0].position, pos, "Resume lets the drone move again")
+
+
+func test_time_keys_are_ignored_at_game_over() -> void:
+	var game = _make_game()
+	game.economy.money = -1
+	game._end_run()
+	assert_eq(game._director.phase, WaveDirector.Phase.GAME_OVER)
+	_press_key(game, KEY_P)
+	_press_key(game, KEY_T)
+	assert_false(game._time_control.is_paused(), "P is ignored at game over")
+	assert_almost_eq(Engine.time_scale, 1.0, 0.001, "T is ignored at game over")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(_telemetry_path(game)))

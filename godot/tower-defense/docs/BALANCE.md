@@ -12,6 +12,7 @@ the map to them.
 | Gun levels (prices, stats, refunds) | `scripts/gun_upgrades.gd` (`GunUpgrades`, ADR 0012) |
 | Piece kinds (cost/label/telemetry mapping) | `scripts/pieces.gd` (`Pieces`, T17) |
 | Run frame (goal wave, result) | `scripts/run_state.gd` (`RunState`, T18) |
+| Time speeds (pause/speed) | `scripts/time_control.gd` (`SPEEDS`, T19) |
 | Drone kinds (hp/speed multipliers) | `scripts/drone.gd` (`KIND_MODS`) |
 | Wave scaling + composition | `scripts/wave.gd` (`WaveGen`) |
 | Wave pacing (spawn/break, modifier knobs) | `scripts/wave_director.gd` (`WaveDirector`) |

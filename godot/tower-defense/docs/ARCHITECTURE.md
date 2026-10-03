@@ -22,7 +22,7 @@ scenes/Main.tscn
                  └─ panels (status/build/wave/game-over)
 
 scripts/*.gd (class_name RefCounted)     ← core logic, no scene access
-  Maze · Pathfinder · Economy · WaveGen · WaveDirector · RunState · Drone
+  Maze · Pathfinder · Economy · WaveGen · WaveDirector · RunState · TimeControl · Drone
   Gun · GunUpgrades · Pieces · Projectile · Telemetry · SkillStub
 
 UI scripts (Control-based, no gameplay access)
@@ -48,13 +48,14 @@ owns its panels and only sees pushed state.
 | `WaveGen` | `scripts/wave.gd` | Static `composition(n, seed)` → `{wave, count, hp, speed, tanks, fast, modifier}` (T10 events from wave 3) |
 | `WaveDirector` | `scripts/wave_director.gd` | Wave flow state machine (T12.5): phase, composition, spawn queue, spawn/break timers, per-wave modifier knobs; `start()`, `begin_break()`, `tick_spawn()`, `tick_break()`, `end_run()` |
 | `RunState` | `scripts/run_state.gd` | Finite-run frame (T18): wave goal, `Result {NONE, WIN, LOSS}`, endless flag, summary counters; `register_wave_cleared()` (guarded), `register_loss()`, `register_kill/leak()` |
+| `TimeControl` | `scripts/time_control.gd` | Pause/speed state (T19): `SPEEDS [1,2,3]`, `paused`, `scale()` (0 while paused), `toggle_pause()`, `cycle_speed()`, `speed_text()` |
 | `TerrainGen` | `scripts/terrain_gen.gd` | Static `generate(size, entries, exits, seed)` → `{blockers, decor}`; greedy placement that never seals an entry |
 | `Drone` | `scripts/drone.gd` | Grid-space walker: `advance(dt)` (returns `true` on leak), `take_damage()`, `reroute()`, `facing()`, `exit_cell()`, `distance_to_exit()`, `KIND_MODS` |
 | `Gun` | `scripts/gun.gd` | Level-based range/cadence/damage (`GunUpgrades`, ADR 0012) + targeting (`range_bonus` hook for wave modifiers); `acquire()` picks the drone closest to its exit, `try_fire(dt, targets)` returns the target when a shot is due |
 | `GunUpgrades` | `scripts/gun_upgrades.gd` | Five-level upgrade table (ADR 0012): cumulative prices, deltas, half refunds, names/descriptions; static helpers only |
 | `Pieces` | `scripts/pieces.gd` | Buildable kinds (T17): `Kind {GUN, WALL}` → cost/label/telemetry name; static, no instances |
 | `Projectile` | `scripts/projectile.gd` | Homing tracer carrying its damage (level-aware); `advance(dt)` returns `true` on hit, fizzles when the target dies or leaks |
-| `Telemetry` | `scripts/telemetry.gd` | Buffers JSON events (wave/build/sell/clear/upgrade/leak/kill/send/overcharge + `wave_end` summaries), `flush(path)` writes JSONL; `run_start` carries `source`/`harness` provenance |
+| `Telemetry` | `scripts/telemetry.gd` | Buffers JSON events (wave/build/sell/clear/upgrade/leak/kill/send/overcharge/time_control + `wave_end`/`mission_cleared`/`run_end` summaries), `flush(path)` writes JSONL; `run_start` carries `source`/`harness` provenance |
 | `SkillStub` | `scripts/skill_stub.gd` | Meta stub: one bonus persisted via `ConfigFile` |
 
 ## Coordinates
@@ -75,7 +76,7 @@ only).
 
 ## Frame order (`game.gd _process`)
 
-0. `_fx.update` — trauma decay + camera offset (also runs after game over)
+0. `TimeControl` pause guard (T19) — frozen world; else `_fx.update` — trauma decay + camera offset (also runs after game over)
 1. `_update_spawner` — asks `WaveDirector` for the next spawn / break timeout
    (`tick_break`, `tick_spawn`); `_spawn_drone` scatters the entry cell and
    draws the assigned exit; empty queue + clear field → win check
@@ -125,7 +126,7 @@ HUD wave button ─► _on_wave_pressed (IDLE/BREAK only) → _start_wave(n + 1)
 HUD sell toggle ─► _sell_mode: LMB sells towers (RMB always sells)
 HUD state       ◄─ GameHud.update_state({money, wave, phase, alive, queued,
                     total, break_left, modifier_id, modifier_label, selected,
-                    build_cost, build_label, build_kind})
+                    build_cost, build_label, build_kind, paused, speed})
                     phase: "idle" | "running" | "break" | "game_over"
 
 Gun.try_fire(dt) ──► _fire: tracer starts at muzzle (0.75 cells) + flash
@@ -176,6 +177,10 @@ Both        ──► _reroute_drones(): each drone re-paths to its assigned exi
 - The run ends strictly below zero (`money < 0`, checked only after a leak)
   or when the goal wave is cleared (`RunState`); `run_end.result` mirrors the
   mission outcome (win stays win through an endless segment).
+- Time control (T19) is `Engine.time_scale` driven: pause freezes logic
+  (explicit guard) and presentation (scale 0); planning actions stay
+  available, wave start/overcharge are denied; `_ready` resets the scale
+  after restart.
 - The wave phase is a single explicit state (`WaveDirector.Phase`: IDLE →
   RUNNING → BREAK → RUNNING … → GAME_OVER); the director owns the queue and
   the BREAK countdown. A wave only ends when its spawn queue and the field
@@ -204,6 +209,8 @@ Gameplay RNG exists in exactly three places, all seeded from the run seed:
 - wave modifiers: rolled after the tanks/fast split, so those stay stable
   per seed; the modifier itself is part of the composition
 - terrain: deterministic given the run seed (greedy placement)
+- time control: pause/speed scale delta only — composition/order stay
+  seed-stable; bit-identical timing across speeds is not guaranteed
 - floor variety: `(x * 7 + y * 13) % 3` (stable pattern)
 - explosion frame alternation: `_fx_counter`
 - animation phases: spawn index (`_drone_phase`), not RNG
@@ -239,8 +246,9 @@ panels → game-over overlay).
 
 - Core classes: pure GUT tests in `tests/test_*.gd`, no scene needed
   (`test_maze`, `test_path`, `test_economy`, `test_wave`,
-  `test_wave_director`, `test_run_state`, `test_drone`, `test_gun`,
-  `test_gun_upgrades`, `test_pieces`, `test_projectile`, `test_terrain_gen`).
+  `test_wave_director`, `test_run_state`, `test_time_control`, `test_drone`,
+  `test_gun`, `test_gun_upgrades`, `test_pieces`, `test_projectile`,
+  `test_terrain_gen`).
 - HUD: `tests/test_hud.gd` instantiates `Hud.tscn` and drives the state API
   and intents (labels, chip, button gating, sell toggle, upgrade row,
   game-over overlay, bar freeze on game over) without the game scene.
@@ -251,6 +259,8 @@ panels → game-over overlay).
   the Space skip, scatter/terrain determinism, the nearest-exit fallback,
   overcharge, modifier knobs, decal caps + ambient setup, terrain clearing,
   upgrades + selection + level pips, wall builds + build-kind toggle, the
+  run frame (win/loss/endless), the pause/speed flow (freeze, denies,
+  `_ready` reset), the
   game-over
   screen incl. telemetry flush and restart-button wiring, and the camera
   shake offset/decay (writes only `user://`, then deletes the file).
