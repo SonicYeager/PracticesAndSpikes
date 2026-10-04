@@ -21,6 +21,7 @@ const MAP_SIZE := Vector2i(20, 12)
 const ART_SCALE := BoardView.ART_SCALE
 const SCATTER_SEED_MUL := 1000003
 const SCATTER_WAVE_MUL := 104729
+const SPLITTER_CHILDREN := 2
 const OVERCHARGE_COST := 20
 const OVERCHARGE_DAMAGE := 15.0
 const OVERCHARGE_RADIUS := 2.5
@@ -52,6 +53,8 @@ const DRONE_TEX := {
 	"normal": [preload("res://art/drone_0.png"), preload("res://art/drone_1.png")],
 	"fast": [preload("res://art/drone_fast_0.png"), preload("res://art/drone_fast_1.png")],
 	"tank": [preload("res://art/drone_tank.png")],
+	"splitter": [preload("res://art/drone_splitter.png")],
+	"child": [preload("res://art/drone_child.png")],
 }
 const SFX := {
 	"shoot": preload("res://audio/shoot.wav"),
@@ -412,6 +415,7 @@ func _start_wave(n: int) -> void:
 		"wave": n,
 		"count": _director.composition["count"],
 		"hp": _director.composition["hp"],
+		"splitters": int(_director.composition.get("splitters", 0)),
 		"modifier": _director.composition["modifier"],
 	})
 	_play("wave")
@@ -467,6 +471,12 @@ func _spawn_drone(kind: String) -> void:
 			cells = _cells_from_path(maze.pathfinder.find_path(entry, exit))
 	if cells.is_empty():
 		return
+	_add_drone(kind, cells, float(index) * 0.9)
+
+
+func _add_drone(kind: String, cells: Array[Vector2i], phase: float) -> void:
+	## Creates the drone plus its sprite/HP bar/anim phase; shared by wave
+	## spawns and splitter children (T22).
 	var speed: float = float(_director.composition["speed"]) / TILE
 	var d := Drone.spawn(kind, cells, _director.composition["hp"], speed)
 	_drones.append(d)
@@ -487,7 +497,24 @@ func _spawn_drone(kind: String) -> void:
 	add_child(bar_bg)
 	add_child(bar_fill)
 	_drone_bars[d] = {"bg": bar_bg, "fill": bar_fill}
-	_drone_phase[d] = float(index) * 0.9
+	_drone_phase[d] = phase
+
+
+func _spawn_split_children(parent: Drone) -> void:
+	## Splitter death (T22): two weak children continue from the death cell to
+	## the parent's exit. No RNG draw — the pair is identical, hence deterministic.
+	var exit := parent.exit_cell()
+	var cells := _cells_from_path(maze.pathfinder.find_path(parent.cell(), exit))
+	if cells.is_empty():
+		exit = _nearest_exit(parent.cell())
+		if exit != Vector2i(-1, -1):
+			cells = _cells_from_path(maze.pathfinder.find_path(parent.cell(), exit))
+	if cells.size() < 2:
+		# Doorstep (or unreachable): a kill at the exit never traps the player.
+		return
+	var parent_phase := float(_drone_phase.get(parent, 0.0))
+	for i in SPLITTER_CHILDREN:
+		_add_drone("child", cells, parent_phase + 0.45 * (i + 1))
 
 
 func _update_drones(delta: float) -> void:
@@ -505,7 +532,7 @@ func _on_leak(d: Drone) -> void:
 	_wave_leaks += 1
 	_run_state.register_leak()
 	var exit := d.exit_cell()
-	telemetry.event("leak", {"wave": _director.wave, "money": economy.money, "exit": [exit.x, exit.y]})
+	telemetry.event("leak", {"wave": _director.wave, "money": economy.money, "exit": [exit.x, exit.y], "kind": d.kind})
 	_play("leak")
 	_fx.shake(SHAKE_LEAK)
 	_hud.flash_leak()
@@ -571,7 +598,12 @@ func _resolve_hit(p: Projectile) -> void:
 func _apply_damage(target: Drone, amount: float) -> bool:
 	## Shared kill/hit consequences; returns true when the drone died.
 	if target.take_damage(amount):
-		economy.on_kill(_director.kill_reward)
+		if target.kind == "splitter":
+			_spawn_split_children(target)
+		var reward: int = (
+			Economy.CHILD_KILL_REWARD if target.kind == "child" else _director.kill_reward
+		)
+		economy.on_kill(reward)
 		_wave_kills += 1
 		_run_state.register_kill()
 		telemetry.event("kill", {

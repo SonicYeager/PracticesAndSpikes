@@ -29,6 +29,7 @@ the map to them.
 | `WALL_COST` | 10 | wall build (`B` toggles the kind); refund 5 |
 | sell refund | `GunUpgrades.refund(level)` | half of the cumulative invest (L1 → 12) |
 | `KILL_REWARD` | 6 | per drone killed |
+| `CHILD_KILL_REWARD` | 2 | splitter children only (T22) |
 | `LEAK_COST` | 10 | per drone reaching the base |
 | game over | `money < 0` | zero is still alive |
 
@@ -68,10 +69,18 @@ Multipliers applied to the wave's base hp/speed by `Drone.spawn()`:
 | normal | 1.0 | 1.0 | 20.0 | 1.31 cells/s |
 | fast | 0.6 | 1.6 | 12.0 | 2.10 cells/s |
 | tank | 2.4 | 0.55 | 48.0 | 0.72 cells/s |
+| splitter | 1.0 | 0.85 | 20.0 | 1.11 cells/s |
+| child | 0.4 | 1.25 | 8.0 | 1.64 cells/s |
 
 Speed is cells/second; `WaveGen` authors px/s and `game.gd` divides by
 `TILE` (32). Fast drones are therefore hard to catch with a single gun, tanks
-soak ~6 hits at wave 1.
+soak ~6 hits at wave 1. Splitters (T22) are normal-tough but slow carriers:
+on death two children spawn at the death cell and keep the parent's exit —
+the pair shares path/position (deliberately RNG-free; de-stacking would be a
+polish follow-up). Payoff matrix: splitter leak −10 · kill + both children
+killed 6+2×2=+10 · kill + both children leaked 6−20=−14 · doorstep kill +6
+(no split). A 2-cell death still splits — the pair then leaks almost
+immediately (the one case where shooting early is not strictly good).
 
 ## Waves (`wave.gd`)
 
@@ -81,11 +90,12 @@ hp    = 20 * 1.15^(n - 1)
 speed = 42 + min((n - 1) * 2, 40)          # px/s, capped at 82
 tanks = randi_range(0, n / 2)              # seeded
 fast  = randi_range(0, n / 3)              # seeded
+splitters = randi_range(1, 1 + (n - 8) / 8)  # seeded, from wave 8
 seed  = game_seed + n * 7919
 ```
 
 Spawn pacing: one drone every 0.7 s (`SPAWN_INTERVAL`), order normals → fast
-→ tanks. Each spawn scatters along the entry cells and draws a random exit
+→ tanks → splitters. Each spawn scatters along the entry cells and draws a random exit
 (seeded per spawn, see the scene pacing table). Between waves: once the
 spawn queue and the field are empty, a `BREAK_SECONDS` (5 s) intermission
 runs with a HUD countdown, then the next wave auto-starts; Space skips the
@@ -95,18 +105,21 @@ lives in `WaveDirector`; the scene spawns and renders.
 Composition for seed 1 (reproducible via `seed_override = 1`), verified
 by running `WaveGen` directly:
 
-| Wave | Count | HP | Speed (px/s) | Tanks | Fast |
-|---|---|---|---|---|---|
-| 1 | 4 | 20.0 | 42 | 0 | 0 |
-| 2 | 6 | 23.0 | 44 | 1 | 0 |
-| 3 | 8 | 26.4 | 46 | 0 | 1 |
-| 4 | 10 | 30.4 | 48 | 0 | 1 |
-| 5 | 12 | 35.0 | 50 | 2 | 1 |
-| 6 | 14 | 40.2 | 52 | 2 | 0 |
-| 7 | 16 | 46.3 | 54 | 3 | 1 |
-| 8 | 18 | 53.2 | 56 | 2 | 0 |
+| Wave | Count | HP | Speed (px/s) | Tanks | Fast | Splitters |
+|---|---|---|---|---|---|---|
+| 1 | 4 | 20.0 | 42 | 0 | 0 | 0 |
+| 2 | 6 | 23.0 | 44 | 1 | 0 | 0 |
+| 3 | 8 | 26.4 | 46 | 0 | 1 | 0 |
+| 4 | 10 | 30.4 | 48 | 0 | 1 | 0 |
+| 5 | 12 | 35.0 | 50 | 2 | 1 | 0 |
+| 6 | 14 | 40.2 | 52 | 2 | 0 | 0 |
+| 7 | 16 | 46.3 | 54 | 3 | 1 | 0 |
+| 8 | 18 | 53.2 | 56 | 2 | 0 | 1 |
 
-The tanks/fast split changes with the seed; count/hp/speed do not.
+The tanks/fast split changes with the seed; count/hp/speed do not. Splitters
+join from wave 8 (`SPLITTER_FROM_WAVE`), one plus growth per eight waves —
+wave 8 is exactly one for every seed; their draw sits after the modifier
+roll, so tanks/fast/modifier stay stable per seed.
 
 ### Wave modifiers (T10)
 
@@ -122,7 +135,7 @@ comes after the tanks/fast split, so those stay stable):
 
 Telegraphed in the HUD (during the wave and in the break preview) and logged
 in the `wave` telemetry event (effective post-swarm count; normals =
-count − fast − tanks). Overcharge (below) is the money sink that answers the
+count − fast − tanks − splitters). Overcharge (below) is the money sink that answers the
 modifiers.
 
 ## Wave pacing (`WaveDirector`)

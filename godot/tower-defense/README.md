@@ -9,7 +9,7 @@ stub, local JSONL telemetry for data-driven balancing.
 
 - Stack: Godot 4.7.2, GDScript (no .NET flow)
 - Entrypoint: `scenes/Main.tscn` (open/import the folder in the Godot editor)
-- Status: prototype complete + sides + dirty world + pulse + XT look + HUD + telemetry + upgrades + wall + run frame + time control + balance harness + entry/exit segments (T01–T21) — see *Controls* and *Roadmap*
+- Status: prototype complete + sides + dirty world + pulse + XT look + HUD + telemetry + upgrades + wall + run frame + time control + balance harness + entry/exit segments + splitter drone (T01–T22) — see *Controls* and *Roadmap*
 
 ## Controls
 
@@ -62,7 +62,7 @@ restarts the scene; a win can continue endless.
   ×1 → ×2 → ×3; the HUD shows PAUSE/×N and the wave button locks while paused.
 - Balance harness (T20): headless fast-forward (`tools/harness.gd`) with pinned
   seed + build script, metric/invariant output and `[harness]` provenance.
-- Three drone kinds (shape + color coded): normal, fast, tank.
+- Four drone kinds (shape + color coded): normal, fast, tank, splitter — a killed splitter spawns two weak children (T22) that keep its exit; children pay a reduced kill reward.
 - Feedback: 10 synthesized SFX, muzzle flash, hit sparks, explosions +
   kill shockwave ring, build/sell/clear dust puffs, leak edge flash, HP bars,
   walk animation, HUD icon panel, pulsing spawn portal/base bunker.
@@ -114,13 +114,14 @@ GODOT_DISABLE_LEAK_CHECKS=1 godot --headless --path . \
   -s res://addons/gut/gut_cmdln.gd -gdir=res://tests -ginclude_subdirs -gexit
 ```
 
-GUT 9.6.1 is vendored under `addons/gut/`. The suite (156 tests / 985 asserts)
+GUT 9.6.1 is vendored under `addons/gut/`. The suite (166 tests / 1035 asserts)
 covers every core class plus one scene integration smoke test that steps the
 real `Main.tscn` (spawn → walk → shoot → kill with scattered entries and
 terrain, break → auto-chain, game over + log flush, restart wiring, camera
 shake decay, scatter determinism, nearest-exit fallback, overcharge,
 modifiers, decal caps, terrain clearing, build/sell FX wiring, upgrades +
-selection, wall builds, run frame, time control, balance harness, entry/exit segments).
+selection, wall builds, run frame, time control, balance harness, entry/exit segments,
+splitter drone).
 
 ## Project structure
 
@@ -245,8 +246,9 @@ run's log remains; a natural loss with `--out` also writes
 | T19 | Time control: `TimeControl`, P pause, T ×1–×3, planning while paused, HUD indicator | done |
 | T20 | Balance harness: `HarnessRun` + headless `tools/harness.gd`, invariants, `[harness]` logs | done |
 | T21 | Entry/exit segments: `SideSegments`, `entry_segments`/`exit_segments` configs, guard fallback | done |
+| T22 | Splitter drone: splits into two weak children on death, doorstep guard, kind telemetry | done |
 
-All slices done (T01–T21). Post-prototype directions are collected in `docs/IDEAS.md`;
+All slices done (T01–T22). Post-prototype directions are collected in `docs/IDEAS.md`;
 the concrete candidate queue is `docs/BACKLOG.md`.
 
 ### From prototype to game

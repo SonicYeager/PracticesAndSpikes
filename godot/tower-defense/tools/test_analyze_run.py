@@ -182,6 +182,37 @@ class LoadRunTest(unittest.TestCase):
         self.assertIn("runs ended: 1/1", text)
         self.assertIn("avg reached wave 1.0", text)
 
+    def test_kill_and_leak_kinds_render(self):
+        run = self.load(
+            '{"t":"wave","wave":8,"count":18,"hp":53.2,"splitters":1}\n'
+            '{"t":"kill","wave":8,"cell":[3,4],"kind":"splitter"}\n'
+            '{"t":"kill","wave":8,"cell":[3,5],"kind":"child"}\n'
+            '{"t":"leak","wave":8,"money":90,"exit":[19,4],"kind":"child"}\n'
+        )
+        self.assertEqual(run["unknown"], {})
+        self.assertEqual(run["kill_kinds"]["splitter"], 1)
+        text = "\n".join(ar.report_run(run))
+        self.assertIn("kinds: kills child 1, splitter 1 | leaks child 1", text)
+        self.assertTrue(all(ord(c) < 128 for c in text), "Report stays ASCII")
+
+    def test_baseline_kinds_stay_quiet(self):
+        run = self.load(
+            '{"t":"kill","wave":1,"cell":[3,4],"kind":"fast"}\n'
+            '{"t":"leak","wave":1,"money":90,"exit":[19,4],"kind":"normal"}\n'
+        )
+        text = "\n".join(ar.report_run(run))
+        self.assertNotIn("kinds:", text)
+
+    def test_legacy_events_without_kind_stay_quiet(self):
+        run = self.load(
+            '{"t":"leak","wave":1,"money":90,"exit":[19,4]}\n'
+            '{"t":"kill","wave":1,"cell":[3,4]}\n'
+        )
+        self.assertEqual(run["unknown"], {})
+        self.assertEqual(run["leak_kinds"], {})
+        text = "\n".join(ar.report_run(run))
+        self.assertNotIn("kinds:", text)
+
     def test_kill_and_wave_end_parsed(self):
         run = self.load(
             '{"t":"wave","wave":1,"count":4,"hp":20.0}\n'

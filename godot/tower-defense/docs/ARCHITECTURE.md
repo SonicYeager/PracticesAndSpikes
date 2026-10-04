@@ -46,12 +46,12 @@ owns its panels and only sees pushed state.
 | `Pathfinder` | `scripts/pathfinder.gd` | `AStarGrid2D` wrapper; `DIAGONAL_MODE_NEVER`, solid points, `find_path()` returns cell ids, `has_path()`, `reachable_from()` multi-source BFS |
 | `SideSegments` | `scripts/side_segments.gd` | Entry/exit topology (T21): static `cells(map_size, segments)` — side + inclusive `from`/`to` range, clamped/normalized, config order + ascending + first-seen dedupe |
 | `Economy` | `scripts/economy.gd` | Money-as-health: `on_kill(amount)`, `on_leak()`, `spend()`, `is_game_over()` (strictly `< 0`) |
-| `WaveGen` | `scripts/wave.gd` | Static `composition(n, seed)` → `{wave, count, hp, speed, tanks, fast, modifier}` (T10 events from wave 3) |
+| `WaveGen` | `scripts/wave.gd` | Static `composition(n, seed)` → `{wave, count, hp, speed, tanks, fast, splitters, modifier}` (T10 events from wave 3, T22 splitters from wave 8) |
 | `WaveDirector` | `scripts/wave_director.gd` | Wave flow state machine (T12.5): phase, composition, spawn queue, spawn/break timers, per-wave modifier knobs; `start()`, `begin_break()`, `tick_spawn()`, `tick_break()`, `end_run()` |
 | `RunState` | `scripts/run_state.gd` | Finite-run frame (T18): wave goal, `Result {NONE, WIN, LOSS}`, endless flag, summary counters; `register_wave_cleared()` (guarded), `register_loss()`, `register_kill/leak()` |
 | `TimeControl` | `scripts/time_control.gd` | Pause/speed state (T19): `SPEEDS [1,2,3]`, `paused`, `scale()` (0 while paused), `toggle_pause()`, `cycle_speed()`, `speed_text()` |
 | `TerrainGen` | `scripts/terrain_gen.gd` | Static `generate(size, entries, exits, seed)` → `{blockers, decor}`; greedy placement that never seals an entry |
-| `Drone` | `scripts/drone.gd` | Grid-space walker: `advance(dt)` (returns `true` on leak), `take_damage()`, `reroute()`, `facing()`, `exit_cell()`, `distance_to_exit()`, `KIND_MODS` |
+| `Drone` | `scripts/drone.gd` | Grid-space walker: `advance(dt)` (returns `true` on leak), `take_damage()`, `reroute()`, `facing()`, `exit_cell()`, `distance_to_exit()`, `KIND_MODS` (normal/fast/tank/splitter/child, T22) |
 | `Gun` | `scripts/gun.gd` | Level-based range/cadence/damage (`GunUpgrades`, ADR 0012) + targeting (`range_bonus` hook for wave modifiers); `acquire()` picks the drone closest to its exit, `try_fire(dt, targets)` returns the target when a shot is due |
 | `GunUpgrades` | `scripts/gun_upgrades.gd` | Five-level upgrade table (ADR 0012): cumulative prices, deltas, half refunds, names/descriptions; static helpers only |
 | `Pieces` | `scripts/pieces.gd` | Buildable kinds (T17): `Kind {GUN, WALL}` → cost/label/telemetry name; static, no instances |
@@ -103,7 +103,7 @@ are freed together with it in `_remove_drone()` / `_remove_projectile()`.
 Space/HUD button ──► _on_wave_pressed: telemetry "send" · _start_wave(n)
             WaveDirector.start(n): WaveGen.composition → modifier knobs
             (rush/swarm/blackout/bounty; knobs reset every wave)
-            queue = normals… + fast… + tanks…      (fixed order)
+            queue = normals… + fast… + tanks… + splitters…   (fixed order)
             scene: gun range ← director · telemetry "wave" · SFX "wave"
 
 Wave cleared ──► telemetry "wave_end" · goal reached? → win screen
@@ -116,7 +116,7 @@ spawner ──► _spawn_drone(kind)
             Drone.spawn(kind, cells, hp, speed) + sprite + HP bar
 
 Drone.advance(dt) == true ──► _on_leak
-            Economy.on_leak() · telemetry "leak" (+ exit cell) · SFX "leak"
+            Economy.on_leak() · telemetry "leak" (+ exit cell + kind) · SFX "leak"
             skid decal at the leak cell
             money < 0 ──► _end_run (end screen, "gameover" SFX, log flush,
             "run_end" with result/endless)
@@ -133,6 +133,8 @@ HUD state       ◄─ GameHud.update_state({money, wave, phase, alive, queued,
 Gun.try_fire(dt) ──► _fire: tracer starts at muzzle (0.75 cells) + flash
 Projectile hit ──► _resolve_hit
             kill: Economy.on_kill() · explosion + shockwave ring · SFX "kill" · scorch decal · telemetry "kill"
+            splitter death: two children spawn at the death cell with the parent's
+            exit (no RNG); a doorstep kill (path < 2 cells) does not split (T22)
             else: hit flash + impact spark · SFX "hit" · debris decal
 Fx ──► muzzle/impact/explosion/ember bursts + barrel recoil (world space)
             taken from the same call sites; Fx.update decays the shake trauma
@@ -205,7 +207,7 @@ Gameplay RNG exists in exactly three places, all seeded from the run seed:
 
 - run seed: random per run (`_random_seed()`), logged as `run_start.seed`;
   `seed_override` pins it for tests/editor — a logged seed replays a run
-- spawn order: normals, then fast, then tanks (fixed)
+- spawn order: normals, then fast, then tanks, then splitters (fixed)
 - spawn scatter: per-spawn RNG, deterministic given the run seed
 - wave modifiers: rolled after the tanks/fast split, so those stay stable
   per seed; the modifier itself is part of the composition
@@ -264,6 +266,7 @@ panels → game-over overlay).
   kill with scattered entries and terrain, the payout, break → auto-chain,
   the Space skip, scatter/terrain determinism, the nearest-exit fallback,
   entry/exit segments (default pin, segment scatter, fallback),
+  splitter drone (split/doorstep/overcharge),
   overcharge, modifier knobs, decal caps + ambient setup, terrain clearing,
   upgrades + selection + level pips, wall builds + build-kind toggle, the
   run frame (win/loss/endless), the pause/speed flow (freeze, denies,
@@ -292,7 +295,9 @@ panels → game-over overlay).
   current kind (caption/cost/icon); a clickable two-slot selector is a queued
   visual slice (BACKLOG `tower-defense-build-selector`).
 - **New drone kind**: add multipliers to `Drone.KIND_MODS` and a frame array
-  to `game.gd` `DRONE_TEX`; `WaveGen` decides counts.
+  to `game.gd` `DRONE_TEX`; `WaveGen` decides counts. Death behaviors stay
+  kind-specific for now (`_spawn_split_children`, T22) — a second death kind
+  should move to a `KIND_MODS` field.
 - **New wave shape**: `WaveGen.composition()` is the single source; keep it
   seeded and deterministic and update `tests/test_wave.gd`.
 - **More entry/exit sides**: `entry_segments` / `exit_segments` in `game.gd`

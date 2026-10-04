@@ -43,13 +43,20 @@ func start(n: int) -> void:
 	composition = WaveGen.composition(n, _seed)
 	_apply_modifier(str(composition.get("modifier", "")))
 	queue.clear()
-	var normals: int = int(composition["count"]) - int(composition["fast"]) - int(composition["tanks"])
+	var normals: int = (
+		int(composition["count"])
+		- int(composition["fast"])
+		- int(composition["tanks"])
+		- int(composition.get("splitters", 0))
+	)
 	for i in normals:
 		queue.append("normal")
 	for i in int(composition["fast"]):
 		queue.append("fast")
 	for i in int(composition["tanks"]):
 		queue.append("tank")
+	for i in int(composition.get("splitters", 0)):
+		queue.append("splitter")
 	total = queue.size()
 	phase = Phase.RUNNING
 	break_timer = 0.0

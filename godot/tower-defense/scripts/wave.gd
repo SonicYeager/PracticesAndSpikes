@@ -13,6 +13,7 @@ const MAX_SPEED_BONUS := 40.0
 const MODIFIERS := ["rush", "swarm", "blackout", "bounty"]
 const MODIFIER_FROM_WAVE := 3
 const MODIFIER_CHANCE := 40  # percent per wave
+const SPLITTER_FROM_WAVE := 8
 
 
 static func composition(wave_n: int, game_seed: int) -> Dictionary:
@@ -29,6 +30,12 @@ static func composition(wave_n: int, game_seed: int) -> Dictionary:
 	var modifier := ""
 	if n >= MODIFIER_FROM_WAVE and rng.randi_range(0, 99) < MODIFIER_CHANCE:
 		modifier = MODIFIERS[rng.randi_range(0, MODIFIERS.size() - 1)]
+	# Splitter draw comes after the modifier roll so the pinned values above
+	# stay stable per seed; splitters join from wave 8, one plus growth per
+	# eight waves.
+	var splitters := 0
+	if n >= SPLITTER_FROM_WAVE:
+		splitters = rng.randi_range(1, 1 + (n - SPLITTER_FROM_WAVE) / 8)
 	return {
 		"wave": n,
 		"count": count,
@@ -36,5 +43,6 @@ static func composition(wave_n: int, game_seed: int) -> Dictionary:
 		"speed": speed,
 		"tanks": mini(tanks, count),
 		"fast": mini(fast, count),
+		"splitters": mini(splitters, count),
 		"modifier": modifier,
 	}

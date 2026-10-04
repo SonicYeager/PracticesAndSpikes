@@ -43,3 +43,12 @@ func test_modifiers_are_deterministic_and_gated() -> void:
 		)
 		seen = seen or a["modifier"] != ""
 	assert_true(seen, "Modifiers actually occur after wave 3")
+
+
+func test_splitters_join_from_wave_eight() -> void:
+	for n in range(1, 8):
+		assert_eq(WaveGen.composition(n, 7)["splitters"], 0, "No splitters before wave 8")
+	assert_eq(WaveGen.composition(8, 7)["splitters"], 1, "Wave 8 brings exactly one splitter")
+	var late := WaveGen.composition(24, 7)
+	assert_true(late["splitters"] >= 1 and late["splitters"] <= 3, "Splitter count grows slowly")
+	assert_eq(WaveGen.composition(24, 7), late, "Same seed, same composition")

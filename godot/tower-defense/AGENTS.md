@@ -65,7 +65,10 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
   spawn at the barrel muzzle (0.75 cells) with a muzzle flash. Drones walk
   the live path and re-path when the maze changes; building on a cell a
   drone currently occupies is rejected. Kinds via `Drone.KIND_MODS`
-  (fast 0.6 hp/1.6 speed, tank 2.4 hp/0.55 speed).
+  (fast 0.6 hp/1.6 speed, tank 2.4 hp/0.55 speed). Splitter (T22): 1.0/0.85,
+  splits on death into two children (0.4/1.25) at the death cell with the
+  parent's exit; no split on leak or at the doorstep (1-cell path); children
+  pay `Economy.CHILD_KILL_REWARD` (2).
 - **Feedback** (juice pass + 2026-10-02 polish): hit = white flash + impact
   spark + SFX, kill = explosion + shockwave ring + SFX, build/sell/clear =
   dust puff, leak = red edge flash + SFX, denied/wave/game-over all have SFX.
@@ -195,7 +198,11 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
   2026-10-04): `SideSegments` (side + inclusive range → deterministic cell
   lists), `@export` `entry_segments`/`exit_segments` (defaults full sides),
   empty-config guard with full-side fallback; suite: 156 tests / 985 asserts
-  green.
+  green. T22 (Splitter drone, 2026-10-04): `KIND_MODS` splitter/child, WaveGen
+  `splitters` from wave 8 (draw after the modifier roll), Director queue,
+  `_spawn_split_children` with doorstep guard + `_add_drone` refactor,
+  `CHILD_KILL_REWARD`, leak `kind` + analyzer `kinds` line, placeholder
+  sprites; suite: 166 tests / 1035 asserts green.
 - Vision (2026-10-02): `docs/VISION.md` — pillars P1–P3 (workbench, living
   foundry, curiosity), values, anti-pillars; calibrations + next prototype
   questions (epilog twist, pressure curve, decal readability, meta, time

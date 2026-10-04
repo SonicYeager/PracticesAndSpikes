@@ -57,7 +57,8 @@ Each needs a slice decision; vision check noted.*
   HUD-Selektor als Folge-Item `tower-defense-build-selector`).
 - **Splitters**: on death spawn two weak offspring — a new enemy behavior
   (Discovery) that rewards wide kill coverage. Caution: keep counterplay
-  open (no lock & key).
+  open (no lock & key). *Umgesetzt (T22) — Kinder schwach/flink, Doorstep-Kill
+  splittet nicht (keine Falle); Kill-Check bleibt Playtest.*
 - **Slow/Frost tower**: the second tower type — a slow field instead of
   damage; XT's freeze was the answer to "reversing the field". Vision: P1/P3.
 - **Endurance goals**: XT missions ran 20–100 waves. Ours could offer light

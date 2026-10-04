@@ -280,6 +280,35 @@ def drone_tank():
     return c
 
 
+def drone_splitter():
+    c = Canvas()
+    for y in (12, 17, 22):                          # three leg pairs
+        c.rect(4, y, 6, y + 2, C["alien_shade"])
+        c.rect(25, y, 27, y + 2, C["alien_shade"])
+    c.ellipse(16, 17, 9, 7, C["alien"])             # swollen abdomen
+    c.ellipse(16, 10, 5, 3, C["alien_shade"])       # head
+    c.rect(10, 13, 12, 15, C["red"])                # eyes
+    c.rect(19, 13, 21, 15, C["red"])
+    c.vline(16, 14, 23, C["alien_shade"])           # split seam
+    c.disc(12, 20, 2, C["acid"])                    # brood nodules
+    c.disc(20, 20, 2, C["acid"])
+    c.bevel(0.3, 0.3)
+    c.outline()
+    return c
+
+
+def drone_child():
+    c = Canvas()
+    c.rect(6, 14, 9, 17, darken(C["acid"], 0.25))   # side fins
+    c.rect(23, 14, 26, 17, darken(C["acid"], 0.25))
+    c.diamond(16, 16, 7, 5, C["acid"])              # small shard body
+    c.rect(12, 13, 14, 15, C["red"])                # eyes
+    c.rect(18, 13, 20, 15, C["red"])
+    c.bevel(0.3, 0.3)
+    c.outline()
+    return c
+
+
 def spawn():
     c = Canvas()
     c.disc(16, 16, 11, C["outline"])
@@ -547,6 +576,8 @@ SPRITES = {
     "drone_fast_0": drone_fast(0),
     "drone_fast_1": drone_fast(1),
     "drone_tank": drone_tank(),
+    "drone_splitter": drone_splitter(),
+    "drone_child": drone_child(),
     "spawn": spawn(),
     "base": base(),
     "projectile": projectile(),

@@ -43,6 +43,14 @@ func _make_game_with_segments(entry_segments: Array, exit_segments: Array):
 	return game
 
 
+func _children_of(game) -> Array:
+	var children: Array = []
+	for d in game._drones:
+		if d.kind == "child":
+			children.append(d)
+	return children
+
+
 func _find_clearable(game) -> Vector2i:
 	for cell in game.maze.blockers:
 		if not game._vents.has(cell):
@@ -1165,3 +1173,142 @@ func test_segment_configs_are_editor_exported() -> void:
 			assert_true((prop["usage"] & PROPERTY_USAGE_EDITOR) != 0, "%s is editor-exported" % prop["name"])
 			found += 1
 	assert_eq(found, 2, "Both topology configs are editor-exported")
+
+
+func test_splitter_death_spawns_two_children() -> void:
+	var game = _make_game()
+	game._start_wave(8)
+	var exit: Vector2i = game.maze.exits[0]
+	var cells: Array[Vector2i] = game._cells_from_path(game.maze.pathfinder.find_path(Vector2i(0, 5), exit))
+	var splitter := Drone.spawn("splitter", cells, game._director.composition["hp"], 1.0)
+	game._drones.append(splitter)
+	var death_cell := splitter.cell()
+	var money_before: int = game.economy.money
+	assert_true(game._apply_damage(splitter, 9999.0), "The splitter dies")
+	assert_eq(game.economy.money, money_before + 6, "Full kill reward for the splitter")
+	var children := _children_of(game)
+	assert_eq(children.size(), 2, "Exactly two children")
+	assert_eq(children[0].path, children[1].path, "The pair is identical (deterministic)")
+	for child in children:
+		assert_eq(child.path[0], death_cell, "Children start at the death cell")
+		assert_eq(child.exit_cell(), exit, "Children keep the assigned exit")
+		assert_almost_eq(
+			child.max_hp,
+			game._director.composition["hp"] * 0.4,
+			0.01,
+			"Children are weak"
+		)
+
+
+func test_child_kill_reward_and_no_split_on_leak() -> void:
+	var game = _make_game()
+	game._start_wave(8)
+	var exit: Vector2i = game.maze.exits[0]
+	var cells: Array[Vector2i] = game._cells_from_path(game.maze.pathfinder.find_path(Vector2i(0, 5), exit))
+	var splitter := Drone.spawn("splitter", cells, game._director.composition["hp"], 1.0)
+	game._drones.append(splitter)
+	game._on_leak(splitter)
+	assert_eq(_children_of(game).size(), 0, "Leaking splitters do not split")
+	assert_eq(game._run_state.leaks, 1)
+	var child := Drone.spawn("child", cells, game._director.composition["hp"], 1.0)
+	game._drones.append(child)
+	var money_before: int = game.economy.money
+	game._apply_damage(child, 9999.0)
+	assert_eq(game.economy.money, money_before + 2, "Children pay the reduced reward")
+	assert_eq(game._run_state.kills, 1)
+
+
+func test_doorstep_kill_does_not_split() -> void:
+	var game = _make_game()
+	game._start_wave(8)
+	var exit: Vector2i = game.maze.exits[0]
+	var doorstep := Drone.spawn("splitter", [exit], game._director.composition["hp"], 1.0)
+	game._drones.append(doorstep)
+	assert_true(game._apply_damage(doorstep, 9999.0))
+	assert_eq(_children_of(game).size(), 0, "A doorstep kill never traps the player")
+
+
+func test_overcharge_split_survives_the_burst() -> void:
+	var game = _make_game()
+	game._start_wave(8)
+	game.economy.money = 500
+	var vent: Vector2i = game._vents.keys()[0]
+	var neighbor := Vector2i(-1, -1)
+	for offset in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+		var cell: Vector2i = vent + offset
+		if game.maze.can_build(cell):
+			neighbor = cell
+			break
+	assert_ne(neighbor, Vector2i(-1, -1), "The vent has a free neighbour")
+	var cells: Array[Vector2i] = game._cells_from_path(game.maze.pathfinder.find_path(neighbor, game.maze.exits[0]))
+	assert_true(cells.size() >= 2, "The neighbour reaches the exit")
+	var splitter := Drone.spawn("splitter", cells, 10.0, 1.0)
+	game._drones.append(splitter)
+	assert_true(game._try_overcharge(vent), "The overcharge fires")
+	assert_eq(_children_of(game).size(), 2, "The split still happens")
+	for child in _children_of(game):
+		assert_true(child.alive, "Children inside the burst survive the snapshot")
+	assert_eq(game.economy.money, 486, "Overcharge 20, splitter kill +6")
+
+
+func test_children_keep_the_wave_open_and_count_in_wave_end() -> void:
+	var game = _make_game()
+	game._start_wave(8)
+	game._director.queue.clear()  # children alone hold the wave open
+	var exit: Vector2i = game.maze.exits[0]
+	var cells: Array[Vector2i] = game._cells_from_path(game.maze.pathfinder.find_path(Vector2i(0, 5), exit))
+	var splitter := Drone.spawn("splitter", cells, game._director.composition["hp"], 1.0)
+	game._drones.append(splitter)
+	game._apply_damage(splitter, 9999.0)
+	for i in 60:
+		game._process(STEP)
+	assert_eq(game._director.phase, WaveDirector.Phase.RUNNING, "Children keep the wave open")
+	assert_eq(_children_of(game).size(), 2)
+	for i in 3600:
+		game._process(STEP)
+		if game._director.phase == WaveDirector.Phase.BREAK:
+			break
+	assert_eq(game._director.phase, WaveDirector.Phase.BREAK, "The wave ends once the field is empty")
+	assert_eq(game._wave_kills, 1, "The splitter kill counts")
+	assert_eq(game._wave_leaks, 2, "Both children leak and count")
+	var wave_end_found := false
+	for line in game.telemetry.lines:
+		if line.contains("\"t\":\"wave_end\""):
+			wave_end_found = true
+			assert_true(
+				line.contains("\"kills\":1") and line.contains("\"leaks\":2"),
+				"wave_end carries the split-pair counts"
+			)
+	assert_true(wave_end_found, "wave_end was emitted")
+
+
+func test_two_cell_path_still_splits() -> void:
+	var game = _make_game()
+	game._start_wave(8)
+	var exit: Vector2i = game.maze.exits[0]
+	var approach := Vector2i(-1, -1)
+	for offset in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+		var cell: Vector2i = exit + offset
+		if game.maze.can_build(cell):
+			approach = cell
+			break
+	assert_ne(approach, Vector2i(-1, -1), "The exit has a buildable neighbour")
+	var near := Drone.spawn("splitter", [approach, exit], game._director.composition["hp"], 1.0)
+	game._drones.append(near)
+	game._apply_damage(near, 9999.0)
+	assert_eq(_children_of(game).size(), 2, "A 2-cell path still splits (boundary pin)")
+
+
+func test_wave_eight_spawns_a_splitter_through_the_queue() -> void:
+	var game = _make_game()
+	game.economy.money = 500
+	game._start_wave(8)
+	var found := false
+	for i in 2400:
+		game._process(STEP)
+		for d in game._drones:
+			if d.kind == "splitter":
+				found = true
+		if found:
+			break
+	assert_true(found, "The wave-8 queue spawns a real splitter (sprite path included)")

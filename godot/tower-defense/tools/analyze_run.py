@@ -4,15 +4,18 @@
 Reads the JSONL files written by scripts/telemetry.gd (`user://run_<seed>.jsonl`)
 and prints a per-run report plus an aggregate across runs.
 
-Events: run_start {seed,source,harness} · wave {wave,count,hp}
+Events: run_start {seed,source,harness} · wave {wave,count,hp,splitters}
         · build {cell,kind} · sell {cell,kind} · clear {cell,money}
         · upgrade {cell,from,to,cost,money} · kill {wave,cell,kind} · wave_end
-        {wave,kills,leaks,money_start,money_end} · leak {wave,money} · send
+        {wave,kills,leaks,money_start,money_end} · leak {wave,money,kind} · send
         {wave} · time_control {action,speed,paused} · overcharge {cell,money}
         · mission_cleared {wave,money,kills,leaks}
         · run_end {wave,money,result,endless}
         · harness_start {waves,money,dt,towers,walls}
         · harness_end {wave,reason,money,kills,leaks,steps}
+
+Note: leak% uses the wave count (children excluded) - it can exceed 100% on
+splitter waves. Legacy events without a kind parse unchanged.
 
 Derived numbers:
   kills      = exact per wave: wave_end.kills once the wave was cleared, else the
@@ -122,9 +125,11 @@ def load_run(path):
         "wave_ends": {},      # wave -> {kills, leaks, money_start, money_end}
         "kills_by_wave": {},  # wave -> kill-event count
         "kill_cells": {},     # (x, y) -> kill count
+        "kill_kinds": {},     # kind -> kill-event count (T22 kinds in reports)
         "waves": {},          # wave -> {"count": int, "hp": number|None}
         "order": [],          # wave numbers in event order
         "leaks": {},          # wave -> [money, ...] (one entry per leak)
+        "leak_kinds": {},     # kind -> leak-event count
         "builds": 0,
         "sells": 0,
         "clears": 0,          # pay-to-clear rock removals
@@ -196,6 +201,9 @@ def load_run(path):
                     run["bad_lines"] += 1
                     continue
                 run["leaks"].setdefault(n, []).append(event.get("money"))
+                leak_kind = event.get("kind")
+                if isinstance(leak_kind, str) and leak_kind:
+                    run["leak_kinds"][leak_kind] = run["leak_kinds"].get(leak_kind, 0) + 1
             elif kind == "kill":
                 n = as_int(event.get("wave"))
                 cell = event.get("cell")
@@ -205,6 +213,9 @@ def load_run(path):
                 run["kills_by_wave"][n] = run["kills_by_wave"].get(n, 0) + 1
                 key = (as_int(cell[0]), as_int(cell[1]))
                 run["kill_cells"][key] = run["kill_cells"].get(key, 0) + 1
+                kill_kind = event.get("kind")
+                if isinstance(kill_kind, str) and kill_kind:
+                    run["kill_kinds"][kill_kind] = run["kill_kinds"].get(kill_kind, 0) + 1
             elif kind == "wave_end":
                 n = as_int(event.get("wave"))
                 if n is None:
@@ -352,6 +363,17 @@ def report_run(run):
                 total_leaks,
             )
         )
+
+    special_kinds = {"normal", "fast", "tank"}
+    kind_parts = []
+    for label, counts in (("kills", run["kill_kinds"]), ("leaks", run["leak_kinds"])):
+        special = sorted(k for k in counts if k not in special_kinds)
+        if special:
+            kind_parts.append(
+                "%s %s" % (label, ", ".join("%s %d" % (k, counts[k]) for k in special))
+            )
+    if kind_parts:
+        lines.append("  kinds: " + " | ".join(kind_parts))
 
     if run["run_starts"] != 1:
         lines.append("  WARNING: %d run_start events (expected 1)" % run["run_starts"])

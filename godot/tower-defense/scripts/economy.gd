@@ -4,6 +4,7 @@ extends RefCounted
 ## Kills earn, leaks cost. Game over only when money drops below zero.
 
 const KILL_REWARD := 6
+const CHILD_KILL_REWARD := 2
 const LEAK_COST := 10
 const GUN_COST := 25
 const WALL_COST := 10

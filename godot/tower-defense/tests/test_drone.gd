@@ -72,3 +72,12 @@ func test_reroute_keeps_position_and_follows_new_path() -> void:
 	assert_false(d.advance(0.5))
 	assert_eq(d.position, Vector2(1.5, 1.0), "Follows the detour instead")
 	assert_eq(d.cell(), Vector2i(1, 1))
+
+
+func test_splitter_and_child_modifiers() -> void:
+	var splitter := Drone.spawn("splitter", PATH, 20.0, 1.0)
+	assert_almost_eq(splitter.max_hp, 20.0, 0.001, "Splitters are normal-tough")
+	assert_almost_eq(splitter.speed, 0.85, 0.001)
+	var child := Drone.spawn("child", PATH, 20.0, 1.0)
+	assert_almost_eq(child.max_hp, 8.0, 0.001, "Children are weak")
+	assert_almost_eq(child.speed, 1.25, 0.001, "Children are quick")

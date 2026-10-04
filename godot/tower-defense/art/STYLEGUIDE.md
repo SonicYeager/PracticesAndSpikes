@@ -37,7 +37,8 @@ Ember-Foundry-Look ersetzt.
 | Hazard White     | `#e8e4da` | Hazard-Streifen                  |
 
 Form + Farbe codieren gemeinsam: rund = Standard, diamantförmig = schnell,
-breit = Tank. Nie nur über Farbe unterscheiden.
+breit = Tank, segmentiert mit Naht + Brut-Knospen = Splitter, kleiner
+Acid-Splitter = Kind. Nie nur über Farbe unterscheiden.
 
 ## Specs
 
@@ -126,6 +127,8 @@ Quelle: Titel-/Help-Screen, Kachel-/Effekt-Sprites, eingebettete Texte.
 | `drone_0/1` | 32×32 | Standard-Bug: weißer Käfer, Kopf + 3 Beinpaare, 2-Frame-Lauf |
 | `drone_fast_0/1` | 32×32 | Schneller Bug: Acid-Diamant mit Flossen + Beinen, rotiert entlang des Pfads |
 | `drone_tank` | 32×32 | Panzerkäfer: grau-blaue Schale, Kopfplatte, dicke Beine |
+| `drone_splitter` | 32×32 | Splitter: Alien-Käfer mit Naht + zwei Acid-Knospen, 1 Frame |
+| `drone_child` | 32×32 | Splitter-Kind: kleiner Acid-Splitter mit Flossen, 1 Frame |
 | `spawn` | 32×32 | Breach-Portal mit grünem Ring (pulsiert, jede Entry-Zelle) |
 | `base` | 32×32 | Containment-Tür mit Hazard-Streifen (pulsiert, jede Exit-Zelle) |
 | `projectile` | 16×16 | Tracer, rotiert zur Flugrichtung |

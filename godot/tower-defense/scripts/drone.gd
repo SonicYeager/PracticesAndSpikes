@@ -9,6 +9,8 @@ const KIND_MODS := {
 	"normal": {"hp": 1.0, "speed": 1.0},
 	"fast": {"hp": 0.6, "speed": 1.6},
 	"tank": {"hp": 2.4, "speed": 0.55},
+	"splitter": {"hp": 1.0, "speed": 0.85},
+	"child": {"hp": 0.4, "speed": 1.25},
 }
 
 var kind: String

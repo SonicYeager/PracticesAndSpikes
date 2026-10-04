@@ -79,3 +79,15 @@ func test_end_run_sets_game_over() -> void:
 	d.start(1)
 	d.end_run()
 	assert_eq(d.phase, WaveDirector.Phase.GAME_OVER)
+
+
+func test_splitter_queue_closes_the_wave() -> void:
+	var d := WaveDirector.new(7)
+	d.start(8)
+	assert_eq(d.total, int(d.composition["count"]), "Total matches the composition")
+	assert_eq(d.queue[d.queue.size() - 1], "splitter", "Splitters close the queue")
+	var splitters := 0
+	for kind in d.queue:
+		if kind == "splitter":
+			splitters += 1
+	assert_eq(splitters, int(d.composition["splitters"]), "All splitters are queued")

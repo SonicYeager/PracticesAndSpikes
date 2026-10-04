@@ -14,7 +14,7 @@ extends SceneTree
 ## `_capture` fails loudly instead of writing a misleading screenshot.
 
 const STATES := ["idle", "running", "gameover"]
-const DRONE_KINDS := ["normal", "fast", "tank"]
+const DRONE_KINDS := ["normal", "fast", "tank", "splitter", "child"]
 
 var _opts := {
 	"states": "idle,running",
