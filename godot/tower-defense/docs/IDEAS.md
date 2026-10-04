@@ -33,8 +33,9 @@ routes instead of just walling the direct line.
 - Build validation: **every entry reaches at least one exit** (multi-source
   BFS from all exits). No single-component rule — creative splits (left→top,
   right→bottom) are allowed; a fully sealed exit is inert.
-- Segments (side + cell range) are a later config detail; default is the
-  full side. Placeholder art reuses `spawn`/`base` sprites; redesign later.
+- Segments (side + cell range) are configurable since T21 (`SideSegments`,
+  `entry_segments`/`exit_segments`; default is the full side). Placeholder art
+  reuses `spawn`/`base` sprites; redesign later.
 - Balance: implement first, then tune with `tools/analyze_run.py` on real
   runs (leak pressure grows with more escape points).
 
@@ -84,7 +85,8 @@ Kandidaten für *wiederkehrende* Entscheidungen (Analyse:
 - **Wellen-getriebene Terrain-Disruptionen**: Krater zerstören Türme (mit
   Refund), Felsen wachsen, eine neue Entry-Front öffnet sich — das Maze muss
   neu gelöst werden (P1). Geseedet, an die Wave-Modifier andockbar,
-  Telegraphing im Break.
+  Telegraphing im Break. Config-Segmente (T21) liefern die Basis;
+  Runtime-Retopology bleibt Folge.
 - **Commander-Fähigkeiten** (Cooldowns): Repair/EMP/Rally o. ä. als
   Mikro-Entscheidungen im Puls, ohne Türme zu versetzen (P2/P3).
 - **Turm-Upgrades** als laufende Geld-Senke — **umgesetzt 2026-10-03** (T16,

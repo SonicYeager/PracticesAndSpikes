@@ -34,6 +34,15 @@ func _find_buildable(game, row: int = 2) -> Vector2i:
 	return Vector2i(-1, -1)
 
 
+func _make_game_with_segments(entry_segments: Array, exit_segments: Array):
+	var game = load("res://scenes/Main.tscn").instantiate()
+	game.seed_override = 1
+	game.entry_segments = entry_segments
+	game.exit_segments = exit_segments
+	add_child_autofree(game)
+	return game
+
+
 func _find_clearable(game) -> Vector2i:
 	for cell in game.maze.blockers:
 		if not game._vents.has(cell):
@@ -1061,3 +1070,98 @@ func test_time_keys_are_ignored_at_game_over() -> void:
 	assert_false(game._time_control.is_paused(), "P is ignored at game over")
 	assert_almost_eq(Engine.time_scale, 1.0, 0.001, "T is ignored at game over")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(_telemetry_path(game)))
+
+
+func test_default_topology_is_full_sides() -> void:
+	var game = _make_game()
+	var entries: Array[Vector2i] = []
+	var exits: Array[Vector2i] = []
+	for y in 12:
+		entries.append(Vector2i(0, y))
+		exits.append(Vector2i(19, y))
+	assert_eq(game.maze.entries, entries, "Default entries stay the full left side")
+	assert_eq(game.maze.exits, exits, "Default exits stay the full right side")
+
+
+func test_segment_topology_scatter_and_validation() -> void:
+	var game = _make_game_with_segments(
+		[{"side": SideSegments.Side.TOP, "from": 4, "to": 8}],
+		[{"side": SideSegments.Side.RIGHT, "from": 3, "to": 5}],
+	)
+	assert_eq(game.maze.entries.size(), 5)
+	assert_eq(game.maze.entries[0], Vector2i(4, 0))
+	assert_eq(game.maze.entries[4], Vector2i(8, 0))
+	assert_eq(game.maze.exits.size(), 3)
+	assert_false(game.maze.can_build(game.maze.entries[2]), "Segment entries stay unbuildable")
+	game._start_wave(1)
+	for i in 240:
+		game._process(STEP)
+	assert_gt(game._drones.size(), 0, "Segment entries spawn drones")
+	for d in game._drones:
+		assert_eq(d.path[0].y, 0, "Spawns use the top segment row")
+		assert_true(d.path[0].x >= 4 and d.path[0].x <= 8, "Spawns stay inside the segment")
+		assert_true(game.maze.exits.has(d.exit_cell()), "Assigned exits come from the segment")
+	var other = _make_game_with_segments(
+		[{"side": SideSegments.Side.TOP, "from": 4, "to": 8}],
+		[{"side": SideSegments.Side.RIGHT, "from": 3, "to": 5}],
+	)
+	other._start_wave(1)
+	for i in 240:
+		other._process(STEP)
+	assert_eq(game._drones.size(), other._drones.size())
+	for i in game._drones.size():
+		assert_eq(game._drones[i].path, other._drones[i].path, "Segment scatter is deterministic")
+
+
+func test_fallback_lands_in_a_partial_exit_segment() -> void:
+	var game = _make_game_with_segments(
+		[{"side": SideSegments.Side.LEFT, "from": 4, "to": 6}],
+		[{"side": SideSegments.Side.RIGHT, "from": 2, "to": 4}],
+	)
+	# Blockers are irrelevant to the fallback logic: use a clean maze so the
+	# sealing cells are guaranteed free (same pattern as the full-side test).
+	game.maze = Maze.new(game.MAP_SIZE, game.maze.entries, game.maze.exits)
+	var entry := Vector2i(0, 5)
+	var target := Vector2i(19, 2)
+	var cells: Array[Vector2i] = []
+	for p in game.maze.pathfinder.find_path(entry, target):
+		cells.append(Vector2i(p))
+	game._drones.append(Drone.spawn("normal", cells, 20.0, 1.0))
+	assert_eq(game._drones[0].exit_cell(), target)
+	# Seal the assigned exit: its floor neighbours are buildable, the second
+	# segment exit (19,3) is reserved, so it is sealed low-level instead.
+	assert_true(game.maze.build(Vector2i(18, 2)), "Sealing cell (18,2) is allowed")
+	assert_true(game.maze.build(Vector2i(19, 1)), "Sealing cell (19,1) is allowed")
+	game.maze.pathfinder.set_solid(Vector2i(19, 3), true)
+	game._reroute_drones()
+	var d: Drone = game._drones[0]
+	assert_ne(d.exit_cell(), target, "Cut-off target is replaced")
+	assert_true(game.maze.exits.has(d.exit_cell()), "Fallback stays inside the exit segment")
+	assert_eq(d.exit_cell(), Vector2i(19, 4), "Fallback picks the remaining segment exit")
+	assert_false(
+		game.maze.pathfinder.find_path(d.cell(), d.exit_cell()).is_empty(),
+		"Fallback path exists"
+	)
+
+
+func test_empty_segments_fall_back_to_full_sides() -> void:
+	var game = _make_game_with_segments([], [])
+	assert_eq(game.maze.entries.size(), 12, "Empty entry config falls back to the full side")
+	assert_eq(game.maze.entries[0], Vector2i(0, 0), "Fallback is the left side")
+	assert_eq(game.maze.exits.size(), 12, "Empty exit config falls back to the full side")
+	assert_eq(game.maze.exits[0], Vector2i(19, 0), "Fallback is the right side")
+	var mixed = _make_game_with_segments(
+		[], [{"side": SideSegments.Side.RIGHT, "from": 3, "to": 5}]
+	)
+	assert_eq(mixed.maze.entries.size(), 12, "Entry guard is independent of the exit config")
+	assert_eq(mixed.maze.exits.size(), 3, "A valid exit config is not overridden")
+
+
+func test_segment_configs_are_editor_exported() -> void:
+	var game = _make_game()
+	var found := 0
+	for prop in game.get_property_list():
+		if prop["name"] == "entry_segments" or prop["name"] == "exit_segments":
+			assert_true((prop["usage"] & PROPERTY_USAGE_EDITOR) != 0, "%s is editor-exported" % prop["name"])
+			found += 1
+	assert_eq(found, 2, "Both topology configs are editor-exported")

@@ -147,7 +147,8 @@ mit 20–100 Wellen, fünf Schwierigkeitsgrade, Tower-Upgrades; Ground-Türme
 - **Ton**: XT war hart (Leben, Boss-Wände) — unsere Vision ist „ruhig mit
   Puls" (Solo-Zen; Discovery/Sensory vor Challenge).
 - **Eigene Ideen obendrauf**: Seiten-Entries/Exits mit Scatter, Overcharge,
-  Wellen-Events, Dirty World — das ist die „Verfeinerung".
+  Wellen-Events, Dirty World — das ist die „Verfeinerung". *(Segmente
+  (Side + Range) seit T21 konfigurierbar.)*
 
 **Code-Analyse 2026-10-02** (deobfuskiertes SWF; Belege und Zahlen im
 Research-Artefakt `context/tasks/research-td-xt-reference/research.md`):

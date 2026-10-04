@@ -22,7 +22,7 @@ scenes/Main.tscn
                  └─ panels (status/build/wave/game-over)
 
 scripts/*.gd (class_name RefCounted)     ← core logic, no scene access
-  Maze · Pathfinder · Economy · WaveGen · WaveDirector · RunState · TimeControl · Drone
+  Maze · Pathfinder · SideSegments · Economy · WaveGen · WaveDirector · RunState · TimeControl · Drone
   Gun · GunUpgrades · Pieces · Projectile · Telemetry · SkillStub
 
 UI scripts (Control-based, no gameplay access)
@@ -44,6 +44,7 @@ owns its panels and only sees pushed state.
 |---|---|---|
 | `Maze` | `scripts/maze.gd` | Buildable grid (`built: cell → tower_type`), entry/exit reservation, `can_build()` via hypothetical block + multi-source BFS (every entry keeps an exit), `build()`, `sell()`, `clear_blocker()` |
 | `Pathfinder` | `scripts/pathfinder.gd` | `AStarGrid2D` wrapper; `DIAGONAL_MODE_NEVER`, solid points, `find_path()` returns cell ids, `has_path()`, `reachable_from()` multi-source BFS |
+| `SideSegments` | `scripts/side_segments.gd` | Entry/exit topology (T21): static `cells(map_size, segments)` — side + inclusive `from`/`to` range, clamped/normalized, config order + ascending + first-seen dedupe |
 | `Economy` | `scripts/economy.gd` | Money-as-health: `on_kill(amount)`, `on_leak()`, `spend()`, `is_game_over()` (strictly `< 0`) |
 | `WaveGen` | `scripts/wave.gd` | Static `composition(n, seed)` → `{wave, count, hp, speed, tanks, fast, modifier}` (T10 events from wave 3) |
 | `WaveDirector` | `scripts/wave_director.gd` | Wave flow state machine (T12.5): phase, composition, spawn queue, spawn/break timers, per-wave modifier knobs; `start()`, `begin_break()`, `tick_spawn()`, `tick_break()`, `end_run()` |
@@ -214,6 +215,8 @@ Gameplay RNG exists in exactly three places, all seeded from the run seed:
 - balance harness: `tools/harness.gd` steps a fixed 1/60 s cadence manually
   (`set_process(false)`, no engine frames in the sim); outcomes are
   seed-stable, manual-run comparison is outcome-level
+- entry/exit cells: config order, ascending within a segment, first-seen
+  dedupe — the default lists are byte-identical to the old full-side ones
 - floor variety: `(x * 7 + y * 13) % 3` (stable pattern)
 - explosion frame alternation: `_fx_counter`
 - animation phases: spawn index (`_drone_phase`), not RNG
@@ -248,7 +251,7 @@ panels → game-over overlay).
 ## Testing
 
 - Core classes: pure GUT tests in `tests/test_*.gd`, no scene needed
-  (`test_maze`, `test_path`, `test_economy`, `test_wave`,
+  (`test_maze`, `test_path`, `test_side_segments`, `test_economy`, `test_wave`,
   `test_wave_director`, `test_run_state`, `test_time_control`, `test_drone`,
   `test_gun`, `test_gun_upgrades`, `test_pieces`, `test_projectile`,
   `test_terrain_gen`).
@@ -260,6 +263,7 @@ panels → game-over overlay).
   assertions are frame-rate independent; it covers spawn → walk → shoot →
   kill with scattered entries and terrain, the payout, break → auto-chain,
   the Space skip, scatter/terrain determinism, the nearest-exit fallback,
+  entry/exit segments (default pin, segment scatter, fallback),
   overcharge, modifier knobs, decal caps + ambient setup, terrain clearing,
   upgrades + selection + level pips, wall builds + build-kind toggle, the
   run frame (win/loss/endless), the pause/speed flow (freeze, denies,
@@ -291,10 +295,11 @@ panels → game-over overlay).
   to `game.gd` `DRONE_TEX`; `WaveGen` decides counts.
 - **New wave shape**: `WaveGen.composition()` is the single source; keep it
   seeded and deterministic and update `tests/test_wave.gd`.
-- **More entry/exit sides**: `ENTRY_SIDES` / `EXIT_SIDES` in `game.gd` (the
-  `Side` enum) are deduplicated into cell lists. Segments (side + cell
-  range) are a future config detail — validation and the nearest-exit
-  fallback already handle non-contiguous exits.
+- **More entry/exit sides**: `entry_segments` / `exit_segments` in `game.gd`
+  accept `SideSegments` configs (side + optional inclusive `from`/`to` range);
+  the cell lists are read once in `_ready` (no mid-run retopology) and the
+  defaults stay the full sides. Validation, scatter and the nearest-exit
+  fallback work on the cell lists unchanged.
 - **Terrain density/types**: `TerrainGen` constants (cluster count/size,
   decor count); a new blocker art is a `TERRAIN_TEX` entry in `BoardView`.
   Battle decals are capped by `BoardView.DECAL_CAP` (FIFO).

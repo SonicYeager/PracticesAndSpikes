@@ -32,12 +32,13 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
 - **Maze**: free building; any build that leaves an entry without a
   reachable exit is rejected with instant refund (multi-source BFS).
   Entry/exit tiles never buildable; sealed exits are inert.
-- **Entries/exits** (T08): whole sides by default (`ENTRY_SIDES`/`EXIT_SIDES`
-  in `game.gd`, `Side` enum — more sides later, segments are a future
-  detail). Drones spawn scattered along the entries and draw a seeded random
-  exit per spawn; re-path goes to the assigned exit, with a nearest-exit
-  fallback when it is cut off. Exits are escape zones (reaching one = leak),
-  no home core.
+- **Entries/exits** (T08/T21): `entry_segments`/`exit_segments` in `game.gd`
+  (`SideSegments`: side + optional inclusive `from`/`to` range; defaults stay
+  the full sides; empty configs fall back to the full side with a warning).
+  Drones spawn scattered along the entry cells and draw a seeded random exit
+  per spawn; re-path goes to the assigned exit, with a nearest-exit fallback
+  when it is cut off. Exits are escape zones (reaching one = leak), no home
+  core.
 - **Run seed** (T09): random per run (`_random_seed()` from the clock),
   logged in `run_start.seed`; `seed_override` (>= 0) pins it for
   tests/editor/replay (default -1 = random).
@@ -190,13 +191,17 @@ category (GDScript does not belong under `dotnet/godot/`, which is the C#
   (Balance harness, 2026-10-04): `HarnessRun`-Kern + headless `tools/harness.gd`
   (Seed + Pre-Wave-1-Builds, Cap/Guard, Auto-Endlos, Determinismus- und
   Log-vs-Memory-Invarianten, `harness_start`/`harness_end`, Analyzer-Render +
-  Aggregat); suite: 143 tests / 910 asserts green.
+  Aggregat); suite: 143 tests / 910 asserts green. T21 (Entry/exit segments,
+  2026-10-04): `SideSegments` (side + inclusive range → deterministic cell
+  lists), `@export` `entry_segments`/`exit_segments` (defaults full sides),
+  empty-config guard with full-side fallback; suite: 156 tests / 985 asserts
+  green.
 - Vision (2026-10-02): `docs/VISION.md` — pillars P1–P3 (workbench, living
   foundry, curiosity), values, anti-pillars; calibrations + next prototype
   questions (epilog twist, pressure curve, decal readability, meta, time
   control, loop maintenance).
 - Open: epilog twist prototype, meta calibration, pressure tuning via
-  telemetry (harness available, T20), segments/more entry/exit sides (see `docs/IDEAS.md`;
+  telemetry (harness available, T20), wave escalation to extra sides (see `docs/IDEAS.md`;
   candidate queue with priorities: `docs/BACKLOG.md`).
 
 ## Commands

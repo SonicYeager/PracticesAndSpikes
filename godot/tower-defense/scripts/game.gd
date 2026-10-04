@@ -16,13 +16,7 @@ extends Node2D
 ## the grid math live in `BoardView`. T14: combat FX (shake, muzzle/impact/
 ## explosion, ember bursts, recoil) live in `Fx`.
 
-## Map edges used as entry/exit zones (T08). The lists stay generic — more
-## sides later, segments are a future config detail.
-enum Side { LEFT, RIGHT, TOP, BOTTOM }
-
 const TILE := BoardView.TILE
-const ENTRY_SIDES: Array = [Side.LEFT]
-const EXIT_SIDES: Array = [Side.RIGHT]
 const MAP_SIZE := Vector2i(20, 12)
 const ART_SCALE := BoardView.ART_SCALE
 const SCATTER_SEED_MUL := 1000003
@@ -93,6 +87,10 @@ const DEBRIS_TEX := preload("res://art/debris.png")
 ## Run provenance: "local" for normal sessions; the balance harness sets
 ## "harness" (logged in run_start, drives the analyzer's provenance marker).
 @export var run_source := "local"
+## Entry/exit topology (T21): side + optional inclusive `from`/`to` range;
+## defaults stay full sides. Empty results fall back to the full side (warned).
+@export var entry_segments: Array = [{"side": SideSegments.Side.LEFT}]
+@export var exit_segments: Array = [{"side": SideSegments.Side.RIGHT}]
 var game_seed := 1
 
 var maze: Maze
@@ -133,8 +131,8 @@ var _anim_time := 0.0
 
 func _ready() -> void:
 	game_seed = seed_override if seed_override >= 0 else _random_seed()
-	var entries := _sides_to_cells(ENTRY_SIDES)
-	var exits := _sides_to_cells(EXIT_SIDES)
+	var entries := _segment_cells(entry_segments, SideSegments.Side.LEFT, "entry")
+	var exits := _segment_cells(exit_segments, SideSegments.Side.RIGHT, "exit")
 	var terrain := TerrainGen.generate(MAP_SIZE, entries, exits, game_seed)
 	maze = Maze.new(MAP_SIZE, entries, exits, terrain["blockers"])
 	economy = Economy.new(100)
@@ -463,7 +461,7 @@ func _spawn_drone(kind: String) -> void:
 	var exit: Vector2i = maze.exits[rng.randi_range(0, maze.exits.size() - 1)]
 	var cells := _cells_from_path(maze.pathfinder.find_path(entry, exit))
 	if cells.is_empty():
-		# Sealed exit (possible with future segments): take the nearest one.
+		# Sealed exit: take the nearest one.
 		exit = _nearest_exit(entry)
 		if exit != Vector2i(-1, -1):
 			cells = _cells_from_path(maze.pathfinder.find_path(entry, exit))
@@ -857,32 +855,13 @@ func _cells_from_path(path: PackedVector2Array) -> Array[Vector2i]:
 	return cells
 
 
-func _sides_to_cells(sides: Array) -> Array[Vector2i]:
-	var cells: Array[Vector2i] = []
-	var seen := {}
-	for side in sides:
-		for cell in _side_cells(side):
-			if not seen.has(cell):
-				seen[cell] = true
-				cells.append(cell)
-	return cells
-
-
-func _side_cells(side: int) -> Array[Vector2i]:
-	var cells: Array[Vector2i] = []
-	match side:
-		Side.LEFT:
-			for y in MAP_SIZE.y:
-				cells.append(Vector2i(0, y))
-		Side.RIGHT:
-			for y in MAP_SIZE.y:
-				cells.append(Vector2i(MAP_SIZE.x - 1, y))
-		Side.TOP:
-			for x in MAP_SIZE.x:
-				cells.append(Vector2i(x, 0))
-		Side.BOTTOM:
-			for x in MAP_SIZE.x:
-				cells.append(Vector2i(x, MAP_SIZE.y - 1))
+func _segment_cells(segments: Array, fallback_side: int, label: String) -> Array[Vector2i]:
+	## Config guard: an empty cell list would crash the scatter draw
+	## (`randi_range(0, -1)`); fall back to the full side and warn.
+	var cells := SideSegments.cells(MAP_SIZE, segments)
+	if cells.is_empty():
+		push_warning("%s segments produced no cells - falling back to the full side" % label)
+		cells = SideSegments.cells(MAP_SIZE, [{"side": fallback_side}])
 	return cells
 
 

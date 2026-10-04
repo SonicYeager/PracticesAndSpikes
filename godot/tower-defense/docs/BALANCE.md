@@ -13,6 +13,7 @@ the map to them.
 | Piece kinds (cost/label/telemetry mapping) | `scripts/pieces.gd` (`Pieces`, T17) |
 | Run frame (goal wave, result) | `scripts/run_state.gd` (`RunState`, T18) |
 | Time speeds (pause/speed) | `scripts/time_control.gd` (`SPEEDS`, T19) |
+| Entry/exit topology | `game.gd` (`entry_segments`/`exit_segments`; `SideSegments`, T21) |
 | Drone kinds (hp/speed multipliers) | `scripts/drone.gd` (`KIND_MODS`) |
 | Wave scaling + composition | `scripts/wave.gd` (`WaveGen`) |
 | Wave pacing (spawn/break, modifier knobs) | `scripts/wave_director.gd` (`WaveDirector`) |
@@ -84,7 +85,7 @@ seed  = game_seed + n * 7919
 ```
 
 Spawn pacing: one drone every 0.7 s (`SPAWN_INTERVAL`), order normals → fast
-→ tanks. Each spawn scatters along the entry side and draws a random exit
+→ tanks. Each spawn scatters along the entry cells and draws a random exit
 (seeded per spawn, see the scene pacing table). Between waves: once the
 spawn queue and the field are empty, a `BREAK_SECONDS` (5 s) intermission
 runs with a HUD countdown, then the next wave auto-starts; Space skips the

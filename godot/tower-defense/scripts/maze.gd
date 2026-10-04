@@ -3,9 +3,9 @@ extends RefCounted
 ## Buildable grid: tracks towers and rejects any build that would leave an
 ## entry without a reachable exit. Entry/exit cells and pre-placed terrain
 ## blockers are never buildable; blockers are solid until the game layer
-## clears them via `clear_blocker`. Any number of entries/exits is supported
-## (side cells by default); a sealed exit is inert as long as every entry
-## keeps at least one open exit.
+## clears them via `clear_blocker`. Any number of entry/exit cells is
+## supported (side segments via `SideSegments`, T21); a sealed exit is inert
+## as long as every entry keeps at least one open exit.
 
 var size: Vector2i
 var entries: Array[Vector2i]

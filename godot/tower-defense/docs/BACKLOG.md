@@ -21,10 +21,6 @@ followed by indented `Vision:` (pillar/prototype question + roadmap milestone), 
 
 ## Open
 
-- [ ] **tower-defense-entry-exit-segments** · priority: medium · effort: medium · area: logic — Generalize T08 entries/exits from whole sides to `(side, cell range)` segments (default stays full side); validation, scatter and nearest-exit fallback stay deterministic.
-  - Vision: P1 (workbench — several fronts); roadmap M2 (difficulty topology).
-  - Kill: segments add config surface without enabling a new maze decision in a playtest.
-  - Surfaces: `scripts/maze.gd`, `scripts/game.gd`, `tests/`, `docs/ARCHITECTURE.md`.
 - [ ] **tower-defense-splitter-drone** · priority: medium · effort: large · area: logic — New drone kind "splitter": on death it spawns two weak children (seeded/deterministic); `WaveGen` + death handling + telemetry counting; placeholder sprite via `tools/make_placeholders.py` (sequence with the graphics-resolution work).
   - Vision: P3 (discovery — new behavior, not more hp); roadmap M2.
   - Kill: reads as more quantity instead of a new decision; counterplay must stay open (no lock & key).
@@ -43,6 +39,7 @@ followed by indented `Vision:` (pillar/prototype question + roadmap milestone), 
 - [x] **tower-defense-run-frame** · priority: medium · effort: medium · area: logic — Finite run frame — done 2026-10-03 via `tower-defense-run-frame`/T18 (`RunState`: Ziel-Welle 20, SIEG/GAME OVER, optionale Endlos-Verlängerung; Ein-`run_end`-Modell + `mission_cleared`; Run-Summary mit Kills/Leaks; Analyzer-Render-Formen + Aggregat-`cleared`-Fix). Kill offen: Playtest (fühlt sich der endliche Run wie ein Spiel an?).
 - [x] **tower-defense-time-control** · priority: medium · effort: medium · area: logic — done 2026-10-04 via `tower-defense-time-control`/T19 (`TimeControl`: P Pause/T ×1–×3, `Engine.time_scale` + Paused-Guard, Planungs-Aktionen im Pause erlaubt, Wellenstart/Overcharge denied, HUD-Indicator + Button-Lock, Analyzer ` - time`-Marker). Surfaces: `scripts/time_control.gd`, `scripts/game.gd`, `scripts/hud.gd`/`scenes/Hud.tscn`, `tools/analyze_run.py`.
 - [x] **tower-defense-balance-harness** · priority: medium · effort: medium · area: logic — done 2026-10-04 via `tower-defense-balance-harness`/T20 (`HarnessRun`-Kern + headless `tools/harness.gd`: Seed + Pre-Wave-1-Builds, Cap/Guard, Auto-Endlos, Determinismus-/Log-vs-Memory-Invarianten, `harness_start`/`harness_end`, Analyzer-Render + Aggregat, `nodes`/`entities`/`fx`/`decals`-Metrik). Grenzen: keine Per-Wave-Bauplanung, feste Kadence (outcome-level). Kill offen: erster 8-Harness-Corpus vs. Handläufe.
+- [x] **tower-defense-entry-exit-segments** · priority: medium · effort: medium · area: logic — done 2026-10-04 via `tower-defense-entry-exit-segments`/T21 (`SideSegments`: Side + inklusive `from`/`to`-Range → deterministische Zelllisten (Clamp/Normalisierung, Config-Reihenfolge, Dedupe); `@export entry_segments`/`exit_segments` (Defaults Full-Sides); Leer-Guard mit Full-Side-Fallback; Tests: Unit + Default-Pin/Segment-Scatter/Fallback/Export-Pin). Grenzen: kein Playtest-Preset, keine Topologie-Provenienz. Kill offen: M2/Playtest.
 
 ## Notes
 
