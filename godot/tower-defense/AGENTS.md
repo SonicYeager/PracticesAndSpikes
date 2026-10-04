@@ -255,3 +255,6 @@ Project has no CI; run from the project dir:
   → writes `<out-prefix>_<state>.png` (default prefix `reports/shot`), logs
   `SHOT <path> <WxH>`; full flag list in the script header. Bad args/states
   fail loudly (exit 1).
+- Windows: run the Python tools as `pythonw tools/<script>.py > <temp>/out.txt 2>&1`
+  — bare `python` from agent shells flashes terminal windows on the user's
+  desktop (workspace rule in `../../AGENTS.md`).
